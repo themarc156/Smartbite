@@ -309,7 +309,18 @@ textarea {
     margin-bottom: 1rem;
     align-items: center;
     width: 100%;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 0.4rem;
+    scrollbar-width: none; /* Firefox */
+}
+
+.filter-bar::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
+.btn-filter {
+    flex-shrink: 0;
 }
 
 .btn-filter {
@@ -558,7 +569,7 @@ textarea {
     padding-right: 0.5rem;
 }
 
-/* Automatisches Umbrechen auf Smartphones (Bildschirme kleiner als 600px) */
+/* Ultra-kompakte Speiseplan-Karte für Smartphones */
 @media (max-width: 600px) {
     .app-header {
         flex-direction: column;
@@ -582,29 +593,39 @@ textarea {
     }
 
     .modal-day-card {
-        flex-direction: column;
-        align-items: stretch;
+        padding: 0.5rem 0.75rem;
         gap: 0.5rem;
-        padding: 0.75rem;
     }
 
     .modal-day-info-wrapper {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.4rem;
+        gap: 0.5rem;
     }
 
     .modal-day-name-col {
-        width: 100%;
-        justify-content: flex-start;
-        gap: 1rem;
+        width: 90px;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 0.1rem;
+        padding-right: 0.2rem;
     }
 
-    .modal-right-actions {
-        width: 100%;
-        justify-content: flex-end;
-        border-top: 1px solid var(--border-color);
-        padding-top: 0.4rem;
+    .modal-day-date-text {
+        font-size: 0.78rem;
+    }
+
+    .today-badge {
+        font-size: 0.55rem;
+        padding: 0.05rem 0.25rem;
+    }
+
+    .plan-dish-thumb, .plan-dish-thumb-placeholder {
+        width: 32px;
+        height: 32px;
+    }
+
+    .modal-dish-name {
+        font-size: 0.95rem;
     }
 }
 

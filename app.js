@@ -903,6 +903,14 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('add');
     });
 
+    const btnCancelEdit = document.getElementById('btn-cancel-edit');
+    if (btnCancelEdit) {
+        btnCancelEdit.addEventListener('click', () => {
+            resetDishForm();
+            switchView('database');
+        });
+    }
+
     const btnToggleLayout = document.getElementById('btn-toggle-layout');
     if (btnToggleLayout) {
         btnToggleLayout.addEventListener('click', () => {

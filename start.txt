@@ -4,23 +4,8 @@
 .\venv\Scripts\python.exe server.py
 
 
+https://smartbite-601712420099.europe-west1.run.app
 
 
 
 
-Model 15:32
-Ja, das geht, aber mit einer wichtigen Einschränkung bezüglich der Bilder.
-Das Problem mit dem Online-Hosting & Bildern:
-Da unsere Flask-App die Daten in eine lokale data.json schreibt und hochgeladene Screenshots im lokalen Ordner /uploads speichert, haben die meisten kostenlosen Cloud-Plattformen (wie Render[1], Fly.io etc.) ein Problem mit dem ephemeren Dateisystem[2]. Das bedeutet: Wenn die Cloud-Plattform den Server mangels Traffic schlafen legt oder neu startet, können lokal gespeicherte Bilder im /uploads Ordner im schlimmsten Fall verschwinden, und die data.json wird zurückgesetzt.
-Die 2 besten Wege, um das für die Familie zu lösen:
-Weg 1: Render.com (Der klassische Cloud-Weg mit externen Bildern)
-Du kannst die Flask-App kostenlos bei Render hosten[3].
-Wichtig bei den Bildern: Damit die Screenshots vom iPad nicht verloren gehen, lädst du die Bilder nicht als Datei hoch, sondern fügst bei den Rezepten einfach einen Bild-Link (URL) ein (z. B. ein Bild, das du kurz bei einem kostenlosen Hoster wie Imgur hochlädst oder direkt von einer Website verlinkst).
-Die data.json läuft in der Cloud[1], sodass alle Familienmitglieder weltweit über einen Link (deine-app.onrender.com) auf den Speiseplan und die Rezepte zugreifen können.
-Weg 2: GitHub Pages + Statische JSON (Die 100% stabile & kostenlose Variante)
-Da ihr die App nur bedient, um Rezepte anzuschauen und zu planen, müssen wir gar keinen Python-Server im Internet laufen lassen!
-Wir wandeln die App in eine Pure Frontend-App um (HTML/CSS/JS), die ihre Daten direkt aus einer data.json im Browser liest.
-Das Ganze hosten wir kostenlos auf GitHub Pages.
-Bilder: Die Screenshots speichert ihr in einem /bilder-Ordner im Repository.
-Jedes Familienmitglied ruft einfach die GitHub-URL auf. Wenn du ein neues Rezept anlegst, lädst du die Bilddatei und die JSON hoch, und alle haben es sofort auf dem iPad.
-Welcher Weg ist dir lieber? Soll ich dir zeigen, wie man das Projekt so anpasst, dass es komplett serverlos auf GitHub Pages (inklusive permanenter Bilderspeicherung im Repo) läuft?
