@@ -303,36 +303,47 @@ textarea {
     border-color: var(--accent-primary);
 }
 
-/* Speiseplan Kompakt-Header mit integrierter KW */
-.plan-header-compact {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Header-Zeile mit KW und Einkaufsliste nebeneinander */
+.plan-header-single-row {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
     background-color: var(--bg-card);
-    padding: 0.5rem 0.8rem;
+    padding: 0.4rem 0.6rem;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
+    margin-bottom: var(--spacing);
+    gap: 0.5rem;
 }
 
 .kw-stepper {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.4rem;
 }
 
 .kw-display {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: bold;
     color: var(--accent-primary);
     white-space: nowrap;
+    padding: 0 0.2rem;
 }
 
-/* Suchleiste und Layout-Umschalter in einer Zeile */
+.btn-shopping-compact {
+    height: 36px;
+    padding: 0 0.75rem !important;
+    font-size: 0.85rem !important;
+    flex-shrink: 0;
+}
+
+/* Suchleiste und Layout-Umschalter */
 .search-and-toggle-row {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.6rem;
 }
 
 .search-and-toggle-row .search-bar-container {
@@ -340,20 +351,40 @@ textarea {
     flex: 1;
 }
 
-/* Filter als festes Grid statt horizontalem Scrollen */
-.filter-bar-grid {
+/* 2-Zeilen Filter-Layout: "Alle" links über 2 Zeilen, rechts 2x3 Grid */
+.filter-layout-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
-    gap: 0.4rem;
-    margin-bottom: 1rem;
+    grid-template-columns: 58px 1fr;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
     width: 100%;
 }
 
-.filter-bar-grid .btn-filter {
-    width: 100%;
+.btn-filter-all-tall {
+    height: 100% !important;
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    font-size: 0.85rem;
+}
+
+.filter-subgrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
+}
+
+.filter-subgrid .btn-filter {
+    padding: 0.4rem 0.15rem;
+    font-size: 0.78rem;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
-    padding: 0.45rem 0.2rem;
-    font-size: 0.82rem;
+    white-space: nowrap;
 }
 
 .btn-filter {
@@ -585,24 +616,72 @@ textarea {
     background-color: rgba(52, 152, 219, 0.1);
 }
 
+/* Speiseplan-Karten: Links Datum gestapelt, mittig Bild & voller Rezeptname, rechts Tausch-Button */
+.modal-day-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-primary);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    user-select: none;
+}
+
 .modal-day-info-wrapper { 
     flex: 1; 
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.5rem;
     min-width: 0;
 }
 
+/* Wochentag oben, Datum darunter */
 .modal-day-name-col {
-    width: 175px;
+    width: 78px;
     flex-shrink: 0;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 0.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    line-height: 1.15;
 }
 
-/* Ultra-kompakte Speiseplan-Karte für Smartphones */
+.modal-day-weekday {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--text-main);
+    white-space: nowrap;
+}
+
+.modal-day-date-text {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.modal-dish-row { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 0;
+}
+
+/* Vollständig lesbarer Rezeptname ohne "..." */
+.modal-dish-name { 
+    font-size: 0.92rem;
+    line-height: 1.25;
+    white-space: normal;
+    word-break: break-word;
+    overflow: visible;
+    text-overflow: unset;
+}
+
+/* Mobile Feinabstimmung */
 @media (max-width: 600px) {
     .app-header {
         flex-direction: column;
@@ -611,54 +690,16 @@ textarea {
 
     .nav-tabs {
         justify-content: center;
-        overflow-x: auto;
-    }
-
-    .view-header {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-    }
-
-    .nav-button-group {
-        justify-content: space-between;
-        flex-wrap: wrap;
-    }
-
-    .modal-day-card {
-        padding: 0.5rem 0.75rem;
-        gap: 0.5rem;
-    }
-
-    .modal-day-info-wrapper {
-        gap: 0.5rem;
-    }
-
-    .modal-day-name-col {
-        width: 90px;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: center;
-        gap: 0.1rem;
-        padding-right: 0.2rem;
-    }
-
-    .modal-day-date-text {
-        font-size: 0.78rem;
-    }
-
-    .today-badge {
-        font-size: 0.55rem;
-        padding: 0.05rem 0.25rem;
     }
 
     .plan-dish-thumb, .plan-dish-thumb-placeholder {
-        width: 32px;
-        height: 32px;
+        width: 34px;
+        height: 34px;
     }
 
-    .modal-dish-name {
-        font-size: 0.95rem;
+    .btn-icon-action {
+        padding: 0.3rem 0.45rem;
+        font-size: 0.85rem;
     }
 }
 

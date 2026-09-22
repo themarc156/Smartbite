@@ -22,13 +22,13 @@
     <main class="main-content-area">
         <!-- VIEW 1: Speiseplan -->
         <section id="view-plan" class="app-view">
-            <div class="view-header plan-header-compact">
+            <div class="view-header plan-header-single-row">
                 <div class="kw-stepper">
                     <button id="btn-prev-week" class="btn btn-nav">&lt;</button>
                     <span id="modal-kw-title" class="kw-display">KW --</span>
                     <button id="btn-next-week" class="btn btn-nav">&gt;</button>
                 </div>
-                <button id="btn-open-shopping-list" class="btn btn-primary">🛒 Einkaufsliste</button>
+                <button id="btn-open-shopping-list" class="btn btn-primary btn-shopping-compact">🛒 Einkaufsliste</button>
             </div>
             <div id="modal-plan-grid" class="modal-plan-grid"></div>
         </section>
@@ -46,14 +46,16 @@
                     <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
                 </div>
 
-                <div class="filter-bar-grid">
-                    <button id="filter-all" class="btn-filter active">Alle</button>
-                    <button id="filter-veggie" class="btn-filter">🌱 Veggie</button>
-                    <button id="filter-flex" class="btn-filter">🍲 Flexi</button>
-                    <button id="filter-meat" class="btn-filter">🥩 Fleisch</button>
-                    <button id="filter-lowcarb" class="btn-filter">🥗 Low-Carb</button>
-                    <button id="filter-highcarb" class="btn-filter">🌾 High-Carb</button>
-                    <button id="filter-emergency" class="btn-filter">🚨 Notfall</button>
+                <div class="filter-layout-container">
+                    <button id="filter-all" class="btn-filter btn-filter-all-tall active">Alle</button>
+                    <div class="filter-subgrid">
+                        <button id="filter-veggie" class="btn-filter">🌱 Veggie</button>
+                        <button id="filter-flex" class="btn-filter">🍲 Flexi</button>
+                        <button id="filter-meat" class="btn-filter">🥩 Fleisch</button>
+                        <button id="filter-lowcarb" class="btn-filter">🥗 Low</button>
+                        <button id="filter-highcarb" class="btn-filter">🌾 High</button>
+                        <button id="filter-emergency" class="btn-filter">🚨 Notfall</button>
+                    </div>
                 </div>
 
                 <div class="card">

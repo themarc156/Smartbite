@@ -495,12 +495,12 @@ function renderApp() {
                 const infoWrapper = document.createElement('div');
                 infoWrapper.className = 'modal-day-info-wrapper';
 
-                // Spalte 1: Datum & Heute-Badge (feste Breite für Symmetrie)
+                // Spalte 1: Wochentag oben, Datum darunter gestapelt (ohne Badge)
                 const dateCol = document.createElement('div');
                 dateCol.className = 'modal-day-name-col';
                 dateCol.innerHTML = `
-                    <span class="modal-day-date-text">${day.dayName}, ${day.dateString}</span>
-                    ${isToday ? '<span class="today-badge">Heute</span>' : '<span></span>'}
+                    <span class="modal-day-weekday">${day.dayName}</span>
+                    <span class="modal-day-date-text">${day.dateString}</span>
                 `;
 
                 // Spalte 2: Miniatur-Vorschaubild des Gerichts (Holt Daten live aus der Datenbank, falls vorhanden)
@@ -570,13 +570,6 @@ function renderApp() {
 
                 const rightActions = document.createElement('div');
                 rightActions.className = 'modal-right-actions';
-
-                if (day.isEmergency) {
-                    const emergencyBadge = document.createElement('span');
-                    emergencyBadge.className = 'modal-emergency-badge';
-                    emergencyBadge.textContent = '🚨';
-                    rightActions.appendChild(emergencyBadge);
-                }
 
                 const changeDishBtn = document.createElement('button');
                 changeDishBtn.className = 'btn-icon-action';
