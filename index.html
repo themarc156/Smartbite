@@ -22,14 +22,13 @@
     <main class="main-content-area">
         <!-- VIEW 1: Speiseplan -->
         <section id="view-plan" class="app-view">
-            <div class="view-header">
-                <h2 id="modal-kw-title">KW --</h2>
-                <div class="nav-button-group">
+            <div class="view-header plan-header-compact">
+                <div class="kw-stepper">
                     <button id="btn-prev-week" class="btn btn-nav">&lt;</button>
+                    <span id="modal-kw-title" class="kw-display">KW --</span>
                     <button id="btn-next-week" class="btn btn-nav">&gt;</button>
-                    <button id="btn-open-shopping-list" class="btn btn-primary">🛒 Einkaufsliste</button>
-                    <button id="btn-regenerate-plan" class="btn btn-success">🔀 Neu mischen</button>
                 </div>
+                <button id="btn-open-shopping-list" class="btn btn-primary">🛒 Einkaufsliste</button>
             </div>
             <div id="modal-plan-grid" class="modal-plan-grid"></div>
         </section>
@@ -38,23 +37,23 @@
         <section id="view-database" class="app-view hidden">
             <div class="view-header">
                 <h2>Gerichte-Datenbank (<span id="dish-count">0</span>)</h2>
-                <div class="view-header-actions">
-                    <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
-                </div>
             </div>
             <div class="database-layout-simple">
-                <div class="search-bar-container">
-                    <input type="text" id="dish-search-input" placeholder="🔍 Rezept oder Zutat durchsuchen..." autocomplete="off">
+                <div class="search-and-toggle-row">
+                    <div class="search-bar-container">
+                        <input type="text" id="dish-search-input" placeholder="🔍 Rezepte durchsuchen..." autocomplete="off">
+                    </div>
+                    <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
                 </div>
 
-                <div class="filter-bar">
+                <div class="filter-bar-grid">
                     <button id="filter-all" class="btn-filter active">Alle</button>
                     <button id="filter-veggie" class="btn-filter">🌱 Veggie</button>
                     <button id="filter-flex" class="btn-filter">🍲 Flexi</button>
                     <button id="filter-meat" class="btn-filter">🥩 Fleisch</button>
                     <button id="filter-lowcarb" class="btn-filter">🥗 Low-Carb</button>
                     <button id="filter-highcarb" class="btn-filter">🌾 High-Carb</button>
-                    <button id="filter-emergency" class="btn-filter filter-right">🚨 Notfall</button>
+                    <button id="filter-emergency" class="btn-filter">🚨 Notfall</button>
                 </div>
 
                 <div class="card">

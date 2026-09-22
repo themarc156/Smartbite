@@ -303,24 +303,57 @@ textarea {
     border-color: var(--accent-primary);
 }
 
-.filter-bar {
+/* Speiseplan Kompakt-Header mit integrierter KW */
+.plan-header-compact {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: var(--bg-card);
+    padding: 0.5rem 0.8rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+}
+
+.kw-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.kw-display {
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: var(--accent-primary);
+    white-space: nowrap;
+}
+
+/* Suchleiste und Layout-Umschalter in einer Zeile */
+.search-and-toggle-row {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 1rem;
     align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.search-and-toggle-row .search-bar-container {
+    margin-bottom: 0;
+    flex: 1;
+}
+
+/* Filter als festes Grid statt horizontalem Scrollen */
+.filter-bar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    gap: 0.4rem;
+    margin-bottom: 1rem;
     width: 100%;
-    overflow-x: auto;
-    white-space: nowrap;
-    padding-bottom: 0.4rem;
-    scrollbar-width: none; /* Firefox */
 }
 
-.filter-bar::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
-}
-
-.btn-filter {
-    flex-shrink: 0;
+.filter-bar-grid .btn-filter {
+    width: 100%;
+    text-align: center;
+    padding: 0.45rem 0.2rem;
+    font-size: 0.82rem;
 }
 
 .btn-filter {

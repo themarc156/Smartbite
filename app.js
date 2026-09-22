@@ -946,10 +946,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const regenBtn = document.getElementById('btn-regenerate-plan');
-    if (regenBtn) {
-        regenBtn.addEventListener('click', () => generate4WeekPlan());
-    }
+    // (Regenerate-Button entfernt)
 
     const closeRecipeView = () => {
         recipeViewModal.classList.add('hidden');
