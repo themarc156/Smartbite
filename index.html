@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧠 SmartBite – Rezepte & Speiseplaner</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="brand">
+            <h1>🧠 SmartBite</h1>
+        </div>
+        <nav class="nav-tabs">
+            <button id="nav-btn-plan" class="nav-tab active">📅 Speiseplan</button>
+            <button id="nav-btn-database" class="nav-tab">🍔 Gerichte-Datenbank</button>
+            <button id="nav-btn-add" class="nav-tab">➕ Neues Rezept</button>
+        </nav>
+    </header>
+
+    <main class="main-content-area">
+        <!-- VIEW 1: Speiseplan -->
+        <section id="view-plan" class="app-view">
+            <div class="view-header">
+                <h2 id="modal-kw-title">KW --</h2>
+                <div class="nav-button-group">
+                    <button id="btn-prev-week" class="btn btn-nav">&lt;</button>
+                    <button id="btn-next-week" class="btn btn-nav">&gt;</button>
+                    <button id="btn-open-shopping-list" class="btn btn-primary">🛒 Einkaufsliste</button>
+                    <button id="btn-regenerate-plan" class="btn btn-success">🔀 Neu mischen</button>
+                </div>
+            </div>
+            <div id="modal-plan-grid" class="modal-plan-grid"></div>
+        </section>
+
+        <!-- VIEW 2: Gerichte-Datenbank -->
+        <section id="view-database" class="app-view hidden">
+            <div class="view-header">
+                <h2>Gerichte-Datenbank (<span id="dish-count">0</span>)</h2>
+                <div class="view-header-actions">
+                    <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
+                </div>
+            </div>
+            <div class="database-layout-simple">
+                <div class="search-bar-container">
+                    <input type="text" id="dish-search-input" placeholder="🔍 Rezept oder Zutat durchsuchen..." autocomplete="off">
+                </div>
+
+                <div class="filter-bar">
+                    <button id="filter-all" class="btn-filter active">Alle</button>
+                    <button id="filter-veggie" class="btn-filter">🌱 Veggie</button>
+                    <button id="filter-flex" class="btn-filter">🍲 Flexi</button>
+                    <button id="filter-meat" class="btn-filter">🥩 Fleisch</button>
+                    <button id="filter-lowcarb" class="btn-filter">🥗 Low-Carb</button>
+                    <button id="filter-highcarb" class="btn-filter">🌾 High-Carb</button>
+                    <button id="filter-emergency" class="btn-filter filter-right">🚨 Notfall</button>
+                </div>
+
+                <div class="card">
+                    <p id="database-instruction" class="subtitle" style="margin-bottom: 1rem;">
+                        Klicke auf den Rezeptnamen, um die Details zu öffnen.
+                    </p>
+                    <ul id="dish-list" class="dish-list"></ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: Neues Rezept -->
+        <section id="view-add" class="app-view hidden">
+            <div class="card add-form-card">
+                <div class="flex-between mb-2">
+                    <h2 id="form-heading-title">Neues Rezept anlegen</h2>
+                    <div class="header-action-group">
+                        <button type="button" id="btn-delete-in-form" class="btn btn-danger hidden">🗑️ Rezept löschen</button>
+                        <button type="button" id="btn-cancel-edit" class="btn btn-primary" style="background: var(--bg-input); border: 1px solid var(--border-color);">Abbrechen ✖</button>
+                    </div>
+                </div>
+                <form id="dish-form" novalidate>
+                    <input type="hidden" id="dish-edit-id" value="">
+                    <div class="form-group">
+                        <label for="dish-name">Name des Gerichts *</label>
+                        <input type="text" id="dish-name" required placeholder="z.B. Lasagne Bolognese">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Art des Gerichts:</label>
+                        <div class="pill-selector-group">
+                            <button type="button" class="pill-select-btn" data-val="veggie">🌱 Veggie</button>
+                            <button type="button" class="pill-select-btn active" data-val="flex">🍲 Flexi</button>
+                            <button type="button" class="pill-select-btn" data-val="meat">🥩 Fleisch</button>
+                        </div>
+                        <input type="hidden" id="dish-meat-val" value="flex">
+                    </div>
+
+                    <div class="checkbox-group-container" style="margin-top: 1rem;">
+                        <div class="form-group checkbox-wrapper">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="dish-highcarb"> 🌾 High-Carb (Kohlenhydrat-Bombe)
+                            </label>
+                        </div>
+                        <div class="form-group checkbox-wrapper">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="dish-emergency"> 🚨 Notfall-Gericht (schnell)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dish-ingredients">Zutaten (zeilenweise)</label>
+                        <textarea id="dish-ingredients" rows="4" placeholder="500g Pasta&#10;1 Dose Tomaten&#10;1 Knoblauchzehe"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dish-instructions">Zubereitungsschritte</label>
+                        <textarea id="dish-instructions" rows="4" placeholder="1. Wasser aufkochen...&#10;2. Sauce anrühren..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dish-source-url">Rezept-Link (Chefkoch, Instagram, etc.)</label>
+                        <input type="url" id="dish-source-url" placeholder="https://www.chefkoch.de/rezepte/..." style="width: 100%; padding: 0.75rem; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius); color: var(--text-main);">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dish-preview-file">🖼️ Schönes Foto für die App-Ansicht (Vorschau)</label>
+                        <input type="file" id="dish-preview-file" accept="image/*">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dish-image-file">📸 Oder langer Screenshot / Infomaterial (optional)</label>
+                        <input type="file" id="dish-image-file" accept="image/*">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="btn-submit-dish">Gericht speichern</button>
+                </form>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal: Einkaufsliste der Woche -->
+    <div id="shopping-list-modal" class="modal hidden">
+        <div class="modal-content recipe-view-content">
+            <header class="modal-header">
+                <button id="btn-close-shopping-list" class="btn btn-danger btn-close-top">✖</button>
+                <h2 id="shopping-list-title">🛒 Einkaufsliste (KW --)</h2>
+                <div></div>
+            </header>
+            <div class="recipe-view-body">
+                <p class="subtitle">Zutaten aller 7 Tage dieser Woche:</p>
+                <ul id="shopping-list-items" class="ingredients-rendered-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Rezept Detail-Ansicht & In-Place Bearbeitung -->
+    <div id="recipe-view-modal" class="modal hidden">
+        <div class="modal-content recipe-view-content">
+            <!-- 1. HEADER FÜR LESE-MODUS -->
+            <header id="recipe-view-header" class="modal-header">
+                <button id="btn-close-recipe-view" class="btn btn-danger btn-close-top">✖</button>
+                <h2 id="recipe-view-title">Rezeptname</h2>
+                <div class="header-action-group">
+                    <button id="btn-edit-recipe" class="btn btn-primary">✏️ Bearbeiten</button>
+                </div>
+            </header>
+
+            <!-- 2. HEADER FÜR BEARBEITUNGS-MODUS -->
+            <header id="recipe-edit-header" class="modal-header hidden">
+                <h2 id="recipe-edit-modal-title">Rezept bearbeiten</h2>
+                <div class="header-action-group">
+                    <button type="button" id="btn-modal-delete-dish" class="btn btn-danger">🗑️ Löschen</button>
+                    <button type="button" id="btn-modal-cancel-edit" class="btn btn-primary" style="background: var(--bg-input); border: 1px solid var(--border-color);">Abbrechen ✖</button>
+                </div>
+            </header>
+            
+            <!-- BODY LESE-MODUS -->
+            <div id="recipe-view-body" class="recipe-view-body">
+                <div id="recipe-view-badges" class="recipe-badges-container"></div>
+                
+                <div id="recipe-link-container" class="hidden" style="margin-bottom: 1rem;">
+                    <a id="recipe-source-link" href="#" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">
+                        🔗 Original-Rezept öffnen (Chefkoch / Instagram)
+                    </a>
+                </div>
+
+                <!-- Vorschau-Foto (falls vorhanden) -->
+                <div id="recipe-preview-image-container" class="recipe-image-container hidden" style="margin-bottom: 1rem;">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Foto:</h4>
+                    <img id="recipe-preview-image" src="" alt="Vorschau-Foto" style="max-height: 250px; object-fit: cover;">
+                </div>
+
+                <!-- Screenshot / Infomaterial -->
+                <div id="recipe-view-image-container" class="recipe-image-container hidden">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Hinterlegter Screenshot / Info:</h4>
+                    <img id="recipe-view-image" src="" alt="Screenshot">
+                </div>
+
+                <div class="recipe-section">
+                    <div class="section-header-with-scaler">
+                        <h3>Zutaten</h3>
+                        <div class="portions-scaler">
+                            <button id="btn-portion-dec" class="btn-scaler">-</button>
+                            <span id="portion-count-label">4 Portionen</span>
+                            <button id="btn-portion-inc" class="btn-scaler">+</button>
+                        </div>
+                    </div>
+                    <ul id="recipe-view-ingredients" class="ingredients-rendered-list"></ul>
+                </div>
+
+                <div class="recipe-section">
+                    <h3>Zubereitung</h3>
+                    <div id="recipe-view-instructions" class="instructions-rendered-text"></div>
+                </div>
+            </div>
+
+            <!-- BODY BEARBEITUNGS-MODUS -->
+            <div id="recipe-edit-body" class="recipe-view-body hidden">
+                <form id="modal-dish-edit-form" novalidate style="display: flex; flex-direction: column; gap: 1rem;">
+                    <input type="hidden" id="modal-edit-id" value="">
+                    
+                    <div class="form-group" style="margin: 0;">
+                        <label for="modal-edit-name">Name des Gerichts *</label>
+                        <input type="text" id="modal-edit-name" required placeholder="z.B. Lasagne">
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label>Art des Gerichts:</label>
+                        <div class="pill-selector-group">
+                            <button type="button" class="modal-pill-select-btn" data-val="veggie">🌱 Veggie</button>
+                            <button type="button" class="modal-pill-select-btn active" data-val="flex">🍲 Flexi</button>
+                            <button type="button" class="modal-pill-select-btn" data-val="meat">🥩 Fleisch</button>
+                        </div>
+                        <input type="hidden" id="modal-edit-meat-val" value="flex">
+                    </div>
+
+                    <div class="checkbox-group-container" style="margin: 0;">
+                        <div class="form-group checkbox-wrapper">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="modal-edit-highcarb"> 🌾 High-Carb (Kohlenhydrat-Bombe)
+                            </label>
+                        </div>
+                        <div class="form-group checkbox-wrapper">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="modal-edit-emergency"> 🚨 Notfall-Gericht (schnell)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label for="modal-edit-ingredients">Zutaten (zeilenweise)</label>
+                        <textarea id="modal-edit-ingredients" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label for="modal-edit-instructions">Zubereitungsschritte</label>
+                        <textarea id="modal-edit-instructions" rows="4"></textarea>
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label for="modal-edit-url">Rezept-Link (optional)</label>
+                        <input type="url" id="modal-edit-url" placeholder="https://...">
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label for="modal-edit-preview-file">🖼️ Schönes Foto für die App-Ansicht (Vorschau)</label>
+                        <input type="file" id="modal-edit-preview-file" accept="image/*">
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label for="modal-edit-image-file">📸 Oder langer Screenshot / Infomaterial (optional)</label>
+                        <input type="file" id="modal-edit-image-file" accept="image/*">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="height: 42px; font-size: 0.95rem; width: 100%;">Änderungen speichern 💾</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
