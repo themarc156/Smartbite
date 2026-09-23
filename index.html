@@ -296,8 +296,18 @@
                     </div>
 
                     <div class="form-group" style="margin: 0;">
-                        <label for="modal-edit-preview-file">🖼️ Schönes Foto für die App-Ansicht (Vorschau)</label>
-                        <input type="file" id="modal-edit-preview-file" accept="image/*">
+                        <label>🖼️ Foto für die App-Ansicht:</label>
+                        <div class="upload-options-row">
+                            <label class="btn-upload-choice">
+                                📷 Foto knipsen
+                                <input type="file" id="modal-edit-preview-file-cam" accept="image/*" capture="environment" class="hidden-file-input">
+                            </label>
+                            <label class="btn-upload-choice">
+                                🖼️ Aus Galerie
+                                <input type="file" id="modal-edit-preview-file" accept="image/*" class="hidden-file-input">
+                            </label>
+                        </div>
+                        <span id="modal-preview-file-hint" class="selected-file-hint"></span>
                     </div>
 
                     <div class="form-group" style="margin: 0;">

@@ -999,6 +999,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-edit-image-file').value = '';
         const previewFileInput = document.getElementById('modal-edit-preview-file');
         if (previewFileInput) previewFileInput.value = '';
+        const modalCamInput = document.getElementById('modal-edit-preview-file-cam');
+        if (modalCamInput) modalCamInput.value = '';
+        const modalHintLabel = document.getElementById('modal-preview-file-hint');
+        if (modalHintLabel) modalHintLabel.textContent = '';
 
         const deleteBtn = document.getElementById('btn-modal-delete-dish');
         deleteBtn.classList.remove('confirm-mode');
@@ -1068,10 +1072,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Vorschaubild hochladen
-        if (previewFileInput && previewFileInput.files.length > 0) {
+        // Vorschaubild hochladen (Kamera oder Galerie)
+        const modalCamFile = document.getElementById('modal-edit-preview-file-cam');
+        const selectedModalPreviewFile = (modalCamFile && modalCamFile.files.length > 0) 
+            ? modalCamFile.files[0] 
+            : (previewFileInput && previewFileInput.files.length > 0 ? previewFileInput.files[0] : null);
+
+        if (selectedModalPreviewFile) {
             const formData = new FormData();
-            formData.append('image', previewFileInput.files[0]);
+            formData.append('image', selectedModalPreviewFile);
             try {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
                 const uploadData = await uploadRes.json();
@@ -1251,6 +1260,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const galInput = document.getElementById('dish-preview-file');
     if (camInput) camInput.addEventListener('change', () => updateHint(camInput));
     if (galInput) galInput.addEventListener('change', () => updateHint(galInput));
+
+    // Dateinamen-Feedback für Modal-Edit
+    const modalHintLabel = document.getElementById('modal-preview-file-hint');
+    const updateModalHint = (input) => {
+        if (input.files.length > 0 && modalHintLabel) {
+            modalHintLabel.textContent = `✓ Foto ausgewählt: ${input.files[0].name}`;
+        }
+    };
+    const modalCamInput = document.getElementById('modal-edit-preview-file-cam');
+    const modalGalInput = document.getElementById('modal-edit-preview-file');
+    if (modalCamInput) modalCamInput.addEventListener('change', () => updateModalHint(modalCamInput));
+    if (modalGalInput) modalGalInput.addEventListener('change', () => updateModalHint(modalGalInput));
 
     document.getElementById('dish-form').addEventListener('submit', async (e) => {
         e.preventDefault();
