@@ -634,20 +634,39 @@ function switchView(viewName) {
     }
 }
 
+// Direkte Klick-Steuerung für Pillen
+window.selectDishType = function(buttonElement, value, targetInputId) {
+    const input = document.getElementById(targetInputId);
+    if (input) input.value = value;
+    
+    const group = buttonElement.closest('.pill-selector-group');
+    if (group) {
+        group.querySelectorAll('button').forEach(btn => btn.classList.remove('active'));
+    }
+    buttonElement.classList.add('active');
+};
+
+// Programmatische Steuerung (z.B. beim Öffnen zum Bearbeiten)
 window.setMeatPill = function(val) {
     const input = document.getElementById('dish-meat-val');
     if (input) input.value = val;
-    document.querySelectorAll('#dish-form .pill-selector-group button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.val === val);
-    });
+    const form = document.getElementById('dish-form');
+    if (form) {
+        form.querySelectorAll('.pill-selector-group button').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-val') === val);
+        });
+    }
 };
 
 window.setModalMeatPill = function(val) {
     const input = document.getElementById('modal-edit-meat-val');
     if (input) input.value = val;
-    document.querySelectorAll('#modal-dish-edit-form .pill-selector-group button').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.val === val);
-    });
+    const form = document.getElementById('modal-dish-edit-form');
+    if (form) {
+        form.querySelectorAll('.pill-selector-group button').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-val') === val);
+        });
+    }
 };
 
 function openEditRecipeForm(dish) {

@@ -917,7 +917,7 @@ textarea {
     width: 100%;
 }
 
-.pill-select-btn, .modal-pill-select-btn {
+.pill-selector-group button {
     flex: 1;
     padding: 0.65rem 0.5rem;
     background-color: var(--bg-input);
@@ -931,16 +931,16 @@ textarea {
     text-align: center;
 }
 
-.pill-select-btn:hover, .modal-pill-select-btn:hover {
+.pill-selector-group button:hover {
     color: var(--text-main);
     border-color: #555;
 }
 
-.pill-select-btn.active, .modal-pill-select-btn.active {
-    background-color: var(--accent-primary);
-    border-color: var(--accent-primary);
-    color: #ffffff;
-    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+.pill-selector-group button.active {
+    background-color: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 8px rgba(52, 152, 219, 0.3) !important;
 }
 .badge-pill-emergency { background: #3a1e28; color: #f43f5e; }
 
