@@ -221,16 +221,6 @@ function switchRecipeModalMode(mode) {
     document.getElementById('recipe-edit-body').classList.toggle('hidden', !isEdit);
 }
 
-function setModalMeatPill(val) {
-    const input = document.getElementById('modal-edit-meat-val');
-    if (input) input.value = val;
-    const container = document.querySelector('#modal-dish-edit-form .pill-selector-group');
-    if (container) {
-        container.querySelectorAll('.modal-pill-select-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.val === val);
-        });
-    }
-}
 
 function openRecipeModal(dish) {
     appState.currentViewingDishId = dish.id;
@@ -644,16 +634,21 @@ function switchView(viewName) {
     }
 }
 
-function setMeatPill(val) {
+window.setMeatPill = function(val) {
     const input = document.getElementById('dish-meat-val');
     if (input) input.value = val;
-    const container = document.querySelector('#dish-form .pill-selector-group');
-    if (container) {
-        container.querySelectorAll('.pill-select-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.val === val);
-        });
-    }
-}
+    document.querySelectorAll('#dish-form .pill-selector-group button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.val === val);
+    });
+};
+
+window.setModalMeatPill = function(val) {
+    const input = document.getElementById('modal-edit-meat-val');
+    if (input) input.value = val;
+    document.querySelectorAll('#modal-dish-edit-form .pill-selector-group button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.val === val);
+    });
+};
 
 function openEditRecipeForm(dish) {
     document.getElementById('dish-edit-id').value = dish.id;
@@ -1035,22 +1030,7 @@ document.addEventListener('DOMContentLoaded', () => {
         switchRecipeModalMode('view');
     });
 
-    // Globale Event-Delegation für alle Pillen-Auswahlen (Hauptformular & Modal)
-    document.addEventListener('click', (e) => {
-        const pillBtn = e.target.closest('.pill-select-btn');
-        if (pillBtn && pillBtn.closest('#dish-form')) {
-            e.preventDefault();
-            setMeatPill(pillBtn.dataset.val);
-            return;
-        }
-
-        const modalPillBtn = e.target.closest('.modal-pill-select-btn');
-        if (modalPillBtn && modalPillBtn.closest('#modal-dish-edit-form')) {
-            e.preventDefault();
-            setModalMeatPill(modalPillBtn.dataset.val);
-            return;
-        }
-    });
+    // (Pillen-Auswahl wird direkt über inline onclick="setMeatPill(...)" gesteuert)
 
     // Löschen direkt aus dem Modal-Editor mit 2-Klick-Sicherheitsabfrage
     document.getElementById('btn-modal-delete-dish').addEventListener('click', async () => {
