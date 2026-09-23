@@ -684,29 +684,179 @@ function resetDishForm() {
     document.getElementById('btn-delete-in-form').classList.add('hidden');
 }
 
-function openShoppingListModal() {
-    const startIdx = appState.currentWeekPage * 7;
-    const activeWeekDays = appState.currentPlan.slice(startIdx, startIdx + 7);
-    const kw = activeWeekDays.length > 0 ? activeWeekDays[0].kw : '--';
+// Wörterbuch für die Regal-Reihenfolge im Supermarkt
+const SUPERMARKET_CATEGORIES = [
+    {
+        name: '🍏 Obst & Gemüse',
+        keywords: ['zwiebel', 'knoblauch', 'tomate', 'paprika', 'kartoffel', 'salat', 'gurke', 'karotte', 'möhre', 'zucchini', 'ananas', 'basilikum', 'kräuter', 'avocado', 'petersilie', 'apfel', 'zitrone', 'champignon', 'pilz']
+    },
+    {
+        name: '🍞 Brot & Backwaren',
+        keywords: ['brot', 'toast', 'brötchen', 'buns', 'wrap', 'tortilla', 'mehl', 'hefe', 'pizzateig', 'grieß']
+    },
+    {
+        name: '🥩 Fleisch, Fisch & Frischetheke',
+        keywords: ['hackfleisch', 'rinderhack', 'hähnchen', 'schinken', 'speck', 'matjes', 'wurst', 'pinkel', 'patty', 'rind']
+    },
+    {
+        name: '🧀 Kühlregal & Molkerei',
+        keywords: ['milch', 'butter', 'käse', 'gouda', 'feta', 'quark', 'sahne', 'ei', 'eier', 'frischkäse', 'mozzarella', 'creme fraiche', 'joghurt', 'maultaschen']
+    },
+    {
+        name: '🍝 Vorrat, Teigwaren & Dosen',
+        keywords: ['nudel', 'spaghetti', 'pasta', 'reis', 'kidneybohne', 'bohne', 'mais', 'dose', 'tomatenmark', 'passierte tomaten', 'gehackte tomaten', 'brühe', 'zucker', 'öl', 'olivenöl']
+    },
+    {
+        name: '🥫 Gewürze, Saucen & Sonstiges',
+        keywords: ['salz', 'pfeffer', 'oregano', 'zimt', 'curry', 'paprikapulver', 'chili', 'kreuzkümmel', 'senf', 'ketchup', 'mayo', 'remoulade', 'sauce', 'soße']
+    }
+];
 
-    document.getElementById('shopping-list-title').textContent = `🛒 Einkaufsliste (KW ${kw})`;
-    const listEl = document.getElementById('shopping-list-items');
-    listEl.innerHTML = '';
+let shoppingTimeframe = 'kw'; // 'kw' oder '7days'
+let customShoppingItems = [];
 
-    const allIngredients = [];
-    activeWeekDays.forEach(day => {
+function categorizeIngredient(text) {
+    const lower = text.toLowerCase();
+    for (const cat of SUPERMARKET_CATEGORIES) {
+        if (cat.keywords.some(k => lower.includes(k))) {
+            return cat.name;
+        }
+    }
+    return '📦 Sonstige Lebensmittel';
+}
+
+function parseAndAggregateIngredients(rawList) {
+    const aggregated = {};
+
+    rawList.forEach(({ text, dishName }) => {
+        // Trennt führende Mengenangaben (z.B. "500g", "2 Dosen", "1") vom Zutatennamen
+        const match = text.match(/^([\d.,/]+(?:\s*[a-zA-Z]+)?)\s+(.*)$/);
+        let amount = '';
+        let item = text.trim();
+
+        if (match) {
+            amount = match[1].trim();
+            item = match[2].trim();
+        }
+
+        const key = item.toLowerCase();
+        if (!aggregated[key]) {
+            aggregated[key] = {
+                displayName: item,
+                category: categorizeIngredient(item),
+                sources: []
+            };
+        }
+
+        aggregated[key].sources.push({ amount, dishName });
+    });
+
+    return aggregated;
+}
+
+function renderShoppingListModal() {
+    let daysToInclude = [];
+    let titleText = '';
+
+    if (shoppingTimeframe === 'kw') {
+        const startIdx = appState.currentWeekPage * 7;
+        daysToInclude = appState.currentPlan.slice(startIdx, startIdx + 7);
+        const kw = daysToInclude.length > 0 ? daysToInclude[0].kw : '--';
+        titleText = `🛒 Einkaufsliste (KW ${kw})`;
+    } else {
+        const todayMs = new Date().setHours(0, 0, 0, 0);
+        // Sortiert und sucht die nächsten 7 Tage ab heute im gesamten 28-Tage-Plan
+        const upcoming = appState.currentPlan.filter(d => d.dateTimeline >= todayMs);
+        daysToInclude = (upcoming.length >= 7) ? upcoming.slice(0, 7) : appState.currentPlan.slice(0, 7);
+        titleText = `🛒 Einkaufsliste (Nächste 7 Tage)`;
+    }
+
+    document.getElementById('shopping-list-title').textContent = titleText;
+
+    const rawIngredients = [];
+    const unparsedDishes = [];
+
+    daysToInclude.forEach(day => {
         const dish = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
-        if (dish && dish.ingredients) {
-            dish.ingredients.split('\n').map(s => s.trim()).filter(Boolean).forEach(ing => {
-                allIngredients.push({ dishName: dish.name, text: ing });
-            });
+        if (dish) {
+            const lines = (dish.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean);
+            if (lines.length > 0) {
+                lines.forEach(line => rawIngredients.push({ text: line, dishName: dish.name }));
+            } else if (dish.image || dish.sourceUrl) {
+                if (!unparsedDishes.some(d => d.id === dish.id)) {
+                    unparsedDishes.push(dish);
+                }
+            }
         }
     });
 
-    if (allIngredients.length === 0) {
-        listEl.innerHTML = '<li style="list-style: none; color: var(--text-muted);">Keine Zutaten für die Gerichte dieser Woche hinterlegt.</li>';
+    // Unparsed-Hinweise rendern
+    const unparsedBox = document.getElementById('shopping-unparsed-box');
+    const unparsedChips = document.getElementById('shopping-unparsed-links');
+    unparsedChips.innerHTML = '';
+
+    if (unparsedDishes.length > 0) {
+        unparsedBox.classList.remove('hidden');
+        unparsedDishes.forEach(d => {
+            const btn = document.createElement('button');
+            btn.className = 'unparsed-chip';
+            btn.textContent = `${d.name} ↗`;
+            btn.addEventListener('click', () => {
+                document.getElementById('shopping-list-modal').classList.add('hidden');
+                openRecipeModal(d);
+            });
+            unparsedChips.appendChild(btn);
+        });
     } else {
-        allIngredients.forEach(item => {
+        unparsedBox.classList.add('hidden');
+    }
+
+    // Aggregieren & nach Supermarkt-Regalen sortieren
+    const aggregated = parseAndAggregateIngredients(rawIngredients);
+    const categorizedMap = {};
+
+    Object.values(aggregated).forEach(item => {
+        if (!categorizedMap[item.category]) categorizedMap[item.category] = [];
+        categorizedMap[item.category].push(item);
+    });
+
+    // Manuelle Artikel einbinden
+    if (customShoppingItems.length > 0) {
+        const customCat = '📝 Manuell hinzugefügt';
+        categorizedMap[customCat] = customShoppingItems.map(name => ({
+            displayName: name,
+            category: customCat,
+            sources: [{ amount: '', dishName: 'Eigener Artikel' }]
+        }));
+    }
+
+    const container = document.getElementById('shopping-list-container');
+    container.innerHTML = '';
+
+    if (Object.keys(categorizedMap).length === 0) {
+        container.innerHTML = '<p class="subtitle" style="text-align: center;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
+        return;
+    }
+
+    // Gerenderte Kategorien in fester Reihenfolge ausgeben
+    const allKnownCatNames = [...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel', '📝 Manuell hinzugefügt'];
+
+    allKnownCatNames.forEach(catName => {
+        const items = categorizedMap[catName];
+        if (!items || items.length === 0) return;
+
+        const groupEl = document.createElement('div');
+        groupEl.className = 'shopping-category-group';
+
+        const titleEl = document.createElement('div');
+        titleEl.className = 'shopping-category-title';
+        titleEl.textContent = catName;
+        groupEl.appendChild(titleEl);
+
+        const listEl = document.createElement('ul');
+        listEl.className = 'ingredients-rendered-list';
+
+        items.forEach(item => {
             const li = document.createElement('li');
             li.className = 'ingredient-item';
 
@@ -714,7 +864,10 @@ function openShoppingListModal() {
             checkbox.type = 'checkbox';
 
             const textSpan = document.createElement('span');
-            textSpan.innerHTML = `<strong>${item.text}</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">(${item.dishName})</span>`;
+            
+            // Formatierung: 500g Hackfleisch (Bolognese) oder 2x Zwiebel (Suppe, Pizza)
+            const amountsText = item.sources.map(s => s.amount ? `${s.amount} [${s.dishName}]` : `[${s.dishName}]`).join(', ');
+            textSpan.innerHTML = `<strong>${item.displayName}</strong> <span style="font-size: 0.78rem; color: var(--text-muted);">(${amountsText})</span>`;
 
             li.appendChild(checkbox);
             li.appendChild(textSpan);
@@ -726,8 +879,14 @@ function openShoppingListModal() {
 
             listEl.appendChild(li);
         });
-    }
 
+        groupEl.appendChild(listEl);
+        container.appendChild(groupEl);
+    });
+}
+
+function openShoppingListModal() {
+    renderShoppingListModal();
     document.getElementById('shopping-list-modal').classList.remove('hidden');
 }
 
@@ -761,6 +920,63 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-close-shopping-list').addEventListener('click', () => {
         shoppingListModal.classList.add('hidden');
     });
+
+    // Zeitraum-Buttons im Einkaufslisten-Modal
+    const btnTfKw = document.getElementById('btn-timeframe-kw');
+    const btnTf7Days = document.getElementById('btn-timeframe-7days');
+
+    if (btnTfKw && btnTf7Days) {
+        btnTfKw.addEventListener('click', () => {
+            shoppingTimeframe = 'kw';
+            btnTfKw.classList.add('active');
+            btnTf7Days.classList.remove('active');
+            renderShoppingListModal();
+        });
+
+        btnTf7Days.addEventListener('click', () => {
+            shoppingTimeframe = '7days';
+            btnTf7Days.classList.add('active');
+            btnTfKw.classList.remove('active');
+            renderShoppingListModal();
+        });
+    }
+
+    // Manuelle Artikel hinzufügen
+    const customInput = document.getElementById('shopping-custom-input');
+    const btnAddCustom = document.getElementById('btn-add-custom-item');
+
+    const handleAddCustom = () => {
+        const val = customInput.value.trim();
+        if (val) {
+            customShoppingItems.push(val);
+            customInput.value = '';
+            renderShoppingListModal();
+        }
+    };
+
+    if (btnAddCustom) btnAddCustom.addEventListener('click', handleAddCustom);
+    if (customInput) customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddCustom(); });
+
+    // Als Text in die Zwischenablage kopieren (z.B. für WhatsApp)
+    const btnCopy = document.getElementById('btn-copy-shopping-list');
+    if (btnCopy) {
+        btnCopy.addEventListener('click', () => {
+            let text = `${document.getElementById('shopping-list-title').textContent}\n\n`;
+            document.querySelectorAll('.shopping-category-group').forEach(group => {
+                const catTitle = group.querySelector('.shopping-category-title').textContent;
+                text += `--- ${catTitle} ---\n`;
+                group.querySelectorAll('.ingredient-item').forEach(item => {
+                    if (!item.classList.contains('checked')) {
+                        text += `• ${item.querySelector('span').textContent}\n`;
+                    }
+                });
+                text += '\n';
+            });
+            navigator.clipboard.writeText(text);
+            btnCopy.textContent = '✓ Kopiert!';
+            setTimeout(() => { btnCopy.textContent = '📋 Kopieren'; }, 2000);
+        });
+    }
 
     // Umschalten in den Bearbeitungsmodus direkt im Modal
     document.getElementById('btn-edit-recipe').addEventListener('click', () => {

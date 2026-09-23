@@ -152,17 +152,35 @@
         </section>
     </main>
 
-    <!-- Modal: Einkaufsliste der Woche -->
+    <!-- Modal: Smarte Einkaufsliste -->
     <div id="shopping-list-modal" class="modal hidden">
         <div class="modal-content recipe-view-content">
             <header class="modal-header">
                 <button id="btn-close-shopping-list" class="btn btn-danger btn-close-top">✖</button>
-                <h2 id="shopping-list-title">🛒 Einkaufsliste (KW --)</h2>
-                <div></div>
+                <h2 id="shopping-list-title">🛒 Einkaufsliste</h2>
+                <button id="btn-copy-shopping-list" class="btn btn-primary" title="Als Text kopieren">📋 Kopieren</button>
             </header>
             <div class="recipe-view-body">
-                <p class="subtitle">Zutaten aller 7 Tage dieser Woche:</p>
-                <ul id="shopping-list-items" class="ingredients-rendered-list"></ul>
+                <!-- Zeitraum-Umschalter -->
+                <div class="shopping-timeframe-toggle">
+                    <button id="btn-timeframe-kw" class="btn-filter active">Aktive Kalenderwoche</button>
+                    <button id="btn-timeframe-7days" class="btn-filter">Nächste 7 Tage ab heute</button>
+                </div>
+
+                <!-- Hinweis-Box für Rezepte mit Screenshot oder Link ohne Textzutaten -->
+                <div id="shopping-unparsed-box" class="unparsed-recipes-box hidden">
+                    <span class="unparsed-title">⚠️ Rezepte ohne Textzutaten:</span>
+                    <div id="shopping-unparsed-links" class="unparsed-chips-container"></div>
+                </div>
+
+                <!-- Schnelleingabe für spontane Artikel (z.B. Milch, Toilettenpapier) -->
+                <div class="shopping-quick-add">
+                    <input type="text" id="shopping-custom-input" placeholder="+ Manueller Artikel (z.B. Butter)...">
+                    <button id="btn-add-custom-item" class="btn btn-primary">Hinzufügen</button>
+                </div>
+
+                <!-- Gruppierte Liste nach Supermarkt-Regalen -->
+                <div id="shopping-list-container" class="shopping-categories-container"></div>
             </div>
         </div>
     </div>

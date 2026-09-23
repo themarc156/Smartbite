@@ -1020,6 +1020,97 @@ textarea {
     color: var(--accent-primary);
 }
 
+/* Smarte Einkaufsliste Styles */
+.shopping-timeframe-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.shopping-timeframe-toggle .btn-filter {
+    flex: 1;
+    text-align: center;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.8rem;
+}
+
+.unparsed-recipes-box {
+    background-color: rgba(243, 156, 18, 0.1);
+    border: 1px solid rgba(243, 156, 18, 0.3);
+    border-radius: var(--radius);
+    padding: 0.6rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.unparsed-title {
+    font-size: 0.8rem;
+    color: var(--accent-warning);
+    font-weight: 600;
+}
+
+.unparsed-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.unparsed-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.unparsed-chip:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.shopping-quick-add {
+    display: flex;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+}
+
+.shopping-quick-add input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.85rem;
+}
+
+.shopping-categories-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.shopping-category-group {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.75rem;
+}
+
+.shopping-category-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent-primary);
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.25rem;
+}
+
 .ingredients-rendered-list {
     list-style: none;
     padding-left: 0;
