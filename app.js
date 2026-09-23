@@ -326,23 +326,24 @@ function renderApp() {
             );
         }
         
+        // 1. Strikte Trennung: Backen vs. Alltagsgerichte
         if (appState.activeFilter === 'baking') {
             // Exklusiv nur Kuchen & Backrezepte anzeigen
             filteredDishes = filteredDishes.filter(d => d.isMeat === 'baking');
         } else {
-            // Alle anderen Filter (inklusive 'Alle') blenden Backrezepte aus
+            // Ausnahmslos ALLE anderen Filter (Alle, High-Carb, Low-Carb, Notfall, Flexi, Veggie, Meat) schliessen Backrezepte aus
             filteredDishes = filteredDishes.filter(d => d.isMeat !== 'baking');
 
             if (appState.activeFilter === 'highcarb') {
-                filteredDishes = filteredDishes.filter(d => d.isHighCarb);
+                filteredDishes = filteredDishes.filter(d => d.isHighCarb === true);
             } else if (appState.activeFilter === 'lowcarb') {
                 filteredDishes = filteredDishes.filter(d => !d.isHighCarb);
             } else if (appState.activeFilter === 'emergency') {
-                filteredDishes = filteredDishes.filter(d => d.isEmergency);
+                filteredDishes = filteredDishes.filter(d => d.isEmergency === true);
             } else if (appState.activeFilter === 'veggie') {
                 filteredDishes = filteredDishes.filter(d => d.isMeat === false);
             } else if (appState.activeFilter === 'flex') {
-                filteredDishes = filteredDishes.filter(d => d.isMeat === null);
+                filteredDishes = filteredDishes.filter(d => d.isMeat === null || d.isMeat === undefined);
             } else if (appState.activeFilter === 'meat') {
                 filteredDishes = filteredDishes.filter(d => d.isMeat === true);
             }
@@ -446,6 +447,11 @@ function renderApp() {
                         openRecipeModal(dish);
                     }
                 });
+
+                // Toggle-Funktion in der Listenansicht: Klick schaltet durch (false -> true -> 'baking' -> null -> false)
+                if (dish.isMeat === 'baking') {
+                    toggleTypeBtn.textContent = '🍰';
+                }
 
                 leftSide.appendChild(toggleTypeBtn);
                 leftSide.appendChild(nameSpan);
