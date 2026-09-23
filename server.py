@@ -57,7 +57,24 @@ DEFAULT_DATA = {
     "plan": []
 }
 
+import requests
+
+JSONBIN_BIN_ID = os.environ.get("JSONBIN_BIN_ID", "")
+JSONBIN_API_KEY = os.environ.get("JSONBIN_API_KEY", "")
+
 def load_data():
+    # 1. Wenn JSONBin konfiguriert ist, Daten aus der Cloud laden
+    if JSONBIN_BIN_ID and JSONBIN_API_KEY:
+        try:
+            url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}/latest"
+            headers = {"X-Master-Key": JSONBIN_API_KEY}
+            res = requests.get(url, headers=headers, timeout=5)
+            if res.ok:
+                return res.json().get("record", DEFAULT_DATA)
+        except Exception as e:
+            print(f"Fehler beim Laden von JSONBin: {e}")
+
+    # 2. Lokaler Fallback auf Festplatte
     if not DATA_FILE.exists():
         save_data(DEFAULT_DATA)
         return DEFAULT_DATA
@@ -68,6 +85,19 @@ def load_data():
             return DEFAULT_DATA
 
 def save_data(data):
+    # 1. Wenn JSONBin konfiguriert ist, direkt in die Cloud speichern
+    if JSONBIN_BIN_ID and JSONBIN_API_KEY:
+        try:
+            url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}"
+            headers = {
+                "Content-Type": "application/json",
+                "X-Master-Key": JSONBIN_API_KEY
+            }
+            requests.put(url, headers=headers, json=data, timeout=5)
+        except Exception as e:
+            print(f"Fehler beim Speichern in JSONBin: {e}")
+
+    # 2. Lokaler Fallback
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
