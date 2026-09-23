@@ -3,6 +3,8 @@ from pathlib import Path
 import json
 import uuid
 import os
+import cloudinary
+import cloudinary.uploader
 
 app = Flask(__name__)
 
@@ -10,6 +12,14 @@ BASE_DIR = Path(__file__).resolve().parent
 DATA_FILE = BASE_DIR / "data.json"
 UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
+
+# Cloudinary Konfiguration über Umgebungsvariablen oder Fallback
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME", ""),
+    api_key=os.environ.get("CLOUDINARY_API_KEY", ""),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET", ""),
+    secure=True
+)
 
 DEFAULT_DATA = {
     "dishes": [
@@ -134,7 +144,22 @@ def upload_image():
     file = request.files["image"]
     if file.filename == "":
         return jsonify({"error": "Kein Dateiname"}), 400
-    
+
+    # 1. Wenn Cloudinary konfiguriert ist, direkt in die Cloud laden
+    if os.environ.get("CLOUDINARY_CLOUD_NAME"):
+        try:
+            upload_result = cloudinary.uploader.upload(
+                file,
+                folder="smartbite_recipes",
+                resource_type="image"
+            )
+            # Liefert die permanente HTTPS-URL von Cloudinary zurück
+            return jsonify({"imageUrl": upload_result.get("secure_url")})
+        except Exception as e:
+            print(f"Cloudinary Upload Fehler: {e}")
+            return jsonify({"error": "Upload fehlgeschlagen"}), 500
+
+    # 2. Lokaler Fallback (für Entwicklung auf dem PC)
     ext = os.path.splitext(file.filename)[1].lower()
     if ext not in [".jpg", ".jpeg", ".png", ".webp", ".gif"]:
         return jsonify({"error": "Ungültiges Format"}), 400
