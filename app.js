@@ -636,7 +636,8 @@ function switchView(viewName) {
 }
 
 function setMeatPill(val) {
-    document.getElementById('dish-meat-val').value = val;
+    const input = document.getElementById('dish-meat-val');
+    if (input) input.value = val;
     document.querySelectorAll('.pill-select-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.val === val);
     });
@@ -1348,10 +1349,11 @@ document.addEventListener('DOMContentLoaded', () => {
             previewImageUrl = existingDish.previewImage;
         }
 
+        const meatValRaw = meatValInput ? meatValInput.value : 'flex';
         let meatVal = null;
-        if (meatValInput.value === 'baking') meatVal = 'baking';
-        else if (meatValInput.value === 'meat') meatVal = true;
-        else if (meatValInput.value === 'veggie') meatVal = false;
+        if (meatValRaw === 'baking') meatVal = 'baking';
+        else if (meatValRaw === 'meat') meatVal = true;
+        else if (meatValRaw === 'veggie') meatVal = false;
 
         const dishPayload = {
             id: editId || undefined,
