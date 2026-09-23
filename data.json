@@ -8,7 +8,7 @@
       "isHighCarb": true,
       "ingredients": "500g Spaghetti\n500g Rinderhackfleisch\n1 Zwiebel\n2 Knoblauchzehen\n2 Dosen gehackte Tomaten\nSalz, Pfeffer, Oregano",
       "instructions": "1. Spaghetti in Salzwasser kochen.\n2. Hackfleisch mit Zwiebeln und Knoblauch anbraten.\n3. Tomaten dazugeben und 15 Minuten köcheln lassen.\n4. Mit Gewürzen abschmecken und servieren.",
-      "image": "/uploads/a7440c02a459441daf3a2396b5935d78.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142730/smartbite_recipes/hjfonjmnnehqdwpmkaor.jpg"
     },
     {
       "id": "dish-toast",
@@ -18,7 +18,7 @@
       "isHighCarb": true,
       "ingredients": "Toastbrot\nButter\nSchinken\nAnanasscheiben\nGouda (gerieben)",
       "instructions": "1. Toastbrot toasten und mit Butter bestreichen.\n2. Schinken und Ananas auf das Toast legen.\n3. Mit Käse bedecken und im Ofen bei 200°C überbacken, bis der Käse schmilzt.",
-      "image": "/uploads/809b5beca281443b9f3201a9cd2cee78.webp"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142730/smartbite_recipes/htegg0uxoueswnxdfijo.webp"
     },
     {
       "id": "dish-chili",
@@ -28,7 +28,7 @@
       "isHighCarb": false,
       "ingredients": "500g Hackfleisch\n1 Dose Kidneybohnen\n1 Dose Mais\n1 Dose gestückelte Tomaten\nPaprikapulver, Kreuzkümmel, Chili",
       "instructions": "1. Hackfleisch scharf anbraten.\n2. Tomaten, Bohnen und Mais hinzufügen.\n3. Mit Gewürzen abschmecken und bei mittlerer Hitze 20 Minuten köcheln lassen.",
-      "image": "/uploads/0363263a5e8644adb9da21f8b2d32004.webp"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142731/smartbite_recipes/efhtzwk8mj34wkvwc7ms.webp"
     },
     {
       "id": "dish-pizza",
@@ -38,7 +38,7 @@
       "isHighCarb": true,
       "ingredients": "Pizzateig (aus dem Kühlregal)\nTomatensoße\nSalami / Schinken\nGeriebener Käse",
       "instructions": "2. Pizzateig ausrollen und mit Tomatensoße bestreichen.\n2. Nach Wunsch belegen und mit Käse bestreuen.\n3. Im Ofen bei 220°C Ober-/Unterhitze ca. 12-15 Minuten backen.",
-      "image": "/uploads/52eeca457e5742298dd97ba83291f670.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142732/smartbite_recipes/hmh2ovgb6s1ucnprzk0v.jpg"
     },
     {
       "id": "dish-pfannkuchen",
@@ -48,7 +48,7 @@
       "isHighCarb": true,
       "ingredients": "300g Mehl\n500ml Milch\n3 Eier\n1 Prise Salz\nButter zum Ausbacken",
       "instructions": "1. Alle Zutaten zu einem glatten Teig verrühren.\n2. Portionsweise in einer heißen Pfanne mit Butter goldgelb ausbacken.",
-      "image": "/uploads/f4f166abe4be468a8424acf2ddd12695.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142733/smartbite_recipes/fsysl6zdq2gocjqfpxtg.jpg"
     },
     {
       "id": "dish-wraps",
@@ -58,7 +58,7 @@
       "isHighCarb": false,
       "ingredients": "Tortilla-Wraps\nHähnchenbruststreifen\nSalat, Tomaten, Gurke\nFrischkäse oder Soße",
       "instructions": "1. Hähnchen anbraten und würzen.\n2. Wraps kurz in der Pfanne oder Mikrowelle erwärmen.\n3. Mit Frischkäse bestreichen, Gemüse und Fleisch einrollen.",
-      "image": "/uploads/34c9580d0075455ab09945790954b9f5.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142734/smartbite_recipes/g6qelb8jpp10uhtpdc9x.jpg"
     },
     {
       "id": "dish-burger",
@@ -68,7 +68,7 @@
       "isHighCarb": true,
       "ingredients": "Burger-Buns\nBurger-P patties (Rindfleisch)\nSalat, Tomate, Gewürzgurke\nBurger-Soße",
       "instructions": "1. Patties von beiden Seiten braten.\n2. Buns kurz aufchnittgeröstet anrösten.\n3. Nach Belieben belegen und zusammenbauen.",
-      "image": "/uploads/fdee1411a8c7406bbc3a8c73bbda2bbd.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142735/smartbite_recipes/jdazsfzro5gtgarujnmx.jpg"
     },
     {
       "id": "dish-maultaschen",
@@ -78,7 +78,7 @@
       "isHighCarb": false,
       "ingredients": "1 Packung Maultaschen\nBrühe oder Butter & Zwiebeln",
       "instructions": "1. Maultaschen in Streifen schneiden und in einer Pfanne mit Zwiebeln anbraten (oder in heißer Brühe ziehen lassen).",
-      "image": "/uploads/0384e9ed0deb403aa9ec12ee81779813.webp"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142736/smartbite_recipes/f7rfzyfvvcsj1lhrtowr.webp"
     },
     {
       "id": "dish-matjes",
@@ -88,7 +88,7 @@
       "isHighCarb": true,
       "ingredients": "Frische Brötchen\nMatjesfilets\nZwiebelringe\nButter oder Remoulade",
       "instructions": "1. Brötchen aufschneiden und bestreichen.\n2. Matjes und Zwiebeln hineinlegen.",
-      "image": "/uploads/800e40cfcde44732b361324a5c8f9e75.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142736/smartbite_recipes/qrrywp7ws4p31guvhxzj.jpg"
     },
     {
       "id": "dish-gruenkohl",
@@ -98,7 +98,7 @@
       "isHighCarb": false,
       "ingredients": "Grünkohl (Glas/Frost)\nKohlatavwurst / Pinkel\nKartoffeln",
       "instructions": "1. Grünkohl mit Wurst im Topf langsam schmoren lassen.\n2. Dazu Salzkartoffeln servieren.",
-      "image": "/uploads/b0dc3314b7804b78add64adb8b05a7e9.webp"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142738/smartbite_recipes/h1u5mrnfiwud7nfwqjso.webp"
     },
     {
       "id": "dish-ofenkartoffeln",
@@ -108,7 +108,7 @@
       "isHighCarb": true,
       "ingredients": "Große Festkochende Kartoffeln\nOlivenöl, Salz\nQuark / Kräuterbutter",
       "instructions": "1. Kartoffeln mit Olivenöl und Salz einreiben und bei 200°C ca. 45-50 Min. im Ofen backen.\n2. Mit Kräuterquark servieren.",
-      "image": "/uploads/427b6315f0554f8d88a63657d0e422bf.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142738/smartbite_recipes/pqnxkaigz74xiexnyo7b.jpg"
     },
     {
       "id": "dish-paprika",
@@ -118,7 +118,7 @@
       "isHighCarb": false,
       "ingredients": "Paprikaschoten\nHackfleisch\nReis\nTomatensoße",
       "instructions": "1. Hackfleisch mit gekochtem Reis mischen und in die ausgehöhlten Paprika füllen.\n2. In eine Auflaufform stellen, Tomatensoße darum gießen und im Ofen bei 180°C ca. 40 Min. garen.",
-      "image": "/uploads/0b2dd037026444f5a2f313e85aad2cc5.webp"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142739/smartbite_recipes/kkb7ekw1hpw4btxpxcza.webp"
     },
     {
       "id": "dish-ofengemuese",
@@ -128,7 +128,7 @@
       "isHighCarb": false,
       "ingredients": "Karotten, Zucchini, Paprika, Kartoffeln\nOlivenöl, Kräuter der Provence, Feta",
       "instructions": "1. Gemüse klein schneiden, mit Öl und Gewürzen vermengen.\n2. Auf einem Blech bei 200°C ca. 30 Min. backen. Evtl. Feta drüberstreuen.",
-      "image": "/uploads/dde6f30620f140bf9c674a49f21a8f96.jpg"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142740/smartbite_recipes/fcylddtpjwujkwnbptla.jpg"
     },
     {
       "id": "dish-griessbrei",
@@ -138,7 +138,7 @@
       "isHighCarb": true,
       "ingredients": "500ml Milch\n5 EL Weichweizengrieß\n2 EL Zucker\nZimt & Zucker",
       "instructions": "1. Milch aufkochen, Grieß und Zucker einrühren.\n2. Unter Rühren kurz aufquellen lassen, mit Zimt & Zucker servieren.",
-      "image": "/uploads/7713fd80d75a435291c4aee41ed6c168.webp"
+      "image": "https://res.cloudinary.com/da6e8pwi/image/upload/v1790142741/smartbite_recipes/tcm09qssjqfst9smzsvd.webp"
     }
   ],
   "plan": [
