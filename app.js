@@ -224,7 +224,7 @@ function switchRecipeModalMode(mode) {
 function setModalMeatPill(val) {
     const input = document.getElementById('modal-edit-meat-val');
     if (input) input.value = val;
-    document.querySelectorAll('.modal-pill-select-btn').forEach(btn => {
+    document.querySelectorAll('#modal-dish-edit-form .modal-pill-select-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.val === val);
     });
 }
@@ -644,7 +644,7 @@ function switchView(viewName) {
 function setMeatPill(val) {
     const input = document.getElementById('dish-meat-val');
     if (input) input.value = val;
-    document.querySelectorAll('.pill-select-btn').forEach(btn => {
+    document.querySelectorAll('#dish-form .pill-select-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.val === val);
     });
 }
