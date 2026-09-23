@@ -222,7 +222,8 @@ function switchRecipeModalMode(mode) {
 }
 
 function setModalMeatPill(val) {
-    document.getElementById('modal-edit-meat-val').value = val;
+    const input = document.getElementById('modal-edit-meat-val');
+    if (input) input.value = val;
     document.querySelectorAll('.modal-pill-select-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.val === val);
     });
@@ -987,10 +988,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-edit-name').value = dish.name || '';
         document.getElementById('modal-edit-url').value = dish.sourceUrl || '';
         
-        if (dish.isMeat === 'baking') setModalMeatPill('baking');
-        else if (dish.isMeat === true) setModalMeatPill('meat');
-        else if (dish.isMeat === false) setModalMeatPill('veggie');
-        else setModalMeatPill('flex');
+        if (dish.isMeat === 'baking') {
+            setModalMeatPill('baking');
+        } else if (dish.isMeat === true) {
+            setModalMeatPill('meat');
+        } else if (dish.isMeat === false) {
+            setModalMeatPill('veggie');
+        } else {
+            setModalMeatPill('flex');
+        }
 
         document.getElementById('modal-edit-highcarb').checked = !!dish.isHighCarb;
         document.getElementById('modal-edit-emergency').checked = !!dish.isEmergency;
@@ -1090,11 +1096,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        const meatValInput = document.getElementById('modal-edit-meat-val').value;
+        const meatValInputEl = document.getElementById('modal-edit-meat-val');
+        const meatValRaw = meatValInputEl ? meatValInputEl.value : 'flex';
         let meatVal = null;
-        if (meatValInput === 'baking') meatVal = 'baking';
-        else if (meatValInput === 'meat') meatVal = true;
-        else if (meatValInput === 'veggie') meatVal = false;
+        if (meatValRaw === 'baking') meatVal = 'baking';
+        else if (meatValRaw === 'meat') meatVal = true;
+        else if (meatValRaw === 'veggie') meatVal = false;
 
         const updatedPayload = {
             id: editId,
