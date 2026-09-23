@@ -351,23 +351,35 @@ textarea {
     flex: 1;
 }
 
-/* 2-Zeilen Filter-Layout: "Alle" links über 2 Zeilen, rechts 2x3 Grid */
+/* Filter-Layout: Links Spalte mit "Alle" und "Kuchen", rechts 2x3 Grid */
 .filter-layout-container {
     display: grid;
-    grid-template-columns: 58px 1fr;
+    grid-template-columns: 78px 1fr;
     gap: 0.35rem;
     margin-bottom: 0.75rem;
     width: 100%;
 }
 
-.btn-filter-all-tall {
-    height: 100% !important;
-    min-height: 64px;
+.filter-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.btn-filter-side {
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 !important;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
+    width: 100%;
+}
+
+.btn-filter-baking.active {
+    background-color: #ec4899;
+    border-color: #ec4899;
+    color: #ffffff;
 }
 
 .filter-subgrid {
@@ -375,6 +387,47 @@ textarea {
     grid-template-columns: repeat(3, 1fr);
     gap: 0.35rem;
 }
+
+/* Kamera vs. Galerie Upload-Buttons */
+.upload-options-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.3rem;
+}
+
+.btn-upload-choice {
+    flex: 1;
+    background-color: var(--bg-input);
+    border: 1px dashed var(--border-color);
+    color: var(--text-main);
+    padding: 0.6rem 0.4rem;
+    border-radius: var(--radius);
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-upload-choice:hover {
+    border-color: var(--accent-primary);
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.hidden-file-input {
+    display: none;
+}
+
+.selected-file-hint {
+    font-size: 0.75rem;
+    color: var(--accent-success);
+    display: block;
+}
+
+.badge-pill-baking { background: #3b1e2b; color: #f472b6; }
 
 .filter-subgrid .btn-filter {
     padding: 0.4rem 0.15rem;

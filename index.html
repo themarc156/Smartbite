@@ -47,7 +47,10 @@
                 </div>
 
                 <div class="filter-layout-container">
-                    <button id="filter-all" class="btn-filter btn-filter-all-tall active">Alle</button>
+                    <div class="filter-left-col">
+                        <button id="filter-all" class="btn-filter btn-filter-side active">Alle</button>
+                        <button id="filter-baking" class="btn-filter btn-filter-side btn-filter-baking">🍰 Backen</button>
+                    </div>
                     <div class="filter-subgrid">
                         <button id="filter-veggie" class="btn-filter">🌱 Veggie</button>
                         <button id="filter-flex" class="btn-filter">🍲 Flexi</button>
@@ -84,14 +87,15 @@
                         <input type="text" id="dish-name" required placeholder="z.B. Lasagne Bolognese">
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" style="margin: 0;">
                         <label>Art des Gerichts:</label>
                         <div class="pill-selector-group">
-                            <button type="button" class="pill-select-btn" data-val="veggie">🌱 Veggie</button>
-                            <button type="button" class="pill-select-btn active" data-val="flex">🍲 Flexi</button>
-                            <button type="button" class="pill-select-btn" data-val="meat">🥩 Fleisch</button>
+                            <button type="button" class="modal-pill-select-btn" data-val="veggie">🌱 Veggie</button>
+                            <button type="button" class="modal-pill-select-btn active" data-val="flex">🍲 Flexi</button>
+                            <button type="button" class="modal-pill-select-btn" data-val="meat">🥩 Fleisch</button>
+                            <button type="button" class="modal-pill-select-btn" data-val="baking">🍰 Backen</button>
                         </div>
-                        <input type="hidden" id="dish-meat-val" value="flex">
+                        <input type="hidden" id="modal-edit-meat-val" value="flex">
                     </div>
 
                     <div class="checkbox-group-container" style="margin-top: 1rem;">
@@ -123,12 +127,22 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="dish-preview-file">🖼️ Schönes Foto für die App-Ansicht (Vorschau)</label>
-                        <input type="file" id="dish-preview-file" accept="image/*">
+                        <label>🖼️ Foto für die App-Ansicht:</label>
+                        <div class="upload-options-row">
+                            <label class="btn-upload-choice">
+                                📷 Foto knipsen
+                                <input type="file" id="dish-preview-file-cam" accept="image/*" capture="environment" class="hidden-file-input">
+                            </label>
+                            <label class="btn-upload-choice">
+                                🖼️ Aus Galerie
+                                <input type="file" id="dish-preview-file" accept="image/*" class="hidden-file-input">
+                            </label>
+                        </div>
+                        <span id="preview-file-name-label" class="selected-file-hint"></span>
                     </div>
 
                     <div class="form-group">
-                        <label for="dish-image-file">📸 Oder langer Screenshot / Infomaterial (optional)</label>
+                        <label for="dish-image-file">📸 Screenshot / Rezept-Details (Galerie/PDF):</label>
                         <input type="file" id="dish-image-file" accept="image/*">
                     </div>
                     
@@ -224,14 +238,15 @@
                         <input type="text" id="modal-edit-name" required placeholder="z.B. Lasagne">
                     </div>
 
-                    <div class="form-group" style="margin: 0;">
+                    <div class="form-group">
                         <label>Art des Gerichts:</label>
                         <div class="pill-selector-group">
-                            <button type="button" class="modal-pill-select-btn" data-val="veggie">🌱 Veggie</button>
-                            <button type="button" class="modal-pill-select-btn active" data-val="flex">🍲 Flexi</button>
-                            <button type="button" class="modal-pill-select-btn" data-val="meat">🥩 Fleisch</button>
+                            <button type="button" class="pill-select-btn" data-val="veggie">🌱 Veggie</button>
+                            <button type="button" class="pill-select-btn active" data-val="flex">🍲 Flexi</button>
+                            <button type="button" class="pill-select-btn" data-val="meat">🥩 Fleisch</button>
+                            <button type="button" class="pill-select-btn" data-val="baking">🍰 Backen</button>
                         </div>
-                        <input type="hidden" id="modal-edit-meat-val" value="flex">
+                        <input type="hidden" id="dish-meat-val" value="flex">
                     </div>
 
                     <div class="checkbox-group-container" style="margin: 0;">

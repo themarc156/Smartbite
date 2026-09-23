@@ -101,7 +101,9 @@ async function savePlanToApi() {
 function generate4WeekPlan() {
     const plan = [];
     const startMonday = getMonday(new Date());
-    const poolSource = appState.dishes.length > 0 ? appState.dishes : [];
+    // Kuchen & Backwaren werden strikt vom Speiseplan ausgeschlossen
+    const mainDishesOnly = (appState.dishes || []).filter(d => d.isMeat !== 'baking');
+    const poolSource = mainDishesOnly.length > 0 ? mainDishesOnly : [];
     if (poolSource.length === 0) return;
 
     let availablePool = [...poolSource];
@@ -248,7 +250,10 @@ function openRecipeModal(dish) {
     badgesContainer.innerHTML = '';
     
     const typeBadge = document.createElement('span');
-    if (dish.isMeat === true) {
+    if (dish.isMeat === 'baking') {
+        typeBadge.className = 'badge-pill badge-pill-baking';
+        typeBadge.textContent = '🍰 Backen';
+    } else if (dish.isMeat === true) {
         typeBadge.className = 'badge-pill badge-pill-meat';
         typeBadge.textContent = '🥩 Fleisch';
     } else if (dish.isMeat === false) {
@@ -320,19 +325,26 @@ function renderApp() {
             );
         }
         
-        if (appState.activeFilter === 'highcarb') {
-            filteredDishes = filteredDishes.filter(d => d.isHighCarb);
-        } else if (appState.activeFilter === 'lowcarb') {
-            // Zeigt alle Gerichte, die NICHT High-Carb sind
-            filteredDishes = filteredDishes.filter(d => !d.isHighCarb);
-        } else if (appState.activeFilter === 'emergency') {
-            filteredDishes = filteredDishes.filter(d => d.isEmergency);
-        } else if (appState.activeFilter === 'veggie') {
-            filteredDishes = filteredDishes.filter(d => d.isMeat === false);
-        } else if (appState.activeFilter === 'flex') {
-            filteredDishes = filteredDishes.filter(d => d.isMeat === null);
-        } else if (appState.activeFilter === 'meat') {
-            filteredDishes = filteredDishes.filter(d => d.isMeat === true);
+        if (appState.activeFilter === 'baking') {
+            // Exklusiv nur Kuchen & Backrezepte anzeigen
+            filteredDishes = filteredDishes.filter(d => d.isMeat === 'baking');
+        } else {
+            // Alle anderen Filter (inklusive 'Alle') blenden Backrezepte aus
+            filteredDishes = filteredDishes.filter(d => d.isMeat !== 'baking');
+
+            if (appState.activeFilter === 'highcarb') {
+                filteredDishes = filteredDishes.filter(d => d.isHighCarb);
+            } else if (appState.activeFilter === 'lowcarb') {
+                filteredDishes = filteredDishes.filter(d => !d.isHighCarb);
+            } else if (appState.activeFilter === 'emergency') {
+                filteredDishes = filteredDishes.filter(d => d.isEmergency);
+            } else if (appState.activeFilter === 'veggie') {
+                filteredDishes = filteredDishes.filter(d => d.isMeat === false);
+            } else if (appState.activeFilter === 'flex') {
+                filteredDishes = filteredDishes.filter(d => d.isMeat === null);
+            } else if (appState.activeFilter === 'meat') {
+                filteredDishes = filteredDishes.filter(d => d.isMeat === true);
+            }
         }
 
         dishCountSpan.textContent = filteredDishes.length;
@@ -633,7 +645,8 @@ function openEditRecipeForm(dish) {
     document.getElementById('dish-edit-id').value = dish.id;
     document.getElementById('dish-name').value = dish.name || '';
     
-    if (dish.isMeat === true) setMeatPill('meat');
+    if (dish.isMeat === 'baking') setMeatPill('baking');
+    else if (dish.isMeat === true) setMeatPill('meat');
     else if (dish.isMeat === false) setMeatPill('veggie');
     else setMeatPill('flex');
 
@@ -758,7 +771,8 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-edit-name').value = dish.name || '';
         document.getElementById('modal-edit-url').value = dish.sourceUrl || '';
         
-        if (dish.isMeat === true) setModalMeatPill('meat');
+        if (dish.isMeat === 'baking') setModalMeatPill('baking');
+        else if (dish.isMeat === true) setModalMeatPill('meat');
         else if (dish.isMeat === false) setModalMeatPill('veggie');
         else setModalMeatPill('flex');
 
@@ -853,8 +867,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const meatValInput = document.getElementById('modal-edit-meat-val').value;
         let meatVal = null;
-        if (meatValInput === 'meat') meatVal = true;
-        if (meatValInput === 'veggie') meatVal = false;
+        if (meatValInput === 'baking') meatVal = 'baking';
+        else if (meatValInput === 'meat') meatVal = true;
+        else if (meatValInput === 'veggie') meatVal = false;
 
         const updatedPayload = {
             id: editId,
@@ -975,6 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const filterButtons = {
         all: document.getElementById('filter-all'),
+        baking: document.getElementById('filter-baking'),
         veggie: document.getElementById('filter-veggie'),
         flex: document.getElementById('filter-flex'),
         meat: document.getElementById('filter-meat'),
@@ -1007,6 +1023,18 @@ document.addEventListener('DOMContentLoaded', () => {
             setMeatPill(btn.dataset.val);
         });
     });
+
+    // Dateinamen-Feedback bei Foto-Auswahl
+    const hintLabel = document.getElementById('preview-file-name-label');
+    const updateHint = (input) => {
+        if (input.files.length > 0 && hintLabel) {
+            hintLabel.textContent = `✓ Foto ausgewählt: ${input.files[0].name}`;
+        }
+    };
+    const camInput = document.getElementById('dish-preview-file-cam');
+    const galInput = document.getElementById('dish-preview-file');
+    if (camInput) camInput.addEventListener('change', () => updateHint(camInput));
+    if (galInput) galInput.addEventListener('change', () => updateHint(galInput));
 
     document.getElementById('dish-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -1053,6 +1081,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const editId = document.getElementById('dish-edit-id').value;
         const existingDish = editId ? appState.dishes.find(d => d.id === editId) : null;
 
+        // Dateiauswahl für Kamera/Galerie abfangen
+        const camFile = document.getElementById('dish-preview-file-cam');
+        const selectedPreviewFile = (camFile && camFile.files.length > 0) ? camFile.files[0] : (previewFileInput && previewFileInput.files.length > 0 ? previewFileInput.files[0] : null);
+
+        if (selectedPreviewFile) {
+            const formData = new FormData();
+            formData.append('image', selectedPreviewFile);
+            try {
+                const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                const uploadData = await uploadRes.json();
+                previewImageUrl = uploadData.imageUrl || '';
+            } catch (err) {
+                console.error('Vorschaubild-Upload fehlgeschlagen:', err);
+            }
+        }
+
         if (!imageUrl && existingDish && existingDish.image) {
             imageUrl = existingDish.image;
         }
@@ -1061,8 +1105,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let meatVal = null;
-        if (meatValInput.value === 'meat') meatVal = true;
-        if (meatValInput.value === 'veggie') meatVal = false;
+        if (meatValInput.value === 'baking') meatVal = 'baking';
+        else if (meatValInput.value === 'meat') meatVal = true;
+        else if (meatValInput.value === 'veggie') meatVal = false;
 
         const dishPayload = {
             id: editId || undefined,

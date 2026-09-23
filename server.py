@@ -97,9 +97,16 @@ def save_dish():
     payload = request.json
     dish_id = payload.get("id") or f"dish-{uuid.uuid4().hex[:8]}"
     
-    # isMeat kann jetzt True (Fleisch), False (Veggie) oder None (Flexibel) sein
+    # isMeat: True (Fleisch), False (Veggie), "baking" (Backen/Kuchen) oder None (Flexibel)
     raw_meat = payload.get("isMeat")
-    meat_val = True if raw_meat is True else (False if raw_meat is False else None)
+    if raw_meat == "baking":
+        meat_val = "baking"
+    elif raw_meat is True:
+        meat_val = True
+    elif raw_meat is False:
+        meat_val = False
+    else:
+        meat_val = None
 
     new_dish = {
         "id": dish_id,
