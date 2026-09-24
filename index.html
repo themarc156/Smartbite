@@ -60,10 +60,9 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <p id="database-instruction" class="subtitle" style="margin-bottom: 1rem;">
-                        Klicke auf den Rezeptnamen, um die Details zu öffnen.
-                    </p>
+                <div class="card" style="padding: 0; background: transparent; border: none;">
+                    <!-- Unsichtbarer Anker zur Vermeidung von JS-Fehlern -->
+                    <span id="database-instruction" class="hidden"></span>
                     <ul id="dish-list" class="dish-list"></ul>
                 </div>
             </div>
