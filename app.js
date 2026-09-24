@@ -710,7 +710,7 @@ function renderApp() {
 
 const VIEW_ORDER = ['plan', 'database', 'add'];
 
-function switchView(viewName) {
+function switchView(viewName, animationType = 'fade') {
     const views = {
         plan: document.getElementById('view-plan'),
         database: document.getElementById('view-database'),
@@ -724,11 +724,24 @@ function switchView(viewName) {
     };
 
     Object.keys(views).forEach(key => {
-        if (views[key]) views[key].classList.add('hidden');
+        if (views[key]) {
+            views[key].classList.add('hidden');
+            views[key].classList.remove('view-enter-from-right', 'view-enter-from-left', 'view-enter-fade');
+        }
         if (tabs[key]) tabs[key].classList.remove('active');
     });
 
-    if (views[viewName]) views[viewName].classList.remove('hidden');
+    const activeViewEl = views[viewName];
+    if (activeViewEl) {
+        activeViewEl.classList.remove('hidden');
+        if (animationType === 'forward') {
+            activeViewEl.classList.add('view-enter-from-right');
+        } else if (animationType === 'backward') {
+            activeViewEl.classList.add('view-enter-from-left');
+        } else {
+            activeViewEl.classList.add('view-enter-fade');
+        }
+    }
     if (tabs[viewName]) tabs[viewName].classList.add('active');
 
     appState.currentView = viewName;
@@ -744,9 +757,10 @@ function navigateViewByOffset(offset) {
     const newIndex = currentIndex + offset;
     if (newIndex >= 0 && newIndex < VIEW_ORDER.length) {
         const targetView = VIEW_ORDER[newIndex];
+        const animationType = offset > 0 ? 'forward' : 'backward';
         appState.selectModeForDayId = null;
         if (targetView === 'add') resetDishForm();
-        switchView(targetView);
+        switchView(targetView, animationType);
         if (targetView !== 'add') renderApp();
     }
 }
@@ -1310,20 +1324,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('nav-btn-plan').addEventListener('click', () => {
         appState.selectModeForDayId = null;
-        switchView('plan');
+        const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
+        const targetIdx = 0;
+        const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
+        switchView('plan', anim);
         renderApp();
     });
 
     document.getElementById('nav-btn-database').addEventListener('click', () => {
         appState.selectModeForDayId = null;
-        switchView('database');
+        const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
+        const targetIdx = 1;
+        const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
+        switchView('database', anim);
         renderApp();
     });
 
     document.getElementById('nav-btn-add').addEventListener('click', () => {
         appState.selectModeForDayId = null;
+        const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
+        const targetIdx = 2;
+        const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
         resetDishForm();
-        switchView('add');
+        switchView('add', anim);
     });
 
     const btnCancelEdit = document.getElementById('btn-cancel-edit');

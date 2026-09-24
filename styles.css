@@ -136,6 +136,51 @@ body {
 
 .app-view {
     width: 100%;
+    will-change: transform, opacity;
+}
+
+/* Schnelle Richtungs-Animationen beim Swipen & Tab-Wechsel */
+.view-enter-from-right {
+    animation: slideInFromRight 0.18s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.view-enter-from-left {
+    animation: slideInFromLeft 0.18s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.view-enter-fade {
+    animation: fadeInView 0.15s ease-out forwards;
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0.3;
+        transform: translateX(25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0.3;
+        transform: translateX(-25px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInView {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .view-header {
