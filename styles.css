@@ -29,12 +29,19 @@
     height: 0px;
 }
 
-body {
+html, body {
     background-color: var(--bg-main);
     color: var(--text-main);
     font-family: var(--font-stack);
-    padding: var(--spacing);
     line-height: 1.5;
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+body {
+    padding: var(--spacing);
+    box-sizing: border-box;
 }
 
 /* Layout mit fester Header-Leiste */
@@ -120,10 +127,16 @@ body {
     max-width: 900px;
     margin: 0 auto;
     width: 100%;
+    overflow-x: hidden;
+    touch-action: pan-y; /* Erlaubt dem Browser vertikales Scrollen, blockiert horizontales Wackeln */
+    box-sizing: border-box;
 }
 
 .app-view {
     width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
     will-change: transform, opacity;
 }
 
@@ -143,22 +156,22 @@ body {
 @keyframes slideInFromRight {
     from {
         opacity: 0.3;
-        transform: translateX(25px);
+        transform: translate3d(20px, 0, 0);
     }
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
 @keyframes slideInFromLeft {
     from {
         opacity: 0.3;
-        transform: translateX(-25px);
+        transform: translate3d(-20px, 0, 0);
     }
     to {
         opacity: 1;
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
     }
 }
 
