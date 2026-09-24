@@ -13,9 +13,18 @@
             <h1>🧠 SmartBite</h1>
         </div>
         <nav class="nav-tabs">
-            <button id="nav-btn-plan" class="nav-tab active">📅 Speiseplan</button>
-            <button id="nav-btn-database" class="nav-tab">🍔 Gerichte-Datenbank</button>
-            <button id="nav-btn-add" class="nav-tab">➕ Neues Rezept</button>
+            <button id="nav-btn-plan" class="nav-tab active">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">Speiseplan</span>
+            </button>
+            <button id="nav-btn-database" class="nav-tab">
+                <span class="nav-icon">🍔</span>
+                <span class="nav-label">Rezepte</span>
+            </button>
+            <button id="nav-btn-add" class="nav-tab">
+                <span class="nav-icon">➕</span>
+                <span class="nav-label">Neu</span>
+            </button>
         </nav>
     </header>
 
@@ -187,22 +196,22 @@
     <!-- Modal: Rezept Detail-Ansicht & In-Place Bearbeitung -->
     <div id="recipe-view-modal" class="modal hidden">
         <div class="modal-content recipe-view-content">
-            <!-- 1. HEADER FÜR LESE-MODUS -->
-            <header id="recipe-view-header" class="modal-header">
-                <button id="btn-close-recipe-view" class="btn btn-danger btn-close-top">✖</button>
-                <h2 id="recipe-view-title">Rezeptname</h2>
-                <div class="header-action-group">
-                    <button id="btn-edit-recipe" class="btn btn-primary">✏️ Bearbeiten</button>
+            <!-- 1. HEADER FÜR LESE-MODUS (Kollisionsfrei) -->
+            <header id="recipe-view-header" class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button id="btn-close-recipe-view" class="btn btn-danger btn-close-top">✖</button>
+                    <button id="btn-edit-recipe" class="btn btn-primary btn-icon-only" title="Rezept bearbeiten">✏️</button>
                 </div>
+                <h2 id="recipe-view-title" class="recipe-modal-title">Rezeptname</h2>
             </header>
 
             <!-- 2. HEADER FÜR BEARBEITUNGS-MODUS -->
-            <header id="recipe-edit-header" class="modal-header hidden">
-                <h2 id="recipe-edit-modal-title">Rezept bearbeiten</h2>
-                <div class="header-action-group">
+            <header id="recipe-edit-header" class="modal-header modal-header-stacked hidden">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-modal-cancel-edit" class="btn btn-primary btn-close-top" style="background: var(--bg-input); border: 1px solid var(--border-color);">✖</button>
                     <button type="button" id="btn-modal-delete-dish" class="btn btn-danger">🗑️ Löschen</button>
-                    <button type="button" id="btn-modal-cancel-edit" class="btn btn-primary" style="background: var(--bg-input); border: 1px solid var(--border-color);">Abbrechen ✖</button>
                 </div>
+                <h2 id="recipe-edit-modal-title" class="recipe-modal-title">Rezept bearbeiten</h2>
             </header>
             
             <!-- BODY LESE-MODUS -->
