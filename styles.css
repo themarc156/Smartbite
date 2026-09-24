@@ -669,31 +669,32 @@ textarea {
     background-color: rgba(52, 152, 219, 0.1);
 }
 
-/* Speiseplan-Karten: Links Datum gestapelt, mittig Bild & voller Rezeptname, rechts Tausch-Button */
+/* Speiseplan-Karten: Komfortable Höhe & Ausnutzung des Displays */
 .modal-day-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-left: 4px solid var(--accent-primary);
     border-radius: var(--radius);
-    padding: 0.5rem 0.6rem;
+    padding: 0.75rem 0.7rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.6rem;
     user-select: none;
+    min-height: 60px;
 }
 
 .modal-day-info-wrapper { 
     flex: 1; 
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     min-width: 0;
 }
 
-/* Wochentag oben, Datum darunter */
+/* Wochentag gekürzt (Mo, Di...), Bild rückt weit nach links */
 .modal-day-name-col {
-    width: 78px;
+    width: 46px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -703,8 +704,8 @@ textarea {
 }
 
 .modal-day-weekday {
-    font-size: 0.82rem;
-    font-weight: 700;
+    font-size: 0.92rem;
+    font-weight: 800;
     color: var(--text-main);
     white-space: nowrap;
 }
@@ -712,8 +713,14 @@ textarea {
 .modal-day-date-text {
     font-size: 0.72rem;
     color: var(--text-muted);
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
+}
+
+.plan-dish-thumb, .plan-dish-thumb-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
 }
 
 .modal-dish-row { 
@@ -746,13 +753,17 @@ textarea {
     }
 
     .plan-dish-thumb, .plan-dish-thumb-placeholder {
-        width: 34px;
-        height: 34px;
+        width: 42px;
+        height: 42px;
     }
 
     .btn-icon-action {
-        padding: 0.3rem 0.45rem;
-        font-size: 0.85rem;
+        padding: 0.4rem 0.55rem;
+        font-size: 0.95rem;
+    }
+
+    .modal-plan-grid {
+        gap: 0.5rem;
     }
 }
 

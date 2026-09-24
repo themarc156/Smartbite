@@ -98,10 +98,19 @@ async function savePlanToApi() {
     });
 }
 
+const WEEKDAY_SHORT = {
+    'Montag': 'Mo',
+    'Dienstag': 'Di',
+    'Mittwoch': 'Mi',
+    'Donnerstag': 'Do',
+    'Freitag': 'Fr',
+    'Samstag': 'Sa',
+    'Sonntag': 'So'
+};
+
 function generate4WeekPlan() {
     const plan = [];
     const startMonday = getMonday(new Date());
-    // Kuchen & Backwaren werden strikt vom Speiseplan ausgeschlossen
     const mainDishesOnly = (appState.dishes || []).filter(d => d.isMeat !== 'baking');
     const poolSource = mainDishesOnly.length > 0 ? mainDishesOnly : [];
     if (poolSource.length === 0) return;
@@ -507,11 +516,12 @@ function renderApp() {
                 const infoWrapper = document.createElement('div');
                 infoWrapper.className = 'modal-day-info-wrapper';
 
-                // Spalte 1: Wochentag oben, Datum darunter gestapelt (ohne Badge)
+                // Spalte 1: Wochentag-Kürzel oben (Mo, Di...), Datum darunter
+                const shortDay = WEEKDAY_SHORT[day.dayName] || day.dayName.slice(0, 2);
                 const dateCol = document.createElement('div');
                 dateCol.className = 'modal-day-name-col';
                 dateCol.innerHTML = `
-                    <span class="modal-day-weekday">${day.dayName}</span>
+                    <span class="modal-day-weekday">${shortDay}</span>
                     <span class="modal-day-date-text">${day.dateString}</span>
                 `;
 
