@@ -2,6 +2,54 @@ const CONFIG = Object.freeze({
     TOTAL_DAYS: 28 
 });
 
+// Komprimiert hochauflösende Smartphone-Fotos blitzschnell im Browser
+async function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
+    if (!file || !file.type.startsWith('image/')) return file;
+    
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth || height > maxWidth) {
+                    if (width > height) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    } else {
+                        width = Math.round((width * maxWidth) / height);
+                        height = maxWidth;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        resolve(file);
+                        return;
+                    }
+                    const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = () => resolve(file);
+        };
+        reader.onerror = () => resolve(file);
+    });
+}
+
 let wakeLockSentinel = null;
 
 const appState = {
@@ -1099,10 +1147,11 @@ document.addEventListener('DOMContentLoaded', () => {
         let imageUrl = existingDish ? (existingDish.image || '') : '';
         let previewImageUrl = existingDish ? (existingDish.previewImage || '') : '';
 
-        // Screenshot hochladen
+        // Screenshot komprimieren & hochladen
         if (fileInput.files.length > 0) {
+            const compressed = await compressImageFile(fileInput.files[0], 1600, 0.85);
             const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
+            formData.append('image', compressed);
             try {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
                 const uploadData = await uploadRes.json();
@@ -1112,15 +1161,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Vorschaubild hochladen (Kamera oder Galerie)
+        // Vorschaubild komprimieren & hochladen (Kamera oder Galerie)
         const modalCamFile = document.getElementById('modal-edit-preview-file-cam');
         const selectedModalPreviewFile = (modalCamFile && modalCamFile.files.length > 0) 
             ? modalCamFile.files[0] 
             : (previewFileInput && previewFileInput.files.length > 0 ? previewFileInput.files[0] : null);
 
         if (selectedModalPreviewFile) {
+            const compressedPreview = await compressImageFile(selectedModalPreviewFile, 1200, 0.82);
             const formData = new FormData();
-            formData.append('image', selectedModalPreviewFile);
+            formData.append('image', compressedPreview);
             try {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
                 const uploadData = await uploadRes.json();
@@ -1329,8 +1379,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let previewImageUrl = '';
 
         if (fileInput.files.length > 0) {
+            const compressed = await compressImageFile(fileInput.files[0], 1600, 0.85);
             const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
+            formData.append('image', compressed);
             try {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
                 const uploadData = await uploadRes.json();
@@ -1340,28 +1391,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (previewFileInput && previewFileInput.files.length > 0) {
-            const formData = new FormData();
-            formData.append('image', previewFileInput.files[0]);
-            try {
-                const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
-                const uploadData = await uploadRes.json();
-                previewImageUrl = uploadData.imageUrl || '';
-            } catch (err) {
-                console.error('Vorschaubild-Upload fehlgeschlagen:', err);
-            }
-        }
-
         const editId = document.getElementById('dish-edit-id').value;
         const existingDish = editId ? appState.dishes.find(d => d.id === editId) : null;
 
-        // Dateiauswahl für Kamera/Galerie abfangen
+        // Dateiauswahl für Kamera/Galerie abfangen & komprimieren
         const camFile = document.getElementById('dish-preview-file-cam');
         const selectedPreviewFile = (camFile && camFile.files.length > 0) ? camFile.files[0] : (previewFileInput && previewFileInput.files.length > 0 ? previewFileInput.files[0] : null);
 
         if (selectedPreviewFile) {
+            const compressedPreview = await compressImageFile(selectedPreviewFile, 1200, 0.82);
             const formData = new FormData();
-            formData.append('image', selectedPreviewFile);
+            formData.append('image', compressedPreview);
             try {
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
                 const uploadData = await uploadRes.json();
