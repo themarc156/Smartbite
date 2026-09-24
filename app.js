@@ -708,13 +708,21 @@ function renderApp() {
     if (nextBtn) nextBtn.disabled = (appState.currentWeekPage === 3);
 }
 
-const VIEW_ORDER = ['plan', 'database', 'add'];
+const VIEW_ORDER = ['shopping', 'plan', 'database', 'add'];
 
 function switchView(viewName, animationType = 'fade') {
     const views = {
+        shopping: document.getElementById('view-shopping'),
         plan: document.getElementById('view-plan'),
         database: document.getElementById('view-database'),
         add: document.getElementById('view-add')
+    };
+
+    const tabs = {
+        shopping: document.getElementById('nav-btn-shopping'),
+        plan: document.getElementById('nav-btn-plan'),
+        database: document.getElementById('nav-btn-database'),
+        add: document.getElementById('nav-btn-add')
     };
 
     const tabs = {
@@ -910,8 +918,12 @@ const SUPERMARKET_CATEGORIES = [
     }
 ];
 
-let shoppingTimeframe = 'kw'; // 'kw' oder '7days'
-let customShoppingItems = [];
+let shoppingTimeframe = '7days'; // '7days', '3days', 'week'
+let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
+
+function saveCustomShoppingItems() {
+    localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
+}
 
 function categorizeIngredient(text) {
     const lower = text.toLowerCase();
@@ -952,24 +964,22 @@ function parseAndAggregateIngredients(rawList) {
     return aggregated;
 }
 
-function renderShoppingListModal() {
+function renderShoppingList() {
     let daysToInclude = [];
-    let titleText = '';
+    const todayMs = new Date().setHours(0, 0, 0, 0);
+    const upcomingDays = (appState.currentPlan || []).filter(d => d.dateTimeline >= todayMs);
 
-    if (shoppingTimeframe === 'kw') {
-        const startIdx = appState.currentWeekPage * 7;
-        daysToInclude = appState.currentPlan.slice(startIdx, startIdx + 7);
-        const kw = daysToInclude.length > 0 ? daysToInclude[0].kw : '--';
-        titleText = `🛒 Einkaufsliste (KW ${kw})`;
+    if (shoppingTimeframe === '3days') {
+        daysToInclude = upcomingDays.slice(0, 3);
+    } else if (shoppingTimeframe === 'week') {
+        // Berechnet alle verbleibenden Tage bis zum kommenden Sonntag
+        const currentDayIndex = new Date().getDay(); // 0 = Sonntag, 1 = Montag...
+        const daysUntilSunday = currentDayIndex === 0 ? 1 : (7 - currentDayIndex + 1);
+        daysToInclude = upcomingDays.slice(0, daysUntilSunday);
     } else {
-        const todayMs = new Date().setHours(0, 0, 0, 0);
-        // Sortiert und sucht die nächsten 7 Tage ab heute im gesamten 28-Tage-Plan
-        const upcoming = appState.currentPlan.filter(d => d.dateTimeline >= todayMs);
-        daysToInclude = (upcoming.length >= 7) ? upcoming.slice(0, 7) : appState.currentPlan.slice(0, 7);
-        titleText = `🛒 Einkaufsliste (Nächste 7 Tage)`;
+        // Standard: 7 Tage ab heute
+        daysToInclude = upcomingDays.length >= 7 ? upcomingDays.slice(0, 7) : (appState.currentPlan || []).slice(0, 7);
     }
-
-    document.getElementById('shopping-list-title').textContent = titleText;
 
     const rawIngredients = [];
     const unparsedDishes = [];
@@ -1019,12 +1029,14 @@ function renderShoppingListModal() {
     });
 
     // Manuelle Artikel einbinden
+    const customCat = '📝 Manuell hinzugefügt';
     if (customShoppingItems.length > 0) {
-        const customCat = '📝 Manuell hinzugefügt';
-        categorizedMap[customCat] = customShoppingItems.map(name => ({
-            displayName: name,
+        categorizedMap[customCat] = customShoppingItems.map(itemObj => ({
+            id: typeof itemObj === 'string' ? itemObj : itemObj.id,
+            displayName: typeof itemObj === 'string' ? itemObj : itemObj.name,
             category: customCat,
-            sources: [{ amount: '', dishName: 'Eigener Artikel' }]
+            isCustom: true,
+            sources: []
         }));
     }
 
@@ -1032,12 +1044,11 @@ function renderShoppingListModal() {
     container.innerHTML = '';
 
     if (Object.keys(categorizedMap).length === 0) {
-        container.innerHTML = '<p class="subtitle" style="text-align: center;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
+        container.innerHTML = '<p class="subtitle" style="text-align: center; margin-top: 2rem;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
         return;
     }
 
-    // Gerenderte Kategorien in fester Reihenfolge ausgeben
-    const allKnownCatNames = [...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel', '📝 Manuell hinzugefügt'];
+    const allKnownCatNames = ['📝 Manuell hinzugefügt', ...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel'];
 
     allKnownCatNames.forEach(catName => {
         const items = categorizedMap[catName];
@@ -1058,19 +1069,40 @@ function renderShoppingListModal() {
             const li = document.createElement('li');
             li.className = 'ingredient-item';
 
+            const leftDiv = document.createElement('div');
+            leftDiv.className = 'ingredient-left';
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
 
             const textSpan = document.createElement('span');
-            
-            // Formatierung: 500g Hackfleisch (Bolognese) oder 2x Zwiebel (Suppe, Pizza)
-            const amountsText = item.sources.map(s => s.amount ? `${s.amount} [${s.dishName}]` : `[${s.dishName}]`).join(', ');
-            textSpan.innerHTML = `<strong>${item.displayName}</strong> <span style="font-size: 0.78rem; color: var(--text-muted);">(${amountsText})</span>`;
+            if (item.isCustom) {
+                textSpan.innerHTML = `<strong>${item.displayName}</strong>`;
+            } else {
+                const amountsText = item.sources.map(s => s.amount ? `${s.amount} [${s.dishName}]` : `[${s.dishName}]`).join(', ');
+                textSpan.innerHTML = `<strong>${item.displayName}</strong> <span style="font-size: 0.76rem; color: var(--text-muted);">(${amountsText})</span>`;
+            }
 
-            li.appendChild(checkbox);
-            li.appendChild(textSpan);
+            leftDiv.appendChild(checkbox);
+            leftDiv.appendChild(textSpan);
+            li.appendChild(leftDiv);
 
-            li.addEventListener('click', (e) => {
+            // Löschbutton für manuelle Einträge
+            if (item.isCustom) {
+                const delBtn = document.createElement('button');
+                delBtn.className = 'btn-delete-custom-item';
+                delBtn.textContent = '✖';
+                delBtn.title = 'Artikel löschen';
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.id) !== item.id);
+                    saveCustomShoppingItems();
+                    renderShoppingList();
+                });
+                li.appendChild(delBtn);
+            }
+
+            leftDiv.addEventListener('click', (e) => {
                 if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
                 li.classList.toggle('checked', checkbox.checked);
             });
@@ -1081,11 +1113,6 @@ function renderShoppingListModal() {
         groupEl.appendChild(listEl);
         container.appendChild(groupEl);
     });
-}
-
-function openShoppingListModal() {
-    renderShoppingListModal();
-    document.getElementById('shopping-list-modal').classList.remove('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1113,31 +1140,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Einkaufsliste öffnen & schließen
-    document.getElementById('btn-open-shopping-list').addEventListener('click', openShoppingListModal);
-    document.getElementById('btn-close-shopping-list').addEventListener('click', () => {
-        shoppingListModal.classList.add('hidden');
+    // Tab 0: Einkauf
+    document.getElementById('nav-btn-shopping').addEventListener('click', () => {
+        appState.selectModeForDayId = null;
+        const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
+        const targetIdx = 0;
+        const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
+        switchView('shopping', anim);
+        renderShoppingList();
     });
 
-    // Zeitraum-Buttons im Einkaufslisten-Modal
-    const btnTfKw = document.getElementById('btn-timeframe-kw');
+    // Zeitraum-Buttons in der Einkaufsliste
     const btnTf7Days = document.getElementById('btn-timeframe-7days');
+    const btnTf3Days = document.getElementById('btn-timeframe-3days');
+    const btnTfWeek = document.getElementById('btn-timeframe-week');
 
-    if (btnTfKw && btnTf7Days) {
-        btnTfKw.addEventListener('click', () => {
-            shoppingTimeframe = 'kw';
-            btnTfKw.classList.add('active');
-            btnTf7Days.classList.remove('active');
-            renderShoppingListModal();
-        });
+    const updateTimeframeButtons = (activeBtn, mode) => {
+        [btnTf7Days, btnTf3Days, btnTfWeek].forEach(b => { if (b) b.classList.remove('active'); });
+        if (activeBtn) activeBtn.classList.add('active');
+        shoppingTimeframe = mode;
+        renderShoppingList();
+    };
 
-        btnTf7Days.addEventListener('click', () => {
-            shoppingTimeframe = '7days';
-            btnTf7Days.classList.add('active');
-            btnTfKw.classList.remove('active');
-            renderShoppingListModal();
-        });
-    }
+    if (btnTf7Days) btnTf7Days.addEventListener('click', () => updateTimeframeButtons(btnTf7Days, '7days'));
+    if (btnTf3Days) btnTf3Days.addEventListener('click', () => updateTimeframeButtons(btnTf3Days, '3days'));
+    if (btnTfWeek) btnTfWeek.addEventListener('click', () => updateTimeframeButtons(btnTfWeek, 'week'));
 
     // Manuelle Artikel hinzufügen
     const customInput = document.getElementById('shopping-custom-input');
@@ -1146,26 +1173,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleAddCustom = () => {
         const val = customInput.value.trim();
         if (val) {
-            customShoppingItems.push(val);
+            customShoppingItems.push({ id: `custom-${Date.now()}`, name: val });
+            saveCustomShoppingItems();
             customInput.value = '';
-            renderShoppingListModal();
+            renderShoppingList();
         }
     };
 
     if (btnAddCustom) btnAddCustom.addEventListener('click', handleAddCustom);
     if (customInput) customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddCustom(); });
 
-    // Als Text in die Zwischenablage kopieren (z.B. für WhatsApp)
+    // Erledigte manuelle Artikel aufräumen
+    const btnClearCompleted = document.getElementById('btn-clear-completed-items');
+    if (btnClearCompleted) {
+        btnClearCompleted.addEventListener('click', () => {
+            document.querySelectorAll('.shopping-category-group .ingredient-item.checked').forEach(item => {
+                const delBtn = item.querySelector('.btn-delete-custom-item');
+                if (delBtn) delBtn.click();
+            });
+        });
+    }
+
+    // Als Text kopieren (z.B. für WhatsApp)
     const btnCopy = document.getElementById('btn-copy-shopping-list');
     if (btnCopy) {
         btnCopy.addEventListener('click', () => {
-            let text = `${document.getElementById('shopping-list-title').textContent}\n\n`;
+            let text = `🛒 SmartBite Einkaufsliste\n\n`;
             document.querySelectorAll('.shopping-category-group').forEach(group => {
                 const catTitle = group.querySelector('.shopping-category-title').textContent;
                 text += `--- ${catTitle} ---\n`;
                 group.querySelectorAll('.ingredient-item').forEach(item => {
                     if (!item.classList.contains('checked')) {
-                        text += `• ${item.querySelector('span').textContent}\n`;
+                        const labelText = item.querySelector('strong') ? item.querySelector('strong').textContent : '';
+                        text += `• ${labelText}\n`;
                     }
                 });
                 text += '\n';
@@ -1325,7 +1365,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-btn-plan').addEventListener('click', () => {
         appState.selectModeForDayId = null;
         const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
-        const targetIdx = 0;
+        const targetIdx = 1;
         const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
         switchView('plan', anim);
         renderApp();
@@ -1334,7 +1374,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-btn-database').addEventListener('click', () => {
         appState.selectModeForDayId = null;
         const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
-        const targetIdx = 1;
+        const targetIdx = 2;
         const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
         switchView('database', anim);
         renderApp();
@@ -1343,7 +1383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('nav-btn-add').addEventListener('click', () => {
         appState.selectModeForDayId = null;
         const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
-        const targetIdx = 2;
+        const targetIdx = 3;
         const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
         resetDishForm();
         switchView('add', anim);

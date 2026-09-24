@@ -24,6 +24,10 @@
             <h1>SmartBite</h1>
         </div>
         <nav class="nav-tabs">
+            <button id="nav-btn-shopping" class="nav-tab">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Einkauf</span>
+            </button>
             <button id="nav-btn-plan" class="nav-tab active">
                 <span class="nav-icon">📅</span>
                 <span class="nav-label">Speiseplan</span>
@@ -40,15 +44,46 @@
     </header>
 
     <main class="main-content-area">
+        <!-- VIEW 0: Smarte Einkaufsliste -->
+        <section id="view-shopping" class="app-view hidden">
+            <div class="view-header plan-header-single-row">
+                <h2 style="font-size: 1.05rem; margin: 0; color: var(--accent-primary);">🛒 Einkaufsliste</h2>
+                <div style="display: flex; gap: 0.4rem;">
+                    <button id="btn-clear-completed-items" class="btn btn-nav" style="width: auto; padding: 0 0.5rem !important; font-size: 0.78rem;" title="Erledigte abräumen">🧹 Aufräumen</button>
+                    <button id="btn-copy-shopping-list" class="btn btn-primary btn-shopping-compact" title="Als Text kopieren">📋 Kopieren</button>
+                </div>
+            </div>
+
+            <!-- Zeitraum-Wähler ab heute -->
+            <div class="shopping-timeframe-toggle">
+                <button id="btn-timeframe-7days" class="btn-filter active">Nächste 7 Tage</button>
+                <button id="btn-timeframe-3days" class="btn-filter">Nächste 3 Tage</button>
+                <button id="btn-timeframe-week" class="btn-filter">Bis Sonntag</button>
+            </div>
+
+            <!-- Hinweis-Box für Rezepte ohne Textzutaten -->
+            <div id="shopping-unparsed-box" class="unparsed-recipes-box hidden">
+                <span class="unparsed-title">⚠️ Rezepte ohne Textzutaten (manuell prüfen):</span>
+                <div id="shopping-unparsed-links" class="unparsed-chips-container"></div>
+            </div>
+
+            <!-- Schnelleingabe für Haushaltswaren / Spontankäufe -->
+            <div class="shopping-quick-add">
+                <input type="text" id="shopping-custom-input" placeholder="+ Artikel (z.B. Spülmaschinentabs)..." autocomplete="off">
+                <button id="btn-add-custom-item" class="btn btn-primary">Hinzufügen</button>
+            </div>
+
+            <div id="shopping-list-container" class="shopping-categories-container"></div>
+        </section>
+
         <!-- VIEW 1: Speiseplan -->
         <section id="view-plan" class="app-view">
             <div class="view-header plan-header-single-row">
-                <div class="kw-stepper">
+                <div class="kw-stepper" style="width: 100%; justify-content: space-between;">
                     <button id="btn-prev-week" class="btn btn-nav">&lt;</button>
                     <span id="modal-kw-title" class="kw-display">KW --</span>
                     <button id="btn-next-week" class="btn btn-nav">&gt;</button>
                 </div>
-                <button id="btn-open-shopping-list" class="btn btn-primary btn-shopping-compact">🛒 Einkaufsliste</button>
             </div>
             <div id="modal-plan-grid" class="modal-plan-grid"></div>
         </section>
@@ -171,38 +206,7 @@
         </section>
     </main>
 
-    <!-- Modal: Smarte Einkaufsliste -->
-    <div id="shopping-list-modal" class="modal hidden">
-        <div class="modal-content recipe-view-content">
-            <header class="modal-header">
-                <button id="btn-close-shopping-list" class="btn btn-danger btn-close-top">✖</button>
-                <h2 id="shopping-list-title">🛒 Einkaufsliste</h2>
-                <button id="btn-copy-shopping-list" class="btn btn-primary" title="Als Text kopieren">📋 Kopieren</button>
-            </header>
-            <div class="recipe-view-body">
-                <!-- Zeitraum-Umschalter -->
-                <div class="shopping-timeframe-toggle">
-                    <button id="btn-timeframe-kw" class="btn-filter active">Aktive Kalenderwoche</button>
-                    <button id="btn-timeframe-7days" class="btn-filter">Nächste 7 Tage ab heute</button>
-                </div>
-
-                <!-- Hinweis-Box für Rezepte mit Screenshot oder Link ohne Textzutaten -->
-                <div id="shopping-unparsed-box" class="unparsed-recipes-box hidden">
-                    <span class="unparsed-title">⚠️ Rezepte ohne Textzutaten:</span>
-                    <div id="shopping-unparsed-links" class="unparsed-chips-container"></div>
-                </div>
-
-                <!-- Schnelleingabe für spontane Artikel (z.B. Milch, Toilettenpapier) -->
-                <div class="shopping-quick-add">
-                    <input type="text" id="shopping-custom-input" placeholder="+ Manueller Artikel (z.B. Butter)...">
-                    <button id="btn-add-custom-item" class="btn btn-primary">Hinzufügen</button>
-                </div>
-
-                <!-- Gruppierte Liste nach Supermarkt-Regalen -->
-                <div id="shopping-list-container" class="shopping-categories-container"></div>
-            </div>
-        </div>
-    </div>
+    <!-- (Altes Einkaufslisten-Modal entfernt, da jetzt als eigenständige Ansicht integriert) -->
 
     <!-- Modal: Rezept Detail-Ansicht & In-Place Bearbeitung -->
     <div id="recipe-view-modal" class="modal hidden">
