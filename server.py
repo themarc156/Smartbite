@@ -113,6 +113,14 @@ def styles():
 def javascript():
     return send_from_directory(BASE_DIR, "app.js")
 
+@app.route("/manifest.json")
+def manifest():
+    return send_from_directory(BASE_DIR, "manifest.json")
+
+@app.route("/icon.png")
+def icon():
+    return send_from_directory(BASE_DIR, "icon.png")
+
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)

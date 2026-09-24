@@ -2,15 +2,26 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧠 SmartBite – Rezepte & Speiseplaner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+    <title>SmartBite – Rezepte & Speiseplaner</title>
+    
+    <!-- PWA & Apple Web App Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#181818">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartBite">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="icon" type="image/png" href="/icon.png">
+
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
     <header class="app-header">
         <div class="brand">
-            <h1>🧠 SmartBite</h1>
+            <img src="/icon.png" alt="SmartBite Icon" class="brand-header-icon">
+            <h1>SmartBite</h1>
         </div>
         <nav class="nav-tabs">
             <button id="nav-btn-plan" class="nav-tab active">

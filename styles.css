@@ -65,6 +65,20 @@ body {
     gap: 0.75rem;
 }
 
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.brand-header-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
 .brand h1 {
     font-size: 1.25rem;
     color: var(--text-main);
@@ -740,57 +754,59 @@ textarea {
     background-color: rgba(52, 152, 219, 0.1);
 }
 
-/* Speiseplan-Karten: Größere Thumbnails (48px) ohne Screen-Overflow */
+/* Speiseplan-Karten: 54px Thumbnails, kompakt & responsive */
 .modal-day-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-left: 4px solid var(--accent-primary);
     border-radius: var(--radius);
-    padding: 0.45rem 0.6rem;
+    padding: 0.4rem 0.55rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 0.5rem;
     user-select: none;
-    min-height: 56px;
+    min-height: 60px;
 }
 
 .modal-day-info-wrapper { 
     flex: 1; 
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
     min-width: 0;
 }
 
 .modal-day-name-col {
-    width: 42px;
+    width: 38px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    line-height: 1.15;
+    line-height: 1.1;
 }
 
 .modal-day-weekday {
-    font-size: 0.9rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: var(--text-main);
     white-space: nowrap;
 }
 
 .modal-day-date-text {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: var(--text-muted);
     font-weight: 600;
     white-space: nowrap;
 }
 
 .plan-dish-thumb, .plan-dish-thumb-placeholder {
-    width: 48px;
-    height: 48px;
-    border-radius: 8px;
+    width: 54px !important;
+    height: 54px !important;
+    min-width: 54px !important;
+    min-height: 54px !important;
+    border-radius: 10px;
 }
 
 .modal-dish-row { 
@@ -822,14 +838,9 @@ textarea {
         justify-content: center;
     }
 
-    .plan-dish-thumb, .plan-dish-thumb-placeholder {
-        width: 42px;
-        height: 42px;
-    }
-
     .btn-icon-action {
-        padding: 0.4rem 0.55rem;
-        font-size: 0.95rem;
+        padding: 0.35rem 0.5rem;
+        font-size: 0.9rem;
     }
 
     .modal-plan-grid {
