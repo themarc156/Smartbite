@@ -725,12 +725,6 @@ function switchView(viewName, animationType = 'fade') {
         add: document.getElementById('nav-btn-add')
     };
 
-    const tabs = {
-        plan: document.getElementById('nav-btn-plan'),
-        database: document.getElementById('nav-btn-database'),
-        add: document.getElementById('nav-btn-add')
-    };
-
     Object.keys(views).forEach(key => {
         if (views[key]) {
             views[key].classList.add('hidden');
