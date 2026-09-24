@@ -104,7 +104,8 @@ const appState = {
     draggedDayId: null,
     isGridView: true,
     currentPortions: 4,
-    basePortions: 4
+    basePortions: 4,
+    currentView: 'plan'
 };
 
 function scaleIngredient(line, factor) {
@@ -707,6 +708,8 @@ function renderApp() {
     if (nextBtn) nextBtn.disabled = (appState.currentWeekPage === 3);
 }
 
+const VIEW_ORDER = ['plan', 'database', 'add'];
+
 function switchView(viewName) {
     const views = {
         plan: document.getElementById('view-plan'),
@@ -728,10 +731,64 @@ function switchView(viewName) {
     if (views[viewName]) views[viewName].classList.remove('hidden');
     if (tabs[viewName]) tabs[viewName].classList.add('active');
 
+    appState.currentView = viewName;
+
     if (viewName === 'plan' && appState.currentPlan.length === 0) {
         generate4WeekPlan();
     }
 }
+
+function navigateViewByOffset(offset) {
+    const currentIndex = VIEW_ORDER.indexOf(appState.currentView || 'plan');
+    if (currentIndex === -1) return;
+    const newIndex = currentIndex + offset;
+    if (newIndex >= 0 && newIndex < VIEW_ORDER.length) {
+        const targetView = VIEW_ORDER[newIndex];
+        appState.selectModeForDayId = null;
+        if (targetView === 'add') resetDishForm();
+        switchView(targetView);
+        if (targetView !== 'add') renderApp();
+    }
+}
+
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartTime = 0;
+
+document.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+    if (e.changedTouches.length !== 1) return;
+
+    const recipeModal = document.getElementById('recipe-view-modal');
+    const shoppingModal = document.getElementById('shopping-list-modal');
+    if ((recipeModal && !recipeModal.classList.contains('hidden')) ||
+        (shoppingModal && !shoppingModal.classList.contains('hidden'))) {
+        return;
+    }
+
+    const targetTag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
+    if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') {
+        return;
+    }
+
+    const deltaX = e.changedTouches[0].clientX - touchStartX;
+    const deltaY = e.changedTouches[0].clientY - touchStartY;
+    const elapsed = Date.now() - touchStartTime;
+
+    if (elapsed < 500 && Math.abs(deltaX) > 60 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+        if (deltaX < 0) {
+            navigateViewByOffset(1);
+        } else {
+            navigateViewByOffset(-1);
+        }
+    }
+}, { passive: true });
 
 // Direkte Klick-Steuerung für Pillen
 window.selectDishType = function(buttonElement, value, targetInputId) {
