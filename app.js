@@ -2,51 +2,92 @@ const CONFIG = Object.freeze({
     TOTAL_DAYS: 28 
 });
 
-// Komprimiert hochauflösende Smartphone-Fotos blitzschnell im Browser
+// Hardware-beschleunigte, speicherschonende Bildkomprimierung ohne RAM-Spikes
 async function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
     if (!file || !file.type.startsWith('image/')) return file;
-    
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                let width = img.width;
-                let height = img.height;
 
-                if (width > maxWidth || height > maxWidth) {
-                    if (width > height) {
-                        height = Math.round((height * maxWidth) / width);
-                        width = maxWidth;
-                    } else {
-                        width = Math.round((width * maxWidth) / height);
-                        height = maxWidth;
-                    }
+    // 1. Bevorzugt: createImageBitmap (direktes Decoding ohne Speicherlast)
+    if ('createImageBitmap' in window) {
+        try {
+            const bitmap = await createImageBitmap(file);
+            let width = bitmap.width;
+            let height = bitmap.height;
+
+            if (width > maxWidth || height > maxWidth) {
+                if (width > height) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                } else {
+                    width = Math.round((width * maxWidth) / height);
+                    height = maxWidth;
                 }
+            }
 
-                const canvas = document.createElement('canvas');
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0, width, height);
+            bitmap.close(); // Gibt den VRAM-Speicher sofort frei
 
+            return new Promise((resolve) => {
                 canvas.toBlob((blob) => {
                     if (!blob) {
                         resolve(file);
                         return;
                     }
-                    const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                    resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
                         type: 'image/jpeg',
                         lastModified: Date.now()
-                    });
-                    resolve(compressedFile);
+                    }));
                 }, 'image/jpeg', quality);
-            };
-            img.onerror = () => resolve(file);
+            });
+        } catch (err) {
+            console.warn('createImageBitmap fehlgeschlagen, nutze ObjectURL Fallback', err);
+        }
+    }
+
+    // 2. Fallback: URL.createObjectURL (kein speicherhungriger Base64-FileReader)
+    return new Promise((resolve) => {
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl); // Speicher sofort freigeben
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth || height > maxWidth) {
+                if (width > height) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                } else {
+                    width = Math.round((width * maxWidth) / height);
+                    height = maxWidth;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    resolve(file);
+                    return;
+                }
+                resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                    type: 'image/jpeg',
+                    lastModified: Date.now()
+                }));
+            }, 'image/jpeg', quality);
         };
-        reader.onerror = () => resolve(file);
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            resolve(file);
+        };
+        img.src = objectUrl;
     });
 }
 
@@ -1336,29 +1377,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // (Pillen-Listener über zentrale Event-Delegation gesteuert)
 
-    // Dateinamen-Feedback bei Foto-Auswahl
+    // Dateinamen-Feedback bei Foto-Auswahl im Hauptformular
     const hintLabel = document.getElementById('preview-file-name-label');
-    const updateHint = (input) => {
-        if (input.files.length > 0 && hintLabel) {
-            hintLabel.textContent = `✓ Foto ausgewählt: ${input.files[0].name}`;
-        }
-    };
     const camInput = document.getElementById('dish-preview-file-cam');
     const galInput = document.getElementById('dish-preview-file');
-    if (camInput) camInput.addEventListener('change', () => updateHint(camInput));
-    if (galInput) galInput.addEventListener('change', () => updateHint(galInput));
 
-    // Dateinamen-Feedback für Modal-Edit
+    if (camInput) {
+        camInput.addEventListener('change', () => {
+            if (camInput.files.length > 0) {
+                if (galInput) galInput.value = '';
+                if (hintLabel) hintLabel.textContent = `✓ Foto geknipst: ${camInput.files[0].name}`;
+            }
+        });
+    }
+    if (galInput) {
+        galInput.addEventListener('change', () => {
+            if (galInput.files.length > 0) {
+                if (camInput) camInput.value = '';
+                if (hintLabel) hintLabel.textContent = `✓ Aus Galerie: ${galInput.files[0].name}`;
+            }
+        });
+    }
+
+    // Dateinamen-Feedback im Bearbeiten-Modal
     const modalHintLabel = document.getElementById('modal-preview-file-hint');
-    const updateModalHint = (input) => {
-        if (input.files.length > 0 && modalHintLabel) {
-            modalHintLabel.textContent = `✓ Foto ausgewählt: ${input.files[0].name}`;
-        }
-    };
     const modalCamInput = document.getElementById('modal-edit-preview-file-cam');
     const modalGalInput = document.getElementById('modal-edit-preview-file');
-    if (modalCamInput) modalCamInput.addEventListener('change', () => updateModalHint(modalCamInput));
-    if (modalGalInput) modalGalInput.addEventListener('change', () => updateModalHint(modalGalInput));
+
+    if (modalCamInput) {
+        modalCamInput.addEventListener('change', () => {
+            if (modalCamInput.files.length > 0) {
+                if (modalGalInput) modalGalInput.value = '';
+                if (modalHintLabel) modalHintLabel.textContent = `✓ Foto geknipst: ${modalCamInput.files[0].name}`;
+            }
+        });
+    }
+    if (modalGalInput) {
+        modalGalInput.addEventListener('change', () => {
+            if (modalGalInput.files.length > 0) {
+                if (modalCamInput) modalCamInput.value = '';
+                if (modalHintLabel) modalHintLabel.textContent = `✓ Aus Galerie: ${modalGalInput.files[0].name}`;
+            }
+        });
+    }
 
     document.getElementById('dish-form').addEventListener('submit', async (e) => {
         e.preventDefault();
