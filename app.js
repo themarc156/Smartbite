@@ -823,14 +823,15 @@ document.addEventListener('touchend', (e) => {
     if (e.changedTouches.length !== 1) return;
 
     const recipeModal = document.getElementById('recipe-view-modal');
-    const shoppingModal = document.getElementById('shopping-list-modal');
+    const editorModal = document.getElementById('text-editor-modal');
     if ((recipeModal && !recipeModal.classList.contains('hidden')) ||
-        (shoppingModal && !shoppingModal.classList.contains('hidden'))) {
+        (editorModal && !editorModal.classList.contains('hidden'))) {
         return;
     }
 
-    const targetTag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
-    if (targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select') {
+    // Nur blockieren, wenn ein Input aktiv fokussiert ist (Tastatur offen)
+    const activeEl = document.activeElement;
+    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
         return;
     }
 
@@ -897,6 +898,8 @@ function openEditRecipeForm(dish) {
     document.getElementById('dish-instructions').value = dish.instructions || '';
     document.getElementById('dish-image-file').value = '';
 
+    updateTextTriggerStatuses();
+
     document.getElementById('form-heading-title').textContent = `Rezept bearbeiten: ${dish.name}`;
     document.getElementById('btn-submit-dish').textContent = 'Änderungen speichern 💾';
     document.getElementById('btn-cancel-edit').classList.remove('hidden');
@@ -909,6 +912,57 @@ function openEditRecipeForm(dish) {
     switchView('add');
 }
 
+let activeEditorTargetId = null;
+
+function updateTextTriggerStatuses() {
+    const ingVal = document.getElementById('dish-ingredients') ? document.getElementById('dish-ingredients').value.trim() : '';
+    const insVal = document.getElementById('dish-instructions') ? document.getElementById('dish-instructions').value.trim() : '';
+
+    const ingStatus = document.getElementById('dish-ingredients-status');
+    const insStatus = document.getElementById('dish-instructions-status');
+
+    if (ingStatus) {
+        if (ingVal) {
+            const count = ingVal.split('\n').filter(Boolean).length;
+            ingStatus.textContent = `${count} Zutat${count > 1 ? 'en' : ''} hinterlegt ✓`;
+            ingStatus.style.color = 'var(--accent-success)';
+        } else {
+            ingStatus.textContent = 'Noch keine Zutaten';
+            ingStatus.style.color = 'var(--text-muted)';
+        }
+    }
+
+    if (insStatus) {
+        if (insVal) {
+            const count = insVal.split('\n').filter(Boolean).length;
+            insStatus.textContent = `${count} Schritt${count > 1 ? 'e' : ''} hinterlegt ✓`;
+            insStatus.style.color = 'var(--accent-success)';
+        } else {
+            insStatus.textContent = 'Noch keine Schritte';
+            insStatus.style.color = 'var(--text-muted)';
+        }
+    }
+}
+
+window.openTextEditorModal = function(type, targetInputId, title) {
+    activeEditorTargetId = targetInputId;
+    const targetInput = document.getElementById(targetInputId);
+    const modalInput = document.getElementById('text-editor-modal-input');
+    const modalTitle = document.getElementById('text-editor-modal-title');
+    const modal = document.getElementById('text-editor-modal');
+
+    if (modalTitle) modalTitle.textContent = title;
+    if (modalInput && targetInput) {
+        modalInput.value = targetInput.value;
+        modalInput.placeholder = type === 'ingredients' 
+            ? 'Zutaten eingeben (eine pro Zeile):\n500g Spaghetti\n1 Dose Tomaten\n1 Zwiebel' 
+            : 'Zubereitungsschritte eingeben:\n1. Nudeln kochen\n2. Sauce anrühren\n3. Servieren';
+    }
+
+    if (modal) modal.classList.remove('hidden');
+    if (modalInput) setTimeout(() => modalInput.focus(), 100);
+};
+
 function resetDishForm() {
     document.getElementById('dish-edit-id').value = '';
     document.getElementById('dish-name').value = '';
@@ -918,6 +972,8 @@ function resetDishForm() {
     setMeatPill('flex');
     document.getElementById('dish-emergency').checked = false;
     document.getElementById('dish-highcarb').checked = false;
+
+    updateTextTriggerStatuses();
 
     document.getElementById('form-heading-title').textContent = 'Neues Rezept anlegen';
     document.getElementById('btn-submit-dish').textContent = 'Gericht speichern';
@@ -1354,6 +1410,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnAddCustom) btnAddCustom.addEventListener('click', handleAddCustom);
     if (customInput) customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddCustom(); });
+
+// Text-Editor Modal Handler
+    const textEditorModal = document.getElementById('text-editor-modal');
+    const btnSaveTextEditor = document.getElementById('btn-save-text-editor');
+    const btnCancelTextEditor = document.getElementById('btn-cancel-text-editor');
+    const textEditorInput = document.getElementById('text-editor-modal-input');
+
+    if (btnSaveTextEditor) {
+        btnSaveTextEditor.addEventListener('click', () => {
+            if (activeEditorTargetId && textEditorInput) {
+                const target = document.getElementById(activeEditorTargetId);
+                if (target) {
+                    target.value = textEditorInput.value;
+                    updateTextTriggerStatuses();
+                }
+            }
+            if (textEditorModal) textEditorModal.classList.add('hidden');
+            activeEditorTargetId = null;
+        });
+    }
+
+    if (btnCancelTextEditor) {
+        btnCancelTextEditor.addEventListener('click', () => {
+            if (textEditorModal) textEditorModal.classList.add('hidden');
+            activeEditorTargetId = null;
+        });
+    }
 
     // Erledigt-Bereich auf-/zuklappen
     const btnToggleDone = document.getElementById('btn-toggle-done-list');
