@@ -1292,10 +1292,22 @@ textarea {
     gap: 0.5rem;
     cursor: pointer;
     user-select: none;
-    padding: 0.4rem 0.5rem;
-    border-radius: 4px;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    padding: 0.45rem 0.55rem;
+    border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.03);
-    transition: background-color 0.15s;
+    border: 1px solid transparent;
+    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
+    position: relative;
+    touch-action: pan-y;
+}
+
+/* Visuelles Feedback beim Halten (Long-Press) */
+.ingredient-item.holding {
+    background-color: rgba(46, 204, 113, 0.2) !important;
+    border-color: var(--accent-success);
+    transform: scale(0.98);
 }
 
 .ingredient-left {
@@ -1320,6 +1332,110 @@ textarea {
 .btn-delete-custom-item:hover {
     color: var(--accent-danger);
     background-color: rgba(231, 76, 60, 0.15);
+}
+
+/* Zuklappbarer Erledigt-Bereich */
+.shopping-done-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--border-color);
+}
+
+.btn-toggle-done {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 0.55rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-toggle-done:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-main);
+}
+
+.shopping-done-items-container {
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.shopping-done-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-decoration: line-through;
+    color: var(--text-muted);
+    opacity: 0.6;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: opacity 0.15s, text-decoration 0.15s;
+}
+
+.shopping-done-item:hover {
+    opacity: 0.95;
+    text-decoration: none;
+}
+
+/* Undo Snackbar Toast */
+.shopping-undo-snackbar {
+    position: fixed;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #1e293b;
+    border: 1px solid #38bdf8;
+    color: #ffffff;
+    padding: 0.55rem 1rem;
+    border-radius: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    z-index: 9999;
+    font-size: 0.82rem;
+    animation: slideUpToast 0.18s cubic-bezier(0.25, 1, 0.5, 1);
+    white-space: nowrap;
+}
+
+.btn-snackbar-undo {
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    font-weight: 700;
+    padding: 0.25rem 0.65rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    transition: background-color 0.15s;
+}
+
+.btn-snackbar-undo:hover {
+    background: rgba(56, 189, 248, 0.35);
+}
+
+@keyframes slideUpToast {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 15px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 .ingredient-item:hover {

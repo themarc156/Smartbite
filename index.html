@@ -71,7 +71,22 @@
             </div>
 
             <div id="shopping-list-container" class="shopping-categories-container"></div>
+
+            <!-- Zuklappbarer Bereich: Bereits im Einkaufswagen -->
+            <div id="shopping-done-section" class="shopping-done-section hidden">
+                <button type="button" id="btn-toggle-done-list" class="btn-toggle-done">
+                    <span>🛒 Bereits im Wagen (<span id="done-items-count">0</span>)</span>
+                    <span id="done-caret-icon">▾</span>
+                </button>
+                <div id="shopping-done-items-container" class="shopping-done-items-container hidden"></div>
+            </div>
         </section>
+
+        <!-- Undo-Snackbar für versehentliches Abhaken -->
+        <div id="shopping-undo-snackbar" class="shopping-undo-snackbar hidden">
+            <span id="snackbar-message">✓ Artikel im Wagen</span>
+            <button type="button" id="btn-snackbar-undo" class="btn-snackbar-undo">↩️ Rückgängig</button>
+        </div>
 
         <!-- VIEW 1: Speiseplan -->
         <section id="view-plan" class="app-view">

@@ -913,11 +913,79 @@ const SUPERMARKET_CATEGORIES = [
     }
 ];
 
-let shoppingTimeframe = '3days'; // Standardmäßig auf 3 Tage voreingestellt
+let shoppingTimeframe = '3days';
 let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
+let checkedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_checked_shopping') || '[]'));
+let isDoneSectionOpen = false;
+let undoSnackbarTimeout = null;
+let lastCompletedKey = null;
 
 function saveCustomShoppingItems() {
     localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
+}
+
+function saveCheckedShoppingKeys() {
+    localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
+}
+
+function showUndoSnackbar(itemName, key) {
+    lastCompletedKey = key;
+    const snackbar = document.getElementById('shopping-undo-snackbar');
+    const message = document.getElementById('snackbar-message');
+    if (!snackbar || !message) return;
+
+    message.textContent = `✓ ${itemName} im Wagen`;
+    snackbar.classList.remove('hidden');
+
+    if (undoSnackbarTimeout) clearTimeout(undoSnackbarTimeout);
+    undoSnackbarTimeout = setTimeout(() => {
+        snackbar.classList.add('hidden');
+        lastCompletedKey = null;
+    }, 5000);
+}
+
+function bindLongPress(element, onTrigger) {
+    let timer = null;
+    let startX = 0;
+    let startY = 0;
+
+    const start = (e) => {
+        if (e.target && e.target.closest('.btn-delete-custom-item')) return;
+        startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+        startY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+        element.classList.add('holding');
+
+        timer = setTimeout(() => {
+            element.classList.remove('holding');
+            if (navigator.vibrate) {
+                try { navigator.vibrate(35); } catch (_) {}
+            }
+            onTrigger();
+        }, 350);
+    };
+
+    const cancel = () => {
+        if (timer) {
+            clearTimeout(timer);
+            timer = null;
+        }
+        element.classList.remove('holding');
+    };
+
+    const move = (e) => {
+        if (!timer) return;
+        const currentX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+        const currentY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+        if (Math.abs(currentX - startX) > 8 || Math.abs(currentY - startY) > 8) {
+            cancel();
+        }
+    };
+
+    element.addEventListener('pointerdown', start);
+    element.addEventListener('pointerup', cancel);
+    element.addEventListener('pointerleave', cancel);
+    element.addEventListener('pointercancel', cancel);
+    element.addEventListener('pointermove', move);
 }
 
 function categorizeIngredient(text) {
@@ -1045,16 +1113,30 @@ function renderShoppingList() {
     const container = document.getElementById('shopping-list-container');
     container.innerHTML = '';
 
-    if (Object.keys(categorizedMap).length === 0) {
-        container.innerHTML = '<p class="subtitle" style="text-align: center; margin-top: 2rem;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
-        return;
-    }
+    const doneSection = document.getElementById('shopping-done-section');
+    const doneContainer = document.getElementById('shopping-done-items-container');
+    const doneCount = document.getElementById('done-items-count');
+    doneContainer.innerHTML = '';
 
     const allKnownCatNames = ['📝 Manuell hinzugefügt', ...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel'];
+    let activeCategoriesCount = 0;
+    const completedItemsList = [];
 
     allKnownCatNames.forEach(catName => {
-        const items = categorizedMap[catName];
-        if (!items || items.length === 0) return;
+        const items = categorizedMap[catName] || [];
+        const activeItems = [];
+
+        items.forEach(item => {
+            const itemKey = item.id || item.displayName.toLowerCase();
+            if (checkedShoppingKeys.has(itemKey)) {
+                completedItemsList.push({ item, itemKey });
+            } else {
+                activeItems.push({ item, itemKey });
+            }
+        });
+
+        if (activeItems.length === 0) return;
+        activeCategoriesCount++;
 
         const groupEl = document.createElement('div');
         groupEl.className = 'shopping-category-group';
@@ -1067,15 +1149,17 @@ function renderShoppingList() {
         const listEl = document.createElement('ul');
         listEl.className = 'ingredients-rendered-list';
 
-        items.forEach(item => {
+        activeItems.forEach(({ item, itemKey }) => {
             const li = document.createElement('li');
             li.className = 'ingredient-item';
+            li.title = 'Gedrückt halten zum Abhaken';
 
             const leftDiv = document.createElement('div');
             leftDiv.className = 'ingredient-left';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
+            checkbox.tabIndex = -1;
 
             const textSpan = document.createElement('span');
             if (item.isCustom) {
@@ -1089,24 +1173,29 @@ function renderShoppingList() {
             leftDiv.appendChild(textSpan);
             li.appendChild(leftDiv);
 
-            // Löschbutton für manuelle Einträge
             if (item.isCustom) {
                 const delBtn = document.createElement('button');
+                delBtn.type = 'button';
                 delBtn.className = 'btn-delete-custom-item';
                 delBtn.textContent = '✖';
                 delBtn.title = 'Artikel löschen';
                 delBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.id) !== item.id);
+                    checkedShoppingKeys.delete(itemKey);
                     saveCustomShoppingItems();
+                    saveCheckedShoppingKeys();
                     renderShoppingList();
                 });
                 li.appendChild(delBtn);
             }
 
-            leftDiv.addEventListener('click', (e) => {
-                if (e.target !== checkbox) checkbox.checked = !checkbox.checked;
-                li.classList.toggle('checked', checkbox.checked);
+            // Long-Press Interaktion
+            bindLongPress(li, () => {
+                checkedShoppingKeys.add(itemKey);
+                saveCheckedShoppingKeys();
+                showUndoSnackbar(item.displayName, itemKey);
+                renderShoppingList();
             });
 
             listEl.appendChild(li);
@@ -1115,6 +1204,33 @@ function renderShoppingList() {
         groupEl.appendChild(listEl);
         container.appendChild(groupEl);
     });
+
+    if (activeCategoriesCount === 0 && completedItemsList.length === 0) {
+        container.innerHTML = '<p class="subtitle" style="text-align: center; margin-top: 2rem;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
+    }
+
+    // Erledigt-Bereich rendern
+    if (completedItemsList.length > 0) {
+        doneSection.classList.remove('hidden');
+        doneCount.textContent = completedItemsList.length;
+
+        completedItemsList.forEach(({ item, itemKey }) => {
+            const doneDiv = document.createElement('div');
+            doneDiv.className = 'shopping-done-item';
+            doneDiv.title = 'Tippen zum Wiederherstellen';
+            doneDiv.innerHTML = `<span>✓ ${item.displayName}</span> <span style="font-size: 0.72rem; color: var(--accent-primary);">Wiederherstellen ↩</span>`;
+            
+            doneDiv.addEventListener('click', () => {
+                checkedShoppingKeys.delete(itemKey);
+                saveCheckedShoppingKeys();
+                renderShoppingList();
+            });
+
+            doneContainer.appendChild(doneDiv);
+        });
+    } else {
+        doneSection.classList.add('hidden');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1185,18 +1301,52 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnAddCustom) btnAddCustom.addEventListener('click', handleAddCustom);
     if (customInput) customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddCustom(); });
 
-    // Erledigte manuelle Artikel aufräumen
-    const btnClearCompleted = document.getElementById('btn-clear-completed-items');
-    if (btnClearCompleted) {
-        btnClearCompleted.addEventListener('click', () => {
-            document.querySelectorAll('.shopping-category-group .ingredient-item.checked').forEach(item => {
-                const delBtn = item.querySelector('.btn-delete-custom-item');
-                if (delBtn) delBtn.click();
-            });
+    // Erledigt-Bereich auf-/zuklappen
+    const btnToggleDone = document.getElementById('btn-toggle-done-list');
+    const doneContainerEl = document.getElementById('shopping-done-items-container');
+    const doneCaret = document.getElementById('done-caret-icon');
+
+    if (btnToggleDone && doneContainerEl) {
+        btnToggleDone.addEventListener('click', () => {
+            isDoneSectionOpen = !isDoneSectionOpen;
+            doneContainerEl.classList.toggle('hidden', !isDoneSectionOpen);
+            if (doneCaret) doneCaret.textContent = isDoneSectionOpen ? '▴' : '▾';
         });
     }
 
-    // Als Text kopieren (z.B. für WhatsApp)
+    // Undo-Button in der Snackbar
+    const btnSnackbarUndo = document.getElementById('btn-snackbar-undo');
+    if (btnSnackbarUndo) {
+        btnSnackbarUndo.addEventListener('click', () => {
+            if (lastCompletedKey) {
+                checkedShoppingKeys.delete(lastCompletedKey);
+                saveCheckedShoppingKeys();
+                lastCompletedKey = null;
+            }
+            const snackbar = document.getElementById('shopping-undo-snackbar');
+            if (snackbar) snackbar.classList.add('hidden');
+            if (undoSnackbarTimeout) clearTimeout(undoSnackbarTimeout);
+            renderShoppingList();
+        });
+    }
+
+    // Erledigte Artikel komplett leeren (Wagen leeren / nach dem Einkauf)
+    const btnClearCompleted = document.getElementById('btn-clear-completed-items');
+    if (btnClearCompleted) {
+        btnClearCompleted.addEventListener('click', () => {
+            // Löscht auch erledigte manuelle Artikel aus der Datenbank
+            customShoppingItems = customShoppingItems.filter(c => {
+                const key = typeof c === 'string' ? c : c.id;
+                return !checkedShoppingKeys.has(key);
+            });
+            saveCustomShoppingItems();
+            checkedShoppingKeys.clear();
+            saveCheckedShoppingKeys();
+            renderShoppingList();
+        });
+    }
+
+    // Als Text kopieren (nur noch offene Artikel)
     const btnCopy = document.getElementById('btn-copy-shopping-list');
     if (btnCopy) {
         btnCopy.addEventListener('click', () => {
@@ -1205,16 +1355,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const catTitle = group.querySelector('.shopping-category-title').textContent;
                 text += `--- ${catTitle} ---\n`;
                 group.querySelectorAll('.ingredient-item').forEach(item => {
-                    if (!item.classList.contains('checked')) {
-                        const labelText = item.querySelector('strong') ? item.querySelector('strong').textContent : '';
-                        text += `• ${labelText}\n`;
-                    }
+                    const labelText = item.querySelector('strong') ? item.querySelector('strong').textContent : '';
+                    if (labelText) text += `• ${labelText}\n`;
                 });
                 text += '\n';
             });
             navigator.clipboard.writeText(text);
             btnCopy.textContent = '✓ Kopiert!';
-            setTimeout(() => { btnCopy.textContent = '📋 Kopieren'; }, 2000);
+            setTimeout(() => { btnCopy.textContent = '📋'; }, 2000);
         });
     }
 
