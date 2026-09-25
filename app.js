@@ -763,7 +763,8 @@ function navigateViewByOffset(offset) {
         appState.selectModeForDayId = null;
         if (targetView === 'add') resetDishForm();
         switchView(targetView, animationType);
-        if (targetView !== 'add') renderApp();
+        if (targetView === 'shopping') renderShoppingList();
+        else if (targetView !== 'add') renderApp();
     }
 }
 
@@ -912,7 +913,7 @@ const SUPERMARKET_CATEGORIES = [
     }
 ];
 
-let shoppingTimeframe = '7days'; // '7days', '3days', 'week'
+let shoppingTimeframe = '3days'; // Standardmäßig auf 3 Tage voreingestellt
 let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
 
 function saveCustomShoppingItems() {
@@ -963,16 +964,23 @@ function renderShoppingList() {
     const todayMs = new Date().setHours(0, 0, 0, 0);
     const upcomingDays = (appState.currentPlan || []).filter(d => d.dateTimeline >= todayMs);
 
-    if (shoppingTimeframe === '3days') {
-        daysToInclude = upcomingDays.slice(0, 3);
-    } else if (shoppingTimeframe === 'week') {
-        // Berechnet alle verbleibenden Tage bis zum kommenden Sonntag
-        const currentDayIndex = new Date().getDay(); // 0 = Sonntag, 1 = Montag...
-        const daysUntilSunday = currentDayIndex === 0 ? 1 : (7 - currentDayIndex + 1);
-        daysToInclude = upcomingDays.slice(0, daysUntilSunday);
-    } else {
-        // Standard: 7 Tage ab heute
+    if (shoppingTimeframe === '7days') {
         daysToInclude = upcomingDays.length >= 7 ? upcomingDays.slice(0, 7) : (appState.currentPlan || []).slice(0, 7);
+    } else if (shoppingTimeframe === 'monday') {
+        // Berechnet alle Tage von heute bis einschließlich des nächsten Montags
+        const currentDayIndex = new Date().getDay(); // 0 = So, 1 = Mo, 2 = Di, 3 = Mi, 4 = Do, 5 = Fr, 6 = Sa
+        let daysUntilMonday;
+        if (currentDayIndex === 1) {
+            daysUntilMonday = 1; // Wenn heute Montag ist: nur heute
+        } else if (currentDayIndex === 0) {
+            daysUntilMonday = 2; // Sonntag -> Montag = 2 Tage
+        } else {
+            daysUntilMonday = (8 - currentDayIndex) + 1; // z.B. Fr(5) -> 8-5+1 = 4 Tage (Fr, Sa, So, Mo)
+        }
+        daysToInclude = upcomingDays.slice(0, daysUntilMonday);
+    } else {
+        // Standard: 3 Tage ab heute
+        daysToInclude = upcomingDays.slice(0, 3);
     }
 
     const rawIngredients = [];
@@ -1145,20 +1153,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Zeitraum-Buttons in der Einkaufsliste
-    const btnTf7Days = document.getElementById('btn-timeframe-7days');
     const btnTf3Days = document.getElementById('btn-timeframe-3days');
-    const btnTfWeek = document.getElementById('btn-timeframe-week');
+    const btnTf7Days = document.getElementById('btn-timeframe-7days');
+    const btnTfMonday = document.getElementById('btn-timeframe-monday');
 
     const updateTimeframeButtons = (activeBtn, mode) => {
-        [btnTf7Days, btnTf3Days, btnTfWeek].forEach(b => { if (b) b.classList.remove('active'); });
+        [btnTf3Days, btnTf7Days, btnTfMonday].forEach(b => { if (b) b.classList.remove('active'); });
         if (activeBtn) activeBtn.classList.add('active');
         shoppingTimeframe = mode;
         renderShoppingList();
     };
 
-    if (btnTf7Days) btnTf7Days.addEventListener('click', () => updateTimeframeButtons(btnTf7Days, '7days'));
     if (btnTf3Days) btnTf3Days.addEventListener('click', () => updateTimeframeButtons(btnTf3Days, '3days'));
-    if (btnTfWeek) btnTfWeek.addEventListener('click', () => updateTimeframeButtons(btnTfWeek, 'week'));
+    if (btnTf7Days) btnTf7Days.addEventListener('click', () => updateTimeframeButtons(btnTf7Days, '7days'));
+    if (btnTfMonday) btnTfMonday.addEventListener('click', () => updateTimeframeButtons(btnTfMonday, 'monday'));
 
     // Manuelle Artikel hinzufügen
     const customInput = document.getElementById('shopping-custom-input');
