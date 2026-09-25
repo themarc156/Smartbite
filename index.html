@@ -150,84 +150,64 @@
             </div>
         </section>
 
-        <!-- VIEW 3: Neues Rezept -->
+        <!-- VIEW 3: Neues Rezept (Kompaktes No-Scroll-Layout) -->
         <section id="view-add" class="app-view hidden">
-            <div class="card add-form-card">
+            <div class="card add-form-card" style="padding: 0.6rem 0.75rem; margin: 0 auto;">
                 <div class="form-top-actions-only">
-                    <!-- Unsichtbarer Titel-Anker zur Fehlervermeidung in JS -->
                     <span id="form-heading-title" class="hidden"></span>
-                    <div class="header-action-group" style="margin-left: auto; margin-bottom: 0.5rem;">
-                        <button type="button" id="btn-delete-in-form" class="btn btn-danger hidden">🗑️ Rezept löschen</button>
-                        <button type="button" id="btn-cancel-edit" class="btn btn-primary" style="background: var(--bg-input); border: 1px solid var(--border-color);">Abbrechen ✖</button>
+                    <div class="header-action-group" style="margin-left: auto; margin-bottom: 0.35rem;">
+                        <button type="button" id="btn-delete-in-form" class="btn btn-danger hidden" style="height: 30px; font-size: 0.78rem;">🗑️ Löschen</button>
+                        <button type="button" id="btn-cancel-edit" class="btn btn-primary" style="height: 30px; font-size: 0.78rem; background: var(--bg-input); border: 1px solid var(--border-color);">Abbrechen ✖</button>
                     </div>
                 </div>
-                <form id="dish-form" novalidate>
+                <form id="dish-form" novalidate class="compact-recipe-form">
                     <input type="hidden" id="dish-edit-id" value="">
-                    <div class="form-group">
-                        <label for="dish-name">Name des Gerichts *</label>
-                        <input type="text" id="dish-name" required placeholder="z.B. Lasagne Bolognese">
+                    
+                    <!-- Zeile 1: Name -->
+                    <input type="text" id="dish-name" required placeholder="Name des Gerichts *" class="compact-input">
+
+                    <!-- Zeile 2: Art des Gerichts (Pillen) -->
+                    <div class="pill-selector-group">
+                        <button type="button" data-val="veggie" onclick="selectDishType(this, 'veggie', 'dish-meat-val')">🌱 Veggie</button>
+                        <button type="button" class="active" data-val="flex" onclick="selectDishType(this, 'flex', 'dish-meat-val')">🍲 Flexi</button>
+                        <button type="button" data-val="meat" onclick="selectDishType(this, 'meat', 'dish-meat-val')">🥩 Fleisch</button>
+                        <button type="button" data-val="baking" onclick="selectDishType(this, 'baking', 'dish-meat-val')">🍰 Backen</button>
+                    </div>
+                    <input type="hidden" id="dish-meat-val" value="flex">
+
+                    <!-- Zeile 3: Checkboxen nebeneinander -->
+                    <div class="compact-checkbox-row">
+                        <label class="checkbox-label" style="font-size: 0.85rem;">
+                            <input type="checkbox" id="dish-highcarb"> 🌾 High-Carb
+                        </label>
+                        <label class="checkbox-label" style="font-size: 0.85rem;">
+                            <input type="checkbox" id="dish-emergency"> 🚨 Notfall-Gericht
+                        </label>
                     </div>
 
-                    <div class="form-group">
-                        <label>Art des Gerichts:</label>
-                        <div class="pill-selector-group">
-                            <button type="button" data-val="veggie" onclick="selectDishType(this, 'veggie', 'dish-meat-val')">🌱 Veggie</button>
-                            <button type="button" class="active" data-val="flex" onclick="selectDishType(this, 'flex', 'dish-meat-val')">🍲 Flexi</button>
-                            <button type="button" data-val="meat" onclick="selectDishType(this, 'meat', 'dish-meat-val')">🥩 Fleisch</button>
-                            <button type="button" data-val="baking" onclick="selectDishType(this, 'baking', 'dish-meat-val')">🍰 Backen</button>
-                        </div>
-                        <input type="hidden" id="dish-meat-val" value="flex">
+                    <!-- Zeile 4: Zutaten & Zubereitung 2-spaltig -->
+                    <div class="compact-two-cols">
+                        <textarea id="dish-ingredients" rows="3" placeholder="Zutaten (zeilenweise)..." class="compact-textarea"></textarea>
+                        <textarea id="dish-instructions" rows="3" placeholder="Zubereitungsschritte..." class="compact-textarea"></textarea>
                     </div>
 
-                    <div class="checkbox-group-container" style="margin-top: 1rem;">
-                        <div class="form-group checkbox-wrapper">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="dish-highcarb"> 🌾 High-Carb (Kohlenhydrat-Bombe)
-                            </label>
-                        </div>
-                        <div class="form-group checkbox-wrapper">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="dish-emergency"> 🚨 Notfall-Gericht (schnell)
-                            </label>
-                        </div>
+                    <!-- Zeile 5: Link & Foto in einer Zeile -->
+                    <div class="compact-inputs-row">
+                        <input type="url" id="dish-source-url" placeholder="🔗 Link (Chefkoch/Instagram...)" class="compact-input" style="flex: 1.2;">
+                        <label class="btn-upload-choice compact-upload-btn" style="flex: 1;">
+                            📷 Foto / Galerie
+                            <input type="file" id="dish-preview-file" accept="image/*" class="hidden-file-input">
+                        </label>
                     </div>
+                    <span id="preview-file-name-label" class="selected-file-hint" style="font-size: 0.7rem; margin-top: -0.2rem;"></span>
 
-                    <div class="form-group">
-                        <label for="dish-ingredients">Zutaten (zeilenweise)</label>
-                        <textarea id="dish-ingredients" rows="4" placeholder="500g Pasta&#10;1 Dose Tomaten&#10;1 Knoblauchzehe"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="dish-instructions">Zubereitungsschritte</label>
-                        <textarea id="dish-instructions" rows="4" placeholder="1. Wasser aufkochen...&#10;2. Sauce anrühren..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="dish-source-url">Rezept-Link (Chefkoch, Instagram, etc.)</label>
-                        <input type="url" id="dish-source-url" placeholder="https://www.chefkoch.de/rezepte/..." style="width: 100%; padding: 0.75rem; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius); color: var(--text-main);">
-                    </div>
-
-                    <div class="form-group">
-                        <label>🖼️ Foto für die App-Ansicht:</label>
-                        <div class="upload-options-row">
-                            <label class="btn-upload-choice">
-                                📷 Foto knipsen
-                                <input type="file" id="dish-preview-file-cam" accept="image/*" capture="environment" class="hidden-file-input">
-                            </label>
-                            <label class="btn-upload-choice">
-                                🖼️ Galerie
-                                <input type="file" id="dish-preview-file" accept="image/*" class="hidden-file-input">
-                            </label>
-                        </div>
-                        <span id="preview-file-name-label" class="selected-file-hint"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="dish-image-file">📸 Screenshot / Rezept-Details (Galerie/PDF):</label>
-                        <input type="file" id="dish-image-file" accept="image/*">
+                    <!-- Zeile 6: Screenshot (optional) -->
+                    <div class="compact-screenshot-row">
+                        <label for="dish-image-file" class="compact-screenshot-label">📸 Screenshot:</label>
+                        <input type="file" id="dish-image-file" accept="image/*" class="compact-file-input">
                     </div>
                     
-                    <button type="submit" class="btn btn-primary" id="btn-submit-dish">Gericht speichern</button>
+                    <button type="submit" class="btn btn-primary btn-save-compact" id="btn-submit-dish">Gericht speichern</button>
                 </form>
             </div>
         </section>
