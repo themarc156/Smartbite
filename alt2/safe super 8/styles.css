@@ -1,15 +1,14 @@
 :root {
-    --bg-main: #141312;
-    --bg-card: #1e1c1a;
-    --bg-input: #282623;
-    --text-main: #f6f3ed;
-    --text-muted: #a69f97;
-    --accent-primary: #f59e0b;
-    --accent-primary-hover: #d97706;
-    --accent-success: #10b981;
-    --accent-danger: #ef4444;
-    --accent-warning: #f59e0b;
-    --border-color: #33302b;
+    --bg-main: #121212;
+    --bg-card: #1e1e1e;
+    --bg-input: #2a2a2a;
+    --text-main: #ffffff;
+    --text-muted: #b0b0b0;
+    --accent-primary: #3498db;
+    --accent-success: #2ecc71;
+    --accent-danger: #e74c3c;
+    --accent-warning: #f39c12;
+    --border-color: #333333;
     --spacing: 1rem;
     --radius: 8px;
     --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -54,7 +53,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem var(--spacing);
-    background-color: #1a1816;
+    background-color: #181818;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: var(--spacing);
     flex-wrap: wrap;
@@ -64,40 +63,20 @@ body {
 .brand {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 0.5rem;
 }
 
 .brand-header-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
     object-fit: cover;
-    transform: scale(1.18);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-    clip-path: inset(0 round 8px);
-    flex-shrink: 0;
-}
-
-.brand-titles {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.1;
 }
 
 .brand h1 {
-    font-size: 1.15rem;
-    font-weight: 800;
+    font-size: 1.25rem;
     color: var(--text-main);
-    letter-spacing: -0.01em;
-    margin: 0;
-}
-
-.brand-subtitle {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--accent-primary);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
 }
 
 .nav-tabs {
@@ -141,7 +120,7 @@ body {
 
 .nav-tab.active {
     background-color: var(--accent-primary);
-    color: #141312;
+    color: #fff;
 }
 
 .main-content-area {
@@ -244,21 +223,8 @@ body {
 /* "Heute" Markierung im Speiseplan */
 .modal-day-card.is-today {
     border-left: 4px solid var(--accent-success);
-    background-color: rgba(16, 185, 129, 0.12);
-    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
-}
-
-/* Vergangene Tage dezent zurueckstufen */
-.modal-day-card.is-past {
-    opacity: 0.42;
-    border-left-color: var(--border-color);
-    filter: grayscale(35%);
-    transition: opacity 0.2s, filter 0.2s;
-}
-
-.modal-day-card.is-past:hover {
-    opacity: 0.85;
-    filter: grayscale(0%);
+    background-color: rgba(46, 204, 113, 0.08);
+    box-shadow: 0 0 12px rgba(46, 204, 113, 0.15);
 }
 
 .today-badge {
@@ -270,29 +236,6 @@ body {
     border-radius: 4px;
     text-transform: uppercase;
     line-height: 1;
-}
-
-/* Schnellspringer zu Heute */
-.btn-today-jump {
-    height: 28px;
-    padding: 0 0.55rem;
-    font-size: 0.75rem;
-    background-color: rgba(245, 158, 11, 0.15);
-    border: 1px solid var(--accent-primary);
-    color: var(--accent-primary);
-    border-radius: var(--radius);
-    cursor: pointer;
-    font-weight: 700;
-    white-space: nowrap;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.15s, color 0.15s;
-}
-
-.btn-today-jump:hover {
-    background-color: var(--accent-primary);
-    color: #141312;
 }
 
 /* Grid-Layout für Gerichte mit Bild */
@@ -684,168 +627,11 @@ textarea {
     to { transform: scale(1.05); box-shadow: 0 0 10px rgba(231, 76, 60, 0.8); }
 }
 
-/* Formular-Gestaltung: Vollstaendige Hoehen-Ausnutzung & komfortable Swipe-Zonen */
-.add-form-card {
-    max-width: 650px;
-    margin: 0 auto;
-    padding: 1rem 1.1rem !important;
-    min-height: calc(100dvh - 145px);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-sizing: border-box;
-}
-
-.recipe-form-flow {
-    display: flex;
-    flex-direction: column;
-    gap: 0.95rem;
-    flex: 1;
-    justify-content: space-between;
-}
-
-.styled-form-input {
+/* Volle Breite nur für das Speichern-Formular */
+#dish-form .btn-primary {
     width: 100%;
-    padding: 0.75rem 0.85rem !important;
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    color: var(--text-main);
-    font-size: 0.92rem !important;
-    box-sizing: border-box;
-    outline: none;
-}
-
-.styled-form-input:focus, .styled-form-textarea:focus {
-    border-color: var(--accent-primary);
-}
-
-.checkbox-row-container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background-color: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 0.6rem 0.5rem;
-}
-
-/* Trigger-Karten für Zutaten & Zubereitung */
-.form-text-triggers-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.6rem;
-}
-
-.btn-text-trigger {
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 0.65rem 0.6rem;
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    cursor: pointer;
-    text-align: left;
-    transition: border-color 0.15s, background-color 0.15s;
-}
-
-.btn-text-trigger:hover {
-    border-color: var(--accent-primary);
-    background-color: rgba(245, 158, 11, 0.05);
-}
-
-.trigger-icon {
-    font-size: 1.3rem;
-    line-height: 1;
-}
-
-.trigger-texts {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    min-width: 0;
-}
-
-.trigger-title {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text-main);
-    white-space: nowrap;
-}
-
-.trigger-status {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Fullscreen Text-Editor Modal */
-.text-editor-modal-content {
-    max-width: 600px;
-    height: 80vh !important;
-}
-
-.fullscreen-modal-textarea {
-    width: 100%;
-    height: 100%;
-    min-height: 55vh;
-    padding: 0.75rem !important;
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    color: var(--text-main);
-    font-size: 0.95rem !important;
-    font-family: inherit;
-    line-height: 1.5;
-    resize: none;
-    box-sizing: border-box;
-    outline: none;
-}
-
-.fullscreen-modal-textarea:focus {
-    border-color: var(--accent-primary);
-}
-
-.form-media-upload-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.65rem;
-}
-
-.btn-upload-choice {
-    flex: 1;
-    background-color: var(--bg-input);
-    border: 1px dashed var(--border-color);
-    color: var(--text-main);
-    padding: 0.75rem 0.4rem;
-    border-radius: var(--radius);
-    text-align: center;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.upload-feedback-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    min-height: 0;
-}
-
-.btn-submit-recipe {
-    width: 100%;
-    height: 48px !important;
-    font-size: 1rem !important;
-    font-weight: 700 !important;
-    margin-top: 0.4rem;
-    margin-bottom: 0.5rem;
+    height: 42px;
+    font-size: 0.95rem;
 }
 
 .dish-list {
@@ -910,7 +696,7 @@ textarea {
     filter: grayscale(0%);
 }
 
-.database-layout-simple { margin-top: 0; }
+.database-layout-simple { margin-top: var(--spacing); }
 .subtitle { font-size: 0.9rem; color: var(--text-muted); }
 
 /* Modals als zentriertes Popup-Overlay */
@@ -1014,26 +800,26 @@ textarea {
     background-color: rgba(52, 152, 219, 0.1);
 }
 
-/* Speiseplan-Karten: 60px Thumbnails & optimale Ausnutzung des Bildschirms */
+/* Speiseplan-Karten: 54px Thumbnails, kompakt & responsive */
 .modal-day-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
     border-left: 4px solid var(--accent-primary);
     border-radius: var(--radius);
-    padding: 0.45rem 0.65rem;
+    padding: 0.4rem 0.55rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.6rem;
+    gap: 0.5rem;
     user-select: none;
-    min-height: 66px;
+    min-height: 60px;
 }
 
 .modal-day-info-wrapper { 
     flex: 1; 
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.6rem;
     min-width: 0;
 }
 
@@ -1048,99 +834,26 @@ textarea {
 }
 
 .modal-day-weekday {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 800;
     color: var(--text-main);
     white-space: nowrap;
 }
 
 .modal-day-date-text {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: var(--text-muted);
     font-weight: 600;
     white-space: nowrap;
 }
 
 .plan-dish-thumb, .plan-dish-thumb-placeholder {
-    width: 60px !important;
-    height: 60px !important;
-    min-width: 60px !important;
-    min-height: 60px !important;
+    width: 54px !important;
+    height: 54px !important;
+    min-width: 54px !important;
+    min-height: 54px !important;
     border-radius: 10px;
 }
-
-.modal-plan-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-    margin: var(--spacing) 0;
-    max-width: 750px;
-    margin-left: auto;
-    margin-right: auto;
-    overflow: visible;
-}
-
-/* Ungeplanter Zustand */
-.modal-day-card.is-unplanned {
-    border-left-color: var(--border-color) !important;
-    background-color: rgba(255, 255, 255, 0.015);
-}
-
-.modal-day-card.is-unplanned .modal-dish-name {
-    color: var(--text-muted);
-    font-style: italic;
-    font-weight: 500;
-}
-
-/* Aktionsleiste bei Zuweisung eines Tages */
-.select-mode-actions-bar {
-    display: flex;
-    flex-direction: column;
-    gap: 0.45rem;
-    background: rgba(245, 158, 11, 0.1);
-    border: 1px dashed var(--accent-primary);
-    padding: 0.6rem;
-    border-radius: var(--radius);
-    margin-bottom: 0.75rem;
-}
-
-.btn-set-unplanned {
-    width: 100% !important;
-    height: 34px !important;
-    font-size: 0.82rem !important;
-    font-weight: 700;
-    color: var(--text-main);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-}
-
-.btn-set-unplanned:hover {
-    border-color: var(--accent-danger);
-    color: var(--accent-danger);
-}
-
-.freetext-dish-row {
-    display: flex;
-    gap: 0.4rem;
-}
-
-.freetext-dish-row input {
-    flex: 1;
-    padding: 0.4rem 0.65rem;
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    color: var(--text-main);
-    font-size: 0.82rem;
-}
-
-.freetext-dish-row .btn {
-    height: 34px;
-    padding: 0 0.75rem !important;
-    font-size: 0.82rem !important;
-}
-
-
 
 .modal-dish-row { 
     display: flex; 
@@ -1330,10 +1043,10 @@ textarea {
     font-size: 0.8rem;
     font-weight: 600;
 }
-.badge-pill-veggie { background: #182e1d; color: #34d399; }
-.badge-pill-meat { background: #381a17; color: #fb7185; }
-.badge-pill-carb { background: #382b14; color: #fbbf24; }
-.badge-pill-flex { background: #182833; color: #38bdf8; }
+.badge-pill-veggie { background: #1e3a1e; color: #4ade80; }
+.badge-pill-meat { background: #3a1e1e; color: #f87171; }
+.badge-pill-carb { background: #3a321e; color: #facc15; }
+.badge-pill-flex { background: #1e293b; color: #38bdf8; }
 
 /* Pillen-Auswahlgruppe im Formular */
 .pill-selector-group {
@@ -1451,40 +1164,18 @@ textarea {
     color: var(--accent-primary);
 }
 
-/* Smarte Einkaufsliste: Einzeilige Kompakt-Leiste */
-.shopping-top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.5rem !important;
-}
-
+/* Smarte Einkaufsliste Styles */
 .shopping-timeframe-toggle {
     display: flex;
-    gap: 0.25rem;
-    flex: 1;
-    margin-bottom: 0;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .shopping-timeframe-toggle .btn-filter {
     flex: 1;
     text-align: center;
-    padding: 0.35rem 0.15rem;
-    font-size: 0.78rem;
-    height: 32px;
-}
-
-.shopping-action-buttons {
-    display: flex;
-    gap: 0.3rem;
-}
-
-.shopping-action-buttons .btn {
-    height: 32px;
-    min-width: 34px;
-    padding: 0 0.4rem !important;
-    font-size: 0.95rem;
+    padding: 0.4rem 0.2rem;
+    font-size: 0.8rem;
 }
 
 .unparsed-recipes-box {
@@ -1579,22 +1270,10 @@ textarea {
     gap: 0.5rem;
     cursor: pointer;
     user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
-    padding: 0.45rem 0.55rem;
-    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    border-radius: 4px;
     background-color: rgba(255, 255, 255, 0.03);
-    border: 1px solid transparent;
-    transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
-    position: relative;
-    touch-action: pan-y;
-}
-
-/* Visuelles Feedback beim Halten (Long-Press) */
-.ingredient-item.holding {
-    background-color: rgba(46, 204, 113, 0.2) !important;
-    border-color: var(--accent-success);
-    transform: scale(0.98);
+    transition: background-color 0.15s;
 }
 
 .ingredient-left {
@@ -1619,110 +1298,6 @@ textarea {
 .btn-delete-custom-item:hover {
     color: var(--accent-danger);
     background-color: rgba(231, 76, 60, 0.15);
-}
-
-/* Zuklappbarer Erledigt-Bereich */
-.shopping-done-section {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px dashed var(--border-color);
-}
-
-.btn-toggle-done {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    padding: 0.55rem 0.75rem;
-    border-radius: var(--radius);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
-}
-
-.btn-toggle-done:hover {
-    background: rgba(255, 255, 255, 0.06);
-    color: var(--text-main);
-}
-
-.shopping-done-items-container {
-    margin-top: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.shopping-done-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.35rem 0.6rem;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    text-decoration: line-through;
-    color: var(--text-muted);
-    opacity: 0.6;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: opacity 0.15s, text-decoration 0.15s;
-}
-
-.shopping-done-item:hover {
-    opacity: 0.95;
-    text-decoration: none;
-}
-
-/* Undo Snackbar Toast */
-.shopping-undo-snackbar {
-    position: fixed;
-    bottom: 1.25rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1e293b;
-    border: 1px solid #38bdf8;
-    color: #ffffff;
-    padding: 0.55rem 1rem;
-    border-radius: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    z-index: 9999;
-    font-size: 0.82rem;
-    animation: slideUpToast 0.18s cubic-bezier(0.25, 1, 0.5, 1);
-    white-space: nowrap;
-}
-
-.btn-snackbar-undo {
-    background: rgba(56, 189, 248, 0.2);
-    border: 1px solid #38bdf8;
-    color: #38bdf8;
-    font-weight: 700;
-    padding: 0.25rem 0.65rem;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.78rem;
-    transition: background-color 0.15s;
-}
-
-.btn-snackbar-undo:hover {
-    background: rgba(56, 189, 248, 0.35);
-}
-
-@keyframes slideUpToast {
-    from {
-        opacity: 0;
-        transform: translate(-50%, 15px);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, 0);
-    }
 }
 
 .ingredient-item:hover {

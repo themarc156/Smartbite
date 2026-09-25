@@ -1,0 +1,15 @@
+
+
+
+.\venv\Scripts\python.exe server.py
+
+
+https://smartbite-601712420099.europe-west1.run.app
+
+
+
+
+https://res.cloudinary.com/da6e8pwi/image/upload/f_auto,q_auto/cld-sample-4.jpg
+
+
+
