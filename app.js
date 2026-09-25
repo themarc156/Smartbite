@@ -298,7 +298,12 @@ function renderRecipeIngredients(dish) {
         checkbox.type = 'checkbox';
         
         const textSpan = document.createElement('span');
-        textSpan.textContent = scaledText;
+        const match = scaledText.match(/^([\d.,/]+(?:\s*[a-zA-ZäöüÄÖÜß]+)?)\s*(.*)$/);
+        if (match && match[1]) {
+            textSpan.innerHTML = `<strong style="color: var(--accent-primary);">${match[1]}</strong> ${match[2]}`;
+        } else {
+            textSpan.textContent = scaledText;
+        }
 
         li.appendChild(checkbox);
         li.appendChild(textSpan);
@@ -573,11 +578,16 @@ function renderApp() {
                 card.className = 'modal-day-card';
                 card.setAttribute('draggable', 'true');
 
-                // Prüfen, ob dieser Tag heute ist
-                const todayStr = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
-                const isToday = (day.dateString === todayStr);
+                // Datumsauswertung: Heute (hervorgehoben) vs. Vergangenheit (zurueckgestuft)
+                const todayMidnight = new Date().setHours(0, 0, 0, 0);
+                const dayMidnight = new Date(day.dateTimeline).setHours(0, 0, 0, 0);
+                const isToday = (dayMidnight === todayMidnight);
+                const isPast = (dayMidnight < todayMidnight);
+
                 if (isToday) {
                     card.classList.add('is-today');
+                } else if (isPast) {
+                    card.classList.add('is-past');
                 }
 
                 card.addEventListener('dragstart', (e) => {
@@ -1644,6 +1654,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-next-week').addEventListener('click', () => {
         if (appState.currentWeekPage < 3) { appState.currentWeekPage++; renderApp(); }
     });
+
+    const btnJumpToday = document.getElementById('btn-jump-today');
+    if (btnJumpToday) {
+        btnJumpToday.addEventListener('click', () => {
+            appState.currentWeekPage = 0;
+            renderApp();
+        });
+    }
 
     // (Pillen-Listener über zentrale Event-Delegation gesteuert)
 

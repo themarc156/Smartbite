@@ -7,7 +7,7 @@
     
     <!-- PWA & Apple Web App Meta Tags -->
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#181818">
+    <meta name="theme-color" content="#1a1816">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="SmartBite">
@@ -93,7 +93,10 @@
             <div class="view-header plan-header-single-row">
                 <div class="kw-stepper" style="width: 100%; justify-content: space-between;">
                     <button id="btn-prev-week" class="btn btn-nav">&lt;</button>
-                    <span id="modal-kw-title" class="kw-display">KW --</span>
+                    <div style="display: flex; align-items: center; gap: 0.45rem;">
+                        <span id="modal-kw-title" class="kw-display">KW --</span>
+                        <button id="btn-jump-today" class="btn-today-jump" title="Zur aktuellen Woche springen">Heute 📍</button>
+                    </div>
                     <button id="btn-next-week" class="btn btn-nav">&gt;</button>
                 </div>
             </div>
