@@ -450,6 +450,11 @@ function renderApp() {
         dishList.innerHTML = '';
         dishList.classList.toggle('grid-view', appState.isGridView);
 
+        const selectModeBar = document.getElementById('select-mode-actions-bar');
+        if (selectModeBar) {
+            selectModeBar.classList.toggle('hidden', !appState.selectModeForDayId);
+        }
+
         if (appState.selectModeForDayId) {
             dishList.classList.add('select-mode');
             if (instructionText) instructionText.innerHTML = "🎯 <strong>Auswahl-Modus:</strong> Klicke auf ein Gericht, um es in den Plan einzutragen!";
@@ -625,30 +630,49 @@ function renderApp() {
                     <span class="modal-day-date-text">${day.dateString}</span>
                 `;
 
-                // Spalte 2: Miniatur-Vorschaubild des Gerichts (Holt Daten live aus der Datenbank, falls vorhanden)
+                // Pruefen, ob der Tag ungeplant ist
+                const isUnplanned = !day.dishId && (!day.dishName || day.dishName === 'Noch nichts geplant' || day.dishName === 'Ungeplant' || day.isUnplanned);
+
+                if (isUnplanned) {
+                    card.classList.add('is-unplanned');
+                }
+
+                // Spalte 2: Vorschaubild (Gurken-Bild fuer ungeplant, sonst Foto/Placeholder)
+                let thumbEl;
                 const dishObj = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
-                
-                // Live-Synchronisation der Attribute, falls sich das Rezept in der Datenbank geändert hat
                 if (dishObj) {
                     day.isMeat = dishObj.isMeat;
                     day.isHighCarb = dishObj.isHighCarb;
                     day.isEmergency = dishObj.isEmergency;
                 }
 
-                let thumbEl;
-                const thumbImage = dishObj ? (dishObj.previewImage || dishObj.image) : null;
-                if (thumbImage) {
+                if (isUnplanned) {
                     thumbEl = document.createElement('img');
-                    thumbEl.src = thumbImage;
+                    thumbEl.src = '/unplanned.png';
                     thumbEl.className = 'plan-dish-thumb';
-                    thumbEl.alt = day.dishName;
+                    thumbEl.alt = 'Ungeplant';
+                    thumbEl.onerror = () => {
+                        thumbEl.style.display = 'none';
+                        const fallback = document.createElement('div');
+                        fallback.className = 'plan-dish-thumb-placeholder';
+                        fallback.textContent = '🥒';
+                        if (thumbEl.parentNode) thumbEl.parentNode.replaceChild(fallback, thumbEl);
+                    };
                 } else {
-                    thumbEl = document.createElement('div');
-                    thumbEl.className = 'plan-dish-thumb-placeholder';
-                    thumbEl.textContent = day.isMeat === true ? '🥩' : (day.isMeat === false ? '🌱' : '🍲');
+                    const thumbImage = dishObj ? (dishObj.previewImage || dishObj.image) : null;
+                    if (thumbImage) {
+                        thumbEl = document.createElement('img');
+                        thumbEl.src = thumbImage;
+                        thumbEl.className = 'plan-dish-thumb';
+                        thumbEl.alt = day.dishName;
+                    } else {
+                        thumbEl = document.createElement('div');
+                        thumbEl.className = 'plan-dish-thumb-placeholder';
+                        thumbEl.textContent = day.isMeat === 'baking' ? '🍰' : (day.isMeat === true ? '🥩' : (day.isMeat === false ? '🌱' : '🍲'));
+                    }
                 }
 
-                // Spalte 3: Nur noch dezent der Carb-Indikator + Rezeptname
+                // Spalte 3: Carb-Indikator + Rezeptname
                 const dishRow = document.createElement('div');
                 dishRow.className = 'modal-dish-row';
 
@@ -657,29 +681,35 @@ function renderApp() {
 
                 const carbBadge = document.createElement('span');
                 carbBadge.textContent = '🌾';
-                carbBadge.className = day.isHighCarb ? 'badge-carb-indicator' : 'badge-carb-indicator badge-inactive';
+                carbBadge.className = (!isUnplanned && day.isHighCarb) ? 'badge-carb-indicator' : 'badge-carb-indicator badge-inactive';
                 leftBadges.appendChild(carbBadge);
 
                 const dishName = document.createElement('div');
                 dishName.className = 'modal-dish-name clickable-recipe-link';
-                dishName.textContent = day.dishName;
-                dishName.title = 'Klicken, um Rezept-Details zu öffnen';
+                dishName.textContent = isUnplanned ? 'Noch nichts geplant...' : day.dishName;
+                dishName.title = isUnplanned ? 'Klicken, um ein Gericht zuzuweisen' : 'Klicken, um Rezept-Details zu öffnen';
+                
                 dishName.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const dishObj = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
-                    if (dishObj) {
-                        openRecipeModal(dishObj);
+                    if (isUnplanned) {
+                        appState.selectModeForDayId = day.id;
+                        switchView('database');
+                        renderApp();
                     } else {
-                        // Fallback für ungespeicherte Gerichte
-                        openRecipeModal({
-                            id: day.dishId,
-                            name: day.dishName,
-                            isMeat: day.isMeat,
-                            isHighCarb: day.isHighCarb,
-                            isEmergency: day.isEmergency,
-                            ingredients: '',
-                            instructions: 'Kein Rezept hinterlegt.'
-                        });
+                        const targetDish = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
+                        if (targetDish) {
+                            openRecipeModal(targetDish);
+                        } else {
+                            openRecipeModal({
+                                id: day.dishId,
+                                name: day.dishName,
+                                isMeat: day.isMeat,
+                                isHighCarb: day.isHighCarb,
+                                isEmergency: day.isEmergency,
+                                ingredients: '',
+                                instructions: 'Freitext-Gericht (kein hinterlegtes Rezept).'
+                            });
+                        }
                     }
                 });
 
@@ -1065,6 +1095,9 @@ function renderShoppingList() {
     const unparsedDishes = [];
 
     daysToInclude.forEach(day => {
+        const isUnplanned = !day.dishId && (!day.dishName || day.dishName === 'Noch nichts geplant' || day.dishName === 'Ungeplant' || day.isUnplanned);
+        if (isUnplanned) return; // Ungeplante Tage ueberspringen
+
         const dish = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
         if (dish) {
             const lines = (dish.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean);
@@ -1074,6 +1107,16 @@ function renderShoppingList() {
                 if (!unparsedDishes.some(d => d.id === dish.id)) {
                     unparsedDishes.push(dish);
                 }
+            }
+        } else if (day.dishName && day.dishName !== 'Noch nichts geplant') {
+            // Freitext-Gericht ohne festes Rezept: In die Hinweisbox aufnehmen
+            const shortDay = WEEKDAY_SHORT[day.dayName] || day.dayName.slice(0, 2);
+            if (!unparsedDishes.some(d => d.name === day.dishName)) {
+                unparsedDishes.push({
+                    id: `freetext-${day.id}`,
+                    name: `${day.dishName} (${shortDay})`,
+                    isFreeText: true
+                });
             }
         }
     });
@@ -1090,8 +1133,9 @@ function renderShoppingList() {
             btn.className = 'unparsed-chip';
             btn.textContent = `${d.name} ↗`;
             btn.addEventListener('click', () => {
-                document.getElementById('shopping-list-modal').classList.add('hidden');
-                openRecipeModal(d);
+                if (!d.isFreeText) {
+                    openRecipeModal(d);
+                }
             });
             unparsedChips.appendChild(btn);
         });
@@ -1556,6 +1600,49 @@ document.addEventListener('DOMContentLoaded', () => {
             switchView('database');
         });
     }
+
+    // Tag leeren / auf ungeplant zuruecksetzen
+    const btnSetUnplanned = document.getElementById('btn-set-unplanned');
+    if (btnSetUnplanned) {
+        btnSetUnplanned.addEventListener('click', () => {
+            if (appState.selectModeForDayId) {
+                assignDishToDay(appState.selectModeForDayId, {
+                    name: 'Noch nichts geplant',
+                    id: null,
+                    isUnplanned: true,
+                    isMeat: null,
+                    isHighCarb: false,
+                    isEmergency: false
+                });
+                appState.selectModeForDayId = null;
+                switchView('plan');
+            }
+        });
+    }
+
+    // Freitext-Gericht eintragen
+    const freetextInput = document.getElementById('freetext-dish-input');
+    const btnSubmitFreetext = document.getElementById('btn-submit-freetext');
+
+    const handleFreetextSubmit = () => {
+        const val = freetextInput ? freetextInput.value.trim() : '';
+        if (val && appState.selectModeForDayId) {
+            assignDishToDay(appState.selectModeForDayId, {
+                name: val,
+                id: null,
+                isUnplanned: false,
+                isMeat: null,
+                isHighCarb: false,
+                isEmergency: false
+            });
+            freetextInput.value = '';
+            appState.selectModeForDayId = null;
+            switchView('plan');
+        }
+    };
+
+    if (btnSubmitFreetext) btnSubmitFreetext.addEventListener('click', handleFreetextSubmit);
+    if (freetextInput) freetextInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleFreetextSubmit(); });
 
     const btnToggleLayout = document.getElementById('btn-toggle-layout');
     if (btnToggleLayout) {

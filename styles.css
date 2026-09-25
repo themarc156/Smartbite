@@ -852,6 +852,66 @@ textarea {
     min-height: 60px;
 }
 
+/* Ungeplanter Zustand */
+.modal-day-card.is-unplanned {
+    border-left-color: var(--border-color) !important;
+    background-color: rgba(255, 255, 255, 0.015);
+}
+
+.modal-day-card.is-unplanned .modal-dish-name {
+    color: var(--text-muted);
+    font-style: italic;
+    font-weight: 500;
+}
+
+/* Aktionsleiste bei Zuweisung eines Tages */
+.select-mode-actions-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px dashed var(--accent-primary);
+    padding: 0.6rem;
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+}
+
+.btn-set-unplanned {
+    width: 100% !important;
+    height: 34px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700;
+    color: var(--text-main);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+
+.btn-set-unplanned:hover {
+    border-color: var(--accent-danger);
+    color: var(--accent-danger);
+}
+
+.freetext-dish-row {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.freetext-dish-row input {
+    flex: 1;
+    padding: 0.4rem 0.65rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.82rem;
+}
+
+.freetext-dish-row .btn {
+    height: 34px;
+    padding: 0 0.75rem !important;
+    font-size: 0.82rem !important;
+}
+
 .modal-day-info-wrapper { 
     flex: 1; 
     display: flex;

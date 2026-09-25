@@ -121,6 +121,10 @@ def manifest():
 def icon():
     return send_from_directory(BASE_DIR, "icon.png")
 
+@app.route("/unplanned.png")
+def unplanned_image():
+    return send_from_directory(BASE_DIR, "unplanned.png")
+
 @app.route("/uploads/<filename>")
 def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)

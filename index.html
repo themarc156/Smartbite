@@ -108,6 +108,15 @@
             <!-- Unsichtbarer Zähler zur Fehlervermeidung in JS -->
             <span id="dish-count" class="hidden">0</span>
             <div class="database-layout-simple">
+                <!-- Aktionsleiste bei Zuweisung eines Tages (Tag leeren / Freitext) -->
+                <div id="select-mode-actions-bar" class="select-mode-actions-bar hidden">
+                    <button type="button" id="btn-set-unplanned" class="btn btn-nav btn-set-unplanned">❓ Tag leeren (auf ungeplant setzen)</button>
+                    <div class="freetext-dish-row">
+                        <input type="text" id="freetext-dish-input" placeholder="✍️ Freitext (z.B. Resteessen, Restaurant, Curry)..." autocomplete="off">
+                        <button type="button" id="btn-submit-freetext" class="btn btn-primary">Eintragen</button>
+                    </div>
+                </div>
+
                 <div class="search-and-toggle-row">
                     <div class="search-bar-container">
                         <input type="text" id="dish-search-input" placeholder="🔍 Rezepte durchsuchen..." autocomplete="off">
