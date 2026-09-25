@@ -1404,7 +1404,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnCopy = document.getElementById('btn-copy-shopping-list');
     if (btnCopy) {
         btnCopy.addEventListener('click', () => {
-            let text = `🛒 SmartBite Einkaufsliste\n\n`;
+            let text = `🛒 SmartBite – Family Food-Orga\nEinkaufsliste:\n\n`;
             document.querySelectorAll('.shopping-category-group').forEach(group => {
                 const catTitle = group.querySelector('.shopping-category-title').textContent;
                 text += `--- ${catTitle} ---\n`;
