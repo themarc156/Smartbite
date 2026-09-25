@@ -684,93 +684,71 @@ textarea {
     to { transform: scale(1.05); box-shadow: 0 0 10px rgba(231, 76, 60, 0.8); }
 }
 
-/* Kompaktes No-Scroll Formular Styles */
-.compact-recipe-form {
+/* Formular-Gestaltung (Angenehme Hoehe & vertikaler Flow) */
+.recipe-form-flow {
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 0.65rem;
 }
 
-.compact-input {
+.styled-form-input {
     width: 100%;
-    padding: 0.5rem 0.65rem !important;
+    padding: 0.65rem 0.75rem !important;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.9rem !important;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.styled-form-input:focus, .styled-form-textarea:focus {
+    border-color: var(--accent-primary);
+}
+
+.checkbox-row-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.5rem;
+}
+
+.styled-form-textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem !important;
     background-color: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     color: var(--text-main);
     font-size: 0.85rem !important;
+    font-family: inherit;
+    resize: vertical;
     box-sizing: border-box;
+    outline: none;
 }
 
-.compact-checkbox-row {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0.15rem 0;
-}
-
-.compact-two-cols {
+.form-media-upload-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.45rem;
+    gap: 0.5rem;
 }
 
-.compact-textarea {
-    width: 100%;
-    padding: 0.45rem 0.6rem !important;
-    background-color: var(--bg-input);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    color: var(--text-main);
-    font-size: 0.8rem !important;
-    font-family: inherit;
-    resize: none;
-    box-sizing: border-box;
-}
-
-.compact-inputs-row {
+.upload-feedback-container {
     display: flex;
-    gap: 0.45rem;
-    align-items: center;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-height: 0;
 }
 
-.compact-upload-btn {
-    padding: 0.45rem 0.35rem !important;
-    font-size: 0.78rem !important;
-    height: 34px;
-    box-sizing: border-box;
-    margin: 0;
-}
-
-.compact-screenshot-row {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    padding: 0.2rem 0.5rem;
-}
-
-.compact-screenshot-label {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-    margin: 0;
-}
-
-.compact-file-input {
-    font-size: 0.72rem !important;
-    padding: 0 !important;
-    border: none !important;
-    background: transparent !important;
-}
-
-.btn-save-compact {
+.btn-submit-recipe {
     width: 100%;
-    height: 38px !important;
-    font-size: 0.9rem !important;
-    margin-top: 0.2rem;
+    height: 44px !important;
+    font-size: 0.95rem !important;
+    margin-top: 0.25rem;
 }
 
 .dish-list {

@@ -1752,46 +1752,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // (Pillen-Listener über zentrale Event-Delegation gesteuert)
 
-    // Dateinamen-Feedback bei Foto-Auswahl im Hauptformular
+    // Dateinamen-Feedback im Hauptformular
     const hintLabel = document.getElementById('preview-file-name-label');
-    const camInput = document.getElementById('dish-preview-file-cam');
     const galInput = document.getElementById('dish-preview-file');
+    const shotInput = document.getElementById('dish-image-file');
+    const shotLabel = document.getElementById('screenshot-file-name-label');
 
-    if (camInput) {
-        camInput.addEventListener('change', () => {
-            if (camInput.files.length > 0) {
-                if (galInput) galInput.value = '';
-                if (hintLabel) hintLabel.textContent = `✓ Foto geknipst: ${camInput.files[0].name}`;
+    if (galInput && hintLabel) {
+        galInput.addEventListener('change', () => {
+            if (galInput.files.length > 0) {
+                hintLabel.textContent = `✓ Foto gewählt: ${galInput.files[0].name}`;
             }
         });
     }
-    if (galInput) {
-        galInput.addEventListener('change', () => {
-            if (galInput.files.length > 0) {
-                if (camInput) camInput.value = '';
-                if (hintLabel) hintLabel.textContent = `✓ Aus Galerie: ${galInput.files[0].name}`;
+
+    if (shotInput && shotLabel) {
+        shotInput.addEventListener('change', () => {
+            if (shotInput.files.length > 0) {
+                shotLabel.textContent = `✓ Screenshot gewählt: ${shotInput.files[0].name}`;
             }
         });
     }
 
     // Dateinamen-Feedback im Bearbeiten-Modal
     const modalHintLabel = document.getElementById('modal-preview-file-hint');
-    const modalCamInput = document.getElementById('modal-edit-preview-file-cam');
     const modalGalInput = document.getElementById('modal-edit-preview-file');
+    const modalShotInput = document.getElementById('modal-edit-image-file');
+    const modalShotLabel = document.getElementById('modal-screenshot-file-hint');
 
-    if (modalCamInput) {
-        modalCamInput.addEventListener('change', () => {
-            if (modalCamInput.files.length > 0) {
-                if (modalGalInput) modalGalInput.value = '';
-                if (modalHintLabel) modalHintLabel.textContent = `✓ Foto geknipst: ${modalCamInput.files[0].name}`;
+    if (modalGalInput && modalHintLabel) {
+        modalGalInput.addEventListener('change', () => {
+            if (modalGalInput.files.length > 0) {
+                modalHintLabel.textContent = `✓ Foto gewählt: ${modalGalInput.files[0].name}`;
             }
         });
     }
-    if (modalGalInput) {
-        modalGalInput.addEventListener('change', () => {
-            if (modalGalInput.files.length > 0) {
-                if (modalCamInput) modalCamInput.value = '';
-                if (modalHintLabel) modalHintLabel.textContent = `✓ Aus Galerie: ${modalGalInput.files[0].name}`;
+
+    if (modalShotInput && modalShotLabel) {
+        modalShotInput.addEventListener('change', () => {
+            if (modalShotInput.files.length > 0) {
+                modalShotLabel.textContent = `✓ Screenshot gewählt: ${modalShotInput.files[0].name}`;
             }
         });
     }

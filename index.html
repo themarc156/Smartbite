@@ -150,23 +150,23 @@
             </div>
         </section>
 
-        <!-- VIEW 3: Neues Rezept (Kompaktes No-Scroll-Layout) -->
+        <!-- VIEW 3: Neues Rezept -->
         <section id="view-add" class="app-view hidden">
-            <div class="card add-form-card" style="padding: 0.6rem 0.75rem; margin: 0 auto;">
+            <div class="card add-form-card">
                 <div class="form-top-actions-only">
                     <span id="form-heading-title" class="hidden"></span>
-                    <div class="header-action-group" style="margin-left: auto; margin-bottom: 0.35rem;">
-                        <button type="button" id="btn-delete-in-form" class="btn btn-danger hidden" style="height: 30px; font-size: 0.78rem;">🗑️ Löschen</button>
-                        <button type="button" id="btn-cancel-edit" class="btn btn-primary" style="height: 30px; font-size: 0.78rem; background: var(--bg-input); border: 1px solid var(--border-color);">Abbrechen ✖</button>
+                    <div class="header-action-group" style="margin-left: auto; margin-bottom: 0.5rem;">
+                        <button type="button" id="btn-delete-in-form" class="btn btn-danger hidden">🗑️ Löschen</button>
+                        <button type="button" id="btn-cancel-edit" class="btn btn-primary" style="background: var(--bg-input); border: 1px solid var(--border-color);">Abbrechen ✖</button>
                     </div>
                 </div>
-                <form id="dish-form" novalidate class="compact-recipe-form">
+                <form id="dish-form" novalidate class="recipe-form-flow">
                     <input type="hidden" id="dish-edit-id" value="">
                     
-                    <!-- Zeile 1: Name -->
-                    <input type="text" id="dish-name" required placeholder="Name des Gerichts *" class="compact-input">
+                    <!-- Name des Gerichts -->
+                    <input type="text" id="dish-name" required placeholder="Name des Gerichts *" class="styled-form-input">
 
-                    <!-- Zeile 2: Art des Gerichts (Pillen) -->
+                    <!-- Art des Gerichts (Pillen) -->
                     <div class="pill-selector-group">
                         <button type="button" data-val="veggie" onclick="selectDishType(this, 'veggie', 'dish-meat-val')">🌱 Veggie</button>
                         <button type="button" class="active" data-val="flex" onclick="selectDishType(this, 'flex', 'dish-meat-val')">🍲 Flexi</button>
@@ -175,39 +175,40 @@
                     </div>
                     <input type="hidden" id="dish-meat-val" value="flex">
 
-                    <!-- Zeile 3: Checkboxen nebeneinander -->
-                    <div class="compact-checkbox-row">
-                        <label class="checkbox-label" style="font-size: 0.85rem;">
+                    <!-- Checkboxen -->
+                    <div class="checkbox-row-container">
+                        <label class="checkbox-label">
                             <input type="checkbox" id="dish-highcarb"> 🌾 High-Carb
                         </label>
-                        <label class="checkbox-label" style="font-size: 0.85rem;">
+                        <label class="checkbox-label">
                             <input type="checkbox" id="dish-emergency"> 🚨 Notfall-Gericht
                         </label>
                     </div>
 
-                    <!-- Zeile 4: Zutaten & Zubereitung 2-spaltig -->
-                    <div class="compact-two-cols">
-                        <textarea id="dish-ingredients" rows="3" placeholder="Zutaten (zeilenweise)..." class="compact-textarea"></textarea>
-                        <textarea id="dish-instructions" rows="3" placeholder="Zubereitungsschritte..." class="compact-textarea"></textarea>
-                    </div>
+                    <!-- Zutaten & Zubereitung untereinander -->
+                    <textarea id="dish-ingredients" rows="3" placeholder="Zutaten (zeilenweise)..." class="styled-form-textarea"></textarea>
+                    <textarea id="dish-instructions" rows="3" placeholder="Zubereitungsschritte..." class="styled-form-textarea"></textarea>
 
-                    <!-- Zeile 5: Link & Foto in einer Zeile -->
-                    <div class="compact-inputs-row">
-                        <input type="url" id="dish-source-url" placeholder="🔗 Link (Chefkoch/Instagram...)" class="compact-input" style="flex: 1.2;">
-                        <label class="btn-upload-choice compact-upload-btn" style="flex: 1;">
+                    <!-- Rezept-Link -->
+                    <input type="url" id="dish-source-url" placeholder="🔗 Rezept-Link (optional)" class="styled-form-input">
+
+                    <!-- Upload-Buttons nebeneinander -->
+                    <div class="form-media-upload-row">
+                        <label class="btn-upload-choice">
                             📷 Foto / Galerie
                             <input type="file" id="dish-preview-file" accept="image/*" class="hidden-file-input">
                         </label>
+                        <label class="btn-upload-choice">
+                            📸 Rezept aus Screenshot
+                            <input type="file" id="dish-image-file" accept="image/*" class="hidden-file-input">
+                        </label>
                     </div>
-                    <span id="preview-file-name-label" class="selected-file-hint" style="font-size: 0.7rem; margin-top: -0.2rem;"></span>
-
-                    <!-- Zeile 6: Screenshot (optional) -->
-                    <div class="compact-screenshot-row">
-                        <label for="dish-image-file" class="compact-screenshot-label">📸 Screenshot:</label>
-                        <input type="file" id="dish-image-file" accept="image/*" class="compact-file-input">
+                    <div class="upload-feedback-container">
+                        <span id="preview-file-name-label" class="selected-file-hint"></span>
+                        <span id="screenshot-file-name-label" class="selected-file-hint"></span>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-save-compact" id="btn-submit-dish">Gericht speichern</button>
+                    <button type="submit" class="btn btn-primary btn-submit-recipe" id="btn-submit-dish">Gericht speichern</button>
                 </form>
             </div>
         </section>
@@ -325,24 +326,19 @@
                         <input type="url" id="modal-edit-url" placeholder="https://...">
                     </div>
 
-                    <div class="form-group" style="margin: 0;">
-                        <label>🖼️ Foto für die App-Ansicht:</label>
-                        <div class="upload-options-row">
-                            <label class="btn-upload-choice">
-                                📷 Foto knipsen
-                                <input type="file" id="modal-edit-preview-file-cam" accept="image/*" capture="environment" class="hidden-file-input">
-                            </label>
-                            <label class="btn-upload-choice">
-                                🖼️ Galerie
-                                <input type="file" id="modal-edit-preview-file" accept="image/*" class="hidden-file-input">
-                            </label>
-                        </div>
-                        <span id="modal-preview-file-hint" class="selected-file-hint"></span>
+                    <div class="form-media-upload-row">
+                        <label class="btn-upload-choice">
+                            📷 Foto / Galerie
+                            <input type="file" id="modal-edit-preview-file" accept="image/*" class="hidden-file-input">
+                        </label>
+                        <label class="btn-upload-choice">
+                            📸 Rezept aus Screenshot
+                            <input type="file" id="modal-edit-image-file" accept="image/*" class="hidden-file-input">
+                        </label>
                     </div>
-
-                    <div class="form-group" style="margin: 0;">
-                        <label for="modal-edit-image-file">📸 Oder langer Screenshot / Infomaterial (optional)</label>
-                        <input type="file" id="modal-edit-image-file" accept="image/*">
+                    <div class="upload-feedback-container">
+                        <span id="modal-preview-file-hint" class="selected-file-hint"></span>
+                        <span id="modal-screenshot-file-hint" class="selected-file-hint"></span>
                     </div>
 
                     <button type="submit" class="btn btn-primary" style="height: 42px; font-size: 0.95rem; width: 100%;">Änderungen speichern 💾</button>
