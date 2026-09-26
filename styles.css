@@ -969,6 +969,8 @@ textarea {
     line-height: 1.25;
     word-break: break-word;
     margin: 0;
+    text-align: center;
+    width: 100%;
 }
 
 .btn-icon-only {
