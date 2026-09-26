@@ -67,12 +67,11 @@
                 <div id="shopping-unparsed-links" class="unparsed-chips-container"></div>
             </div>
 
-           <!-- Schnelleingabe mit Autocomplete & 1-Klick-Dauerbrenner -->
+           <!-- Schnelleingabe mit Autocomplete -->
             <div class="shopping-quick-add">
                 <input type="text" id="shopping-custom-input" placeholder="+ Artikel (z.B. Spülmaschinentabs)..." autocomplete="off" list="shopping-staples-datalist">
                 <datalist id="shopping-staples-datalist"></datalist>
                 <button type="button" id="btn-add-custom-item" class="btn btn-primary">Hinzufügen</button>
-                <button type="button" id="btn-open-staples-modal" class="btn btn-nav btn-staples-trigger" title="Dauerbrenner & Haushalts-Basics">📌</button>
             </div>
 
             <div id="shopping-list-container" class="shopping-categories-container"></div>
@@ -393,30 +392,7 @@
         </div>
     </div>
 
-    <!-- Modal: Dauerbrenner & Vorrats-Basics (1-Klick-Menü) -->
-    <div id="shopping-staples-modal" class="modal hidden">
-        <div class="modal-content staples-modal-content">
-            <header class="modal-header">
-                <button type="button" id="btn-close-staples-modal" class="btn btn-danger btn-close-top">✖</button>
-                <h2 style="font-size: 1.1rem; margin: 0; color: var(--accent-primary);">📌 Haushalts-Dauerbrenner</h2>
-                <div></div>
-            </header>
-            <div class="recipe-view-body">
-                <p class="subtitle" style="margin-bottom: 0.5rem;">Tippe einen Artikel an, um ihn direkt auf den Einkaufszettel zu setzen:</p>
-                <div id="staples-list-container" class="staples-categories-list"></div>
-                
-                <!-- Neuen Dauerbrenner anlegen -->
-                <div class="add-new-staple-box">
-                    <h4 style="font-size: 0.85rem; color: var(--text-main); margin-bottom: 0.3rem;">Neuen Dauerbrenner anlegen:</h4>
-                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                        <input type="text" id="new-staple-name-input" placeholder="Artikel (z.B. Kaffeebohnen)..." class="styled-form-input" style="flex: 1; min-width: 140px;">
-                        <select id="new-staple-category-select" class="styled-form-input" style="flex: 1; min-width: 140px;"></select>
-                        <button type="button" id="btn-create-staple" class="btn btn-primary" style="height: 38px;">+ Merken</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- (Separates Dauerbrenner-Modal entfernt – alles auf einer Liste) -->
 
     <!-- Modal: Fokussierter Text-Editor fuer Zutaten & Zubereitung -->
     <div id="text-editor-modal" class="modal hidden">
