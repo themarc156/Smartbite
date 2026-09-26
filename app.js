@@ -211,7 +211,7 @@ async function loadData(silent = false) {
         appState.dishes = data.dishes || [];
         appState.currentPlan = data.plan || [];
 
-        // 1. Cloud-Sync für Einkaufsliste übernehmen
+        // 1. Cloud-Sync für Einkaufsliste & Dauerbrenner übernehmen
         if (data.shopping) {
             if (Array.isArray(data.shopping.customItems)) {
                 customShoppingItems = data.shopping.customItems;
@@ -220,6 +220,10 @@ async function loadData(silent = false) {
             if (Array.isArray(data.shopping.checkedKeys)) {
                 checkedShoppingKeys = new Set(data.shopping.checkedKeys);
                 localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
+            }
+            if (Array.isArray(data.shopping.staples) && data.shopping.staples.length > 0) {
+                staplesCatalog = data.shopping.staples;
+                localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
             }
         }
 
@@ -243,7 +247,8 @@ async function syncShoppingToApi() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 customItems: customShoppingItems,
-                checkedKeys: [...checkedShoppingKeys]
+                checkedKeys: [...checkedShoppingKeys],
+                staples: staplesCatalog
             })
         });
     } catch (err) {
@@ -1210,37 +1215,58 @@ function resetDishForm() {
     document.getElementById('btn-delete-in-form').classList.add('hidden');
 }
 
-// Wörterbuch für die Regal-Reihenfolge im Supermarkt
+// Wörterbuch für die Regal-Reihenfolge im Supermarkt inkl. Drogerie & Haushalt
 const SUPERMARKET_CATEGORIES = [
     {
         name: '🍏 Obst & Gemüse',
-        keywords: ['zwiebel', 'knoblauch', 'tomate', 'paprika', 'kartoffel', 'salat', 'gurke', 'karotte', 'möhre', 'zucchini', 'ananas', 'basilikum', 'kräuter', 'avocado', 'petersilie', 'apfel', 'zitrone', 'champignon', 'pilz']
+        keywords: ['zwiebel', 'knoblauch', 'tomate', 'paprika', 'kartoffel', 'salat', 'gurke', 'karotte', 'möhre', 'zucchini', 'ananas', 'basilikum', 'kräuter', 'avocado', 'petersilie', 'apfel', 'zitrone', 'champignon', 'pilz', 'banane', 'beeren', 'obst', 'gemüse']
     },
     {
         name: '🍞 Brot & Backwaren',
-        keywords: ['brot', 'toast', 'brötchen', 'buns', 'wrap', 'tortilla', 'mehl', 'hefe', 'pizzateig', 'grieß']
+        keywords: ['brot', 'toast', 'brötchen', 'buns', 'wrap', 'tortilla', 'mehl', 'hefe', 'pizzateig', 'grieß', 'baguette', 'croissant']
     },
     {
         name: '🥩 Fleisch, Fisch & Frischetheke',
-        keywords: ['hackfleisch', 'rinderhack', 'hähnchen', 'schinken', 'speck', 'matjes', 'wurst', 'pinkel', 'patty', 'rind']
+        keywords: ['hackfleisch', 'rinderhack', 'hähnchen', 'schinken', 'speck', 'matjes', 'wurst', 'pinkel', 'patty', 'rind', 'lachs', 'fisch', 'fleisch', 'putenfleisch', 'bratwurst']
     },
     {
         name: '🧀 Kühlregal & Molkerei',
-        keywords: ['milch', 'butter', 'käse', 'gouda', 'feta', 'quark', 'sahne', 'ei', 'eier', 'frischkäse', 'mozzarella', 'creme fraiche', 'joghurt', 'maultaschen']
+        keywords: ['milch', 'butter', 'käse', 'gouda', 'feta', 'quark', 'sahne', 'ei', 'eier', 'frischkäse', 'mozzarella', 'creme fraiche', 'joghurt', 'maultaschen', 'hafermilch', 'parmesan']
     },
     {
         name: '🍝 Vorrat, Teigwaren & Dosen',
-        keywords: ['nudel', 'spaghetti', 'pasta', 'reis', 'kidneybohne', 'bohne', 'mais', 'dose', 'tomatenmark', 'passierte tomaten', 'gehackte tomaten', 'brühe', 'zucker', 'öl', 'olivenöl']
+        keywords: ['nudel', 'spaghetti', 'pasta', 'reis', 'kidneybohne', 'bohne', 'mais', 'dose', 'tomatenmark', 'passierte tomaten', 'gehackte tomaten', 'brühe', 'zucker', 'öl', 'olivenöl', 'haferflocken', 'linsen', 'kokosmilch', 'kaffee', 'kaffeebohnen', 'tee']
     },
     {
-        name: '🥫 Gewürze, Saucen & Sonstiges',
-        keywords: ['salz', 'pfeffer', 'oregano', 'zimt', 'curry', 'paprikapulver', 'chili', 'kreuzkümmel', 'senf', 'ketchup', 'mayo', 'remoulade', 'sauce', 'soße']
+        name: '🥫 Gewürze, Saucen & Snacks',
+        keywords: ['salz', 'pfeffer', 'oregano', 'zimt', 'curry', 'paprikapulver', 'chili', 'kreuzkümmel', 'senf', 'ketchup', 'mayo', 'remoulade', 'sauce', 'soße', 'chips', 'nüsse', 'schokolade']
+    },
+    {
+        name: '🧼 Drogerie & Haushalt',
+        keywords: ['spülmaschinentabs', 'tabs', 'klopapier', 'toilettenpapier', 'müllbeutel', 'alufolie', 'backpapier', 'küchenrolle', 'seife', 'duschgel', 'shampoo', 'zahnpasta', 'waschmittel', 'spülmittel', 'schwamm', 'taschentücher', 'haushalt']
     }
+];
+
+const DEFAULT_STAPLES = [
+    { id: 'staple-tabs', name: 'Spülmaschinentabs', category: '🧼 Drogerie & Haushalt' },
+    { id: 'staple-tp', name: 'Toilettenpapier', category: '🧼 Drogerie & Haushalt' },
+    { id: 'staple-trash', name: 'Müllbeutel', category: '🧼 Drogerie & Haushalt' },
+    { id: 'staple-milk', name: 'Milch', category: '🧀 Kühlregal & Molkerei' },
+    { id: 'staple-butter', name: 'Butter', category: '🧀 Kühlregal & Molkerei' },
+    { id: 'staple-eggs', name: 'Eier', category: '🧀 Kühlregal & Molkerei' },
+    { id: 'staple-coffee', name: 'Kaffeebohnen', category: '🍝 Vorrat, Teigwaren & Dosen' },
+    { id: 'staple-banana', name: 'Bananen', category: '🍏 Obst & Gemüse' }
 ];
 
 let shoppingTimeframe = '3days';
 let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
 let checkedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_checked_shopping') || '[]'));
+let staplesCatalog = JSON.parse(localStorage.getItem('smartbite_staples_catalog') || 'null') || [...DEFAULT_STAPLES];
+
+function saveStaplesCatalog() {
+    localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
+    syncShoppingToApi();
+}
 let isDoneSectionOpen = false;
 let undoSnackbarTimeout = null;
 let lastCompletedKey = null;
@@ -1438,27 +1464,44 @@ function renderShoppingList() {
         categorizedMap[item.category].push(item);
     });
 
-    // Manuelle Artikel einbinden
-    const customCat = '📝 Manuell hinzugefügt';
+    // Manuelle Artikel automatisch in Supermarkt-Gänge einsortieren
     if (customShoppingItems.length > 0) {
-        categorizedMap[customCat] = customShoppingItems.map(itemObj => ({
-            id: typeof itemObj === 'string' ? itemObj : itemObj.id,
-            displayName: typeof itemObj === 'string' ? itemObj : itemObj.name,
-            category: customCat,
-            isCustom: true,
-            sources: []
-        }));
+        customShoppingItems.forEach(itemObj => {
+            const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
+            const id = typeof itemObj === 'string' ? itemObj : itemObj.id;
+            const cat = (itemObj.category) ? itemObj.category : categorizeIngredient(name);
+
+            if (!categorizedMap[cat]) categorizedMap[cat] = [];
+            categorizedMap[cat].push({
+                id: id,
+                displayName: name,
+                category: cat,
+                isCustom: true,
+                sources: []
+            });
+        });
+    }
+
+    // Datalist für Autocomplete aktualisieren
+    const datalist = document.getElementById('shopping-staples-datalist');
+    if (datalist) {
+        datalist.innerHTML = '';
+        staplesCatalog.forEach(staple => {
+            const opt = document.createElement('option');
+            opt.value = staple.name;
+            datalist.appendChild(opt);
+        });
     }
 
     const container = document.getElementById('shopping-list-container');
     container.innerHTML = '';
 
-    const doneSection = document.getElementById('shopping-done-section');
-    const doneContainer = document.getElementById('shopping-done-items-container');
-    const doneCount = document.getElementById('done-items-count');
-    doneContainer.innerHTML = '';
+    if (Object.keys(categorizedMap).length === 0) {
+        container.innerHTML = '<p class="subtitle" style="text-align: center; margin-top: 2rem;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
+        return;
+    }
 
-    const allKnownCatNames = ['📝 Manuell hinzugefügt', ...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel'];
+    const allKnownCatNames = [...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel'];
     let activeCategoriesCount = 0;
     const completedItemsList = [];
 
@@ -1754,15 +1797,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnTf7Days) btnTf7Days.addEventListener('click', () => updateTimeframeButtons(btnTf7Days, '7days'));
     if (btnTfMonday) btnTfMonday.addEventListener('click', () => updateTimeframeButtons(btnTfMonday, 'monday'));
 
-    // Manuelle Artikel hinzufügen
+    // Manuelle Artikel hinzufügen & ins Dauerbrenner-Wörterbuch aufnehmen
     const customInput = document.getElementById('shopping-custom-input');
     const btnAddCustom = document.getElementById('btn-add-custom-item');
 
     const handleAddCustom = () => {
-        const val = customInput.value.trim();
+        const val = customInput ? customInput.value.trim() : '';
         if (val) {
-            customShoppingItems.push({ id: `custom-${Date.now()}`, name: val });
+            const autoCategory = categorizeIngredient(val);
+            const newItem = { 
+                id: `custom-${Date.now()}`, 
+                name: val,
+                category: autoCategory
+            };
+
+            customShoppingItems.push(newItem);
             saveCustomShoppingItems();
+
+            // Automatisch dauerhaft im Wörterbuch merken, falls noch nicht vorhanden
+            if (!staplesCatalog.some(s => s.name.toLowerCase() === val.toLowerCase())) {
+                staplesCatalog.push({
+                    id: `staple-${Date.now()}`,
+                    name: val,
+                    category: autoCategory
+                });
+                saveStaplesCatalog();
+            }
+
             customInput.value = '';
             renderShoppingList();
         }
@@ -1770,6 +1831,120 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnAddCustom) btnAddCustom.addEventListener('click', handleAddCustom);
     if (customInput) customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddCustom(); });
+
+    // Dauerbrenner Modal Steuerung
+    const staplesModal = document.getElementById('shopping-staples-modal');
+    const btnOpenStaples = document.getElementById('btn-open-staples-modal');
+    const btnCloseStaples = document.getElementById('btn-close-staples-modal');
+    const staplesListContainer = document.getElementById('staples-list-container');
+    const stapleCatSelect = document.getElementById('new-staple-category-select');
+    const btnCreateStaple = document.getElementById('btn-create-staple');
+    const newStapleNameInput = document.getElementById('new-staple-name-input');
+
+    // Kategorien in das Dropdown füllen
+    if (stapleCatSelect) {
+        stapleCatSelect.innerHTML = '';
+        SUPERMARKET_CATEGORIES.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat.name;
+            opt.textContent = cat.name;
+            stapleCatSelect.appendChild(opt);
+        });
+    }
+
+    function renderStaplesModal() {
+        if (!staplesListContainer) return;
+        staplesListContainer.innerHTML = '';
+
+        const groupedStaples = {};
+        SUPERMARKET_CATEGORIES.forEach(cat => { groupedStaples[cat.name] = []; });
+        groupedStaples['📦 Sonstige Lebensmittel'] = [];
+
+        staplesCatalog.forEach(staple => {
+            const cat = staple.category || categorizeIngredient(staple.name);
+            if (!groupedStaples[cat]) groupedStaples[cat] = [];
+            groupedStaples[cat].push(staple);
+        });
+
+        Object.keys(groupedStaples).forEach(catName => {
+            const staples = groupedStaples[catName];
+            if (!staples || staples.length === 0) return;
+
+            const groupEl = document.createElement('div');
+            groupEl.className = 'staples-cat-group';
+
+            const titleEl = document.createElement('div');
+            titleEl.className = 'staples-cat-title';
+            titleEl.textContent = catName;
+            groupEl.appendChild(titleEl);
+
+            const chipsGrid = document.createElement('div');
+            chipsGrid.className = 'staples-chips-grid';
+
+            staples.forEach(staple => {
+                const isActive = customShoppingItems.some(c => (typeof c === 'string' ? c : c.name).toLowerCase() === staple.name.toLowerCase());
+                
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = `staple-toggle-chip ${isActive ? 'active' : ''}`;
+                chip.innerHTML = `<span>${isActive ? '✓' : '+'}</span> <span>${staple.name}</span>`;
+
+                chip.addEventListener('click', () => {
+                    if (isActive) {
+                        // Von der Einkaufsliste entfernen
+                        customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.name).toLowerCase() !== staple.name.toLowerCase());
+                    } else {
+                        // Auf die Einkaufsliste setzen
+                        customShoppingItems.push({
+                            id: `custom-${Date.now()}`,
+                            name: staple.name,
+                            category: staple.category || catName
+                        });
+                    }
+                    saveCustomShoppingItems();
+                    renderStaplesModal();
+                    renderShoppingList();
+                });
+
+                chipsGrid.appendChild(chip);
+            });
+
+            groupEl.appendChild(chipsGrid);
+            staplesListContainer.appendChild(groupEl);
+        });
+    }
+
+    if (btnOpenStaples) {
+        btnOpenStaples.addEventListener('click', () => {
+            renderStaplesModal();
+            if (staplesModal) staplesModal.classList.remove('hidden');
+        });
+    }
+
+    if (btnCloseStaples) {
+        btnCloseStaples.addEventListener('click', () => {
+            if (staplesModal) staplesModal.classList.add('hidden');
+        });
+    }
+
+    if (btnCreateStaple) {
+        btnCreateStaple.addEventListener('click', () => {
+            const name = newStapleNameInput ? newStapleNameInput.value.trim() : '';
+            const cat = stapleCatSelect ? stapleCatSelect.value : '📦 Sonstige Lebensmittel';
+            if (name) {
+                if (!staplesCatalog.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+                    staplesCatalog.push({
+                        id: `staple-${Date.now()}`,
+                        name: name,
+                        category: cat
+                    });
+                    saveStaplesCatalog();
+                }
+                newStapleNameInput.value = '';
+                renderStaplesModal();
+            }
+        });
+    }
 
 // Text-Editor Modal Handler
     const textEditorModal = document.getElementById('text-editor-modal');
