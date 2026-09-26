@@ -2235,8 +2235,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Vorschlag aus der Liste antippen fuegt den Artikel direkt hinzu und leert das Feld
-        customInput.addEventListener('input', () => {
+        // Sofort-Uebernahme nur bei echtem Antippen eines Vorschlags (nicht beim normalen Weitertippen)
+        customInput.addEventListener('input', (e) => {
+            // Normales Tippen / Loeschen von einzelnen Buchstaben ignorieren
+            const isManualTyping = e.inputType === 'insertText' || e.inputType === 'insertCompositionText' || e.inputType === 'deleteContentBackward' || e.inputType === 'deleteContentForward';
+            if (isManualTyping) return;
+
             const currentVal = customInput.value.trim().toLowerCase();
             if (!currentVal) return;
 
