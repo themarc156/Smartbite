@@ -211,7 +211,7 @@ async function loadData(silent = false) {
         appState.dishes = data.dishes || [];
         appState.currentPlan = data.plan || [];
 
-        // 1. Cloud-Sync für Einkaufsliste & Dauerbrenner übernehmen
+        // 1. Cloud-Sync für Einkaufsliste, Dauerbrenner & gelernte Gänge übernehmen
         if (data.shopping) {
             if (Array.isArray(data.shopping.customItems)) {
                 customShoppingItems = data.shopping.customItems;
@@ -224,6 +224,14 @@ async function loadData(silent = false) {
             if (Array.isArray(data.shopping.staples) && data.shopping.staples.length > 0) {
                 staplesCatalog = data.shopping.staples;
                 localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
+            }
+            if (data.shopping.categoryOverrides && typeof data.shopping.categoryOverrides === 'object') {
+                categoryOverrides = data.shopping.categoryOverrides;
+                localStorage.setItem('smartbite_category_overrides', JSON.stringify(categoryOverrides));
+            }
+            if (Array.isArray(data.shopping.excludedKeys)) {
+                excludedShoppingKeys = new Set(data.shopping.excludedKeys);
+                localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
             }
         }
 
@@ -248,7 +256,9 @@ async function syncShoppingToApi() {
             body: JSON.stringify({
                 customItems: customShoppingItems,
                 checkedKeys: [...checkedShoppingKeys],
-                staples: staplesCatalog
+                staples: staplesCatalog,
+                categoryOverrides: categoryOverrides,
+                excludedKeys: [...excludedShoppingKeys]
             })
         });
     } catch (err) {
@@ -414,7 +424,7 @@ function swapDaysInPlan(sourceDayId, targetDayId) {
     renderApp();
 }
 
-const COOKING_UNITS = '(?:g|kg|mg|ml|cl|dl|l|liter|tl|el|msp|prise|prisen|dose|dosen|pkg|pck|packung|packungen|becher|bund|zehe|zehen|stk|stück|scheibe|scheiben|glas|gläser|tasse|tassen|blatt|blätter|tropfen|cups?|tbsp|tsp|oz|lbs?)';
+const COOKING_UNITS = '(?:g|kg|mg|ml|cl|dl|l|liter|tl|el|msp|prise|prisen|dose|dosen|tube|tuben|pkg|pck|packung|packungen|becher|bund|zehe|zehen|stk|stück|scheibe|scheiben|glas|gläser|tasse|tassen|blatt|blätter|tropfen|cups?|tbsp|tsp|oz|lbs?)';
 
 function splitIngredientAmountAndName(text) {
     // Erkennt: "500g Tomaten", "2 EL Öl", "1 Dose Mais" oder "5 Tomaten", "1/2 Zwiebel"
@@ -1235,7 +1245,7 @@ const SUPERMARKET_CATEGORIES = [
     },
     {
         name: '🍝 Vorrat, Teigwaren & Dosen',
-        keywords: ['tomatenmark', 'gehackte tomaten', 'passierte tomaten', 'dosentomaten', 'schältomaten', 'nudel', 'nudeln', 'spaghetti', 'penne', 'fusilli', 'pasta', 'lasagneplatten', 'reis', 'basmatireis', 'jasminreis', 'milchreis', 'kidneybohne', 'kidneybohnen', 'bohne', 'bohnen', 'weiße bohnen', 'kichererbsen', 'mais', 'dose mais', 'dose', 'konserve', 'brühe', 'gemüsebrühe', 'hühnerbrühe', 'rinderbrühe', 'zucker', 'puderzucker', 'brauner zucker', 'öl', 'olivenöl', 'rapsöl', 'sonnenblumenöl', 'kokosöl', 'haferflocken', 'linsen', 'rote linsen', 'kokosmilch', 'kaffee', 'kaffeebohnen', 'espressbohnen', 'tee', 'essig', 'balsamico', 'apfelessig', 'senf', 'ketchup', 'mayo', 'mayonnaise', 'sauerkirschen', 'apfelmus']
+        keywords: ['tomatenmark', 'tube tomatenmark', 'gehackte tomaten', 'gestückelte tomaten', 'passierte tomaten', 'dosentomaten', 'schältomaten', 'nudel', 'nudeln', 'spaghetti', 'penne', 'fusilli', 'pasta', 'lasagneplatten', 'reis', 'basmatireis', 'jasminreis', 'milchreis', 'kidneybohne', 'kidneybohnen', 'bohne', 'bohnen', 'weiße bohnen', 'kichererbsen', 'mais', 'dose mais', 'dose', 'konserve', 'brühe', 'gemüsebrühe', 'hühnerbrühe', 'rinderbrühe', 'zucker', 'puderzucker', 'brauner zucker', 'öl', 'olivenöl', 'rapsöl', 'sonnenblumenöl', 'kokosöl', 'haferflocken', 'linsen', 'rote linsen', 'kokosmilch', 'kaffee', 'kaffeebohnen', 'espressbohnen', 'tee', 'essig', 'balsamico', 'apfelessig', 'senf', 'ketchup', 'mayo', 'mayonnaise', 'sauerkirschen', 'apfelmus']
     },
     {
         name: '🥫 Gewürze, Saucen & Snacks',
@@ -1250,6 +1260,17 @@ const SUPERMARKET_CATEGORIES = [
 // Intelligente Kategorisierung mit Prioritaets-Matching (Spezifisch vor Allgemein)
 function categorizeIngredient(text) {
     const lower = text.toLowerCase().trim();
+
+    // 0. GELERNTES WÖRTERBUCH PRÜFEN (Manuelle Zuweisungen aus dem [🏷️]-Overlay haben Vorrang!)
+    if (categoryOverrides[lower]) {
+        return categoryOverrides[lower];
+    }
+    // Auch Wortteil-Prüfung bei manuellen Overrides
+    for (const [overrideTerm, targetCategory] of Object.entries(categoryOverrides)) {
+        if (lower.includes(overrideTerm)) {
+            return targetCategory;
+        }
+    }
 
     // 1. ZUERST: Drogerie & Haushalt pruefen (damit 'allzwecktücher', 'spülmittel' etc. sofort abgefangen werden)
     const drogerieCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Drogerie'));
@@ -1311,6 +1332,18 @@ let shoppingTimeframe = '3days';
 let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
 let checkedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_checked_shopping') || '[]'));
 let staplesCatalog = JSON.parse(localStorage.getItem('smartbite_staples_catalog') || 'null') || [...DEFAULT_STAPLES];
+let categoryOverrides = JSON.parse(localStorage.getItem('smartbite_category_overrides') || '{}');
+let excludedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_excluded_shopping') || '[]'));
+
+function saveCategoryOverrides() {
+    localStorage.setItem('smartbite_category_overrides', JSON.stringify(categoryOverrides));
+    syncShoppingToApi();
+}
+
+function saveExcludedShoppingKeys() {
+    localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
+    syncShoppingToApi();
+}
 
 function saveStaplesCatalog() {
     localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
@@ -1404,25 +1437,37 @@ function parseAndAggregateIngredients(rawList) {
     const aggregated = {};
 
     rawList.forEach(({ text, dishName }) => {
-        const match = splitIngredientAmountAndName(text.trim());
-        let amount = '';
-        let item = text.trim();
+        // Trennt Komma-Zutaten (z.B. "Salz, Pfeffer, Oregano" -> 3 Zutaten)
+        const subItems = text.includes(',') && !text.match(/^[\d.,/]+\s/) 
+            ? text.split(',').map(s => s.trim()).filter(Boolean)
+            : [text.trim()];
 
-        if (match && match[1] && match[2]) {
-            amount = match[1].trim();
-            item = match[2].trim();
-        }
+        subItems.forEach(subText => {
+            const match = splitIngredientAmountAndName(subText);
+            let amount = '';
+            let item = subText;
 
-        const key = item.toLowerCase();
-        if (!aggregated[key]) {
-            aggregated[key] = {
-                displayName: item,
-                category: categorizeIngredient(item),
-                sources: []
-            };
-        }
+            if (match && match[1] && match[2]) {
+                amount = match[1].trim();
+                item = match[2].trim();
+            }
 
-        aggregated[key].sources.push({ amount, dishName });
+            const key = item.toLowerCase();
+            
+            // Überspringen, falls Zutat als Vorrat gestrichen wurde
+            if (excludedShoppingKeys.has(key)) return;
+
+            if (!aggregated[key]) {
+                aggregated[key] = {
+                    key: key,
+                    displayName: item,
+                    category: categorizeIngredient(item),
+                    sources: []
+                };
+            }
+
+            aggregated[key].sources.push({ amount, dishName });
+        });
     });
 
     return aggregated;
@@ -1518,11 +1563,14 @@ function renderShoppingList() {
         customShoppingItems.forEach(itemObj => {
             const name = typeof itemObj === 'string' ? itemObj : itemObj.name;
             const id = typeof itemObj === 'string' ? itemObj : itemObj.id;
-            const cat = (itemObj.category) ? itemObj.category : categorizeIngredient(name);
+            
+            // Prüfen auf Overrides oder Auto-Kategorie
+            const cat = categoryOverrides[name.toLowerCase()] || (itemObj.category ? itemObj.category : categorizeIngredient(name));
 
             if (!categorizedMap[cat]) categorizedMap[cat] = [];
             categorizedMap[cat].push({
                 id: id,
+                key: id,
                 displayName: name,
                 category: cat,
                 isCustom: true,
@@ -1829,6 +1877,180 @@ document.addEventListener('DOMContentLoaded', () => {
         switchView('shopping', anim);
         renderShoppingList();
     });
+
+    // Einkaufslisten-Verwaltungs-Modal [🏷️] (Gänge anpassen & Vorräte streichen)
+    const manageModal = document.getElementById('shopping-manage-modal');
+    const btnOpenManage = document.getElementById('btn-open-manage-shopping');
+    const btnCloseManage = document.getElementById('btn-close-manage-shopping');
+    const btnSaveManage = document.getElementById('btn-save-manage-shopping');
+    const manageListContainer = document.getElementById('shopping-manage-items-list');
+
+    function renderManageShoppingModal() {
+        if (!manageListContainer) return;
+        manageListContainer.innerHTML = '';
+
+        // Alle aktuellen Roh-Zutaten der ausgewählten Tage sammeln
+        let daysToInclude = [];
+        const todayMs = new Date().setHours(0, 0, 0, 0);
+        const upcomingDays = (appState.currentPlan || []).filter(d => d.dateTimeline >= todayMs);
+
+        if (shoppingTimeframe === '7days') {
+            daysToInclude = upcomingDays.length >= 7 ? upcomingDays.slice(0, 7) : (appState.currentPlan || []).slice(0, 7);
+        } else if (shoppingTimeframe === 'monday') {
+            const currentDayIndex = new Date().getDay();
+            const daysUntilMonday = currentDayIndex === 1 ? 1 : (currentDayIndex === 0 ? 2 : (8 - currentDayIndex) + 1);
+            daysToInclude = upcomingDays.slice(0, daysUntilMonday);
+        } else {
+            daysToInclude = upcomingDays.slice(0, 3);
+        }
+
+        const rawList = [];
+        daysToInclude.forEach(day => {
+            const isUnplanned = !day.dishId && (!day.dishName || day.dishName === 'Noch nichts geplant' || day.dishName === 'Ungeplant' || day.isUnplanned);
+            if (isUnplanned) return;
+            const dish = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
+            if (dish && dish.ingredients) {
+                dish.ingredients.split('\n').map(s => s.trim()).filter(Boolean).forEach(text => {
+                    rawList.push({ text, dishName: dish.name });
+                });
+            }
+        });
+
+        // Vorübergehend ohne Excludes parsen, um alle anpassbaren Artikel anzuzeigen
+        const currentItemsMap = {};
+
+        rawList.forEach(({ text, dishName }) => {
+            const subItems = text.includes(',') && !text.match(/^[\d.,/]+\s/) 
+                ? text.split(',').map(s => s.trim()).filter(Boolean)
+                : [text.trim()];
+
+            subItems.forEach(subText => {
+                const match = splitIngredientAmountAndName(subText);
+                const item = (match && match[1] && match[2]) ? match[2].trim() : subText;
+                const key = item.toLowerCase();
+                if (!currentItemsMap[key]) {
+                    currentItemsMap[key] = {
+                        key: key,
+                        displayName: item,
+                        currentCategory: categorizeIngredient(item),
+                        sources: [dishName],
+                        isCustom: false
+                    };
+                } else {
+                    if (!currentItemsMap[key].sources.includes(dishName)) currentItemsMap[key].sources.push(dishName);
+                }
+            });
+        });
+
+        // Manuelle Artikel hinzufügen
+        customShoppingItems.forEach(c => {
+            const name = typeof c === 'string' ? c : c.name;
+            const id = typeof c === 'string' ? c : c.id;
+            currentItemsMap[id] = {
+                key: id,
+                displayName: name,
+                currentCategory: categoryOverrides[name.toLowerCase()] || (c.category ? c.category : categorizeIngredient(name)),
+                sources: ['Manuell'],
+                isCustom: true,
+                rawItem: c
+            };
+        });
+
+        const allItems = Object.values(currentItemsMap);
+        if (allItems.length === 0) {
+            manageListContainer.innerHTML = '<p class="subtitle" style="text-align: center;">Keine Artikel im aktuellen Zeitraum vorhanden.</p>';
+            return;
+        }
+
+        allItems.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'manage-item-row';
+
+            const isExcluded = excludedShoppingKeys.has(item.key);
+            if (isExcluded) row.style.opacity = '0.4';
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'manage-item-info';
+
+            const nameEl = document.createElement('div');
+            nameEl.className = 'manage-item-name';
+            nameEl.textContent = item.displayName;
+            if (isExcluded) nameEl.style.textDecoration = 'line-through';
+
+            const sourceEl = document.createElement('div');
+            sourceEl.className = 'manage-item-source';
+            sourceEl.textContent = isExcluded ? 'Bereits zu Hause (gestrichen)' : `Aus: ${item.sources.join(', ')}`;
+
+            infoDiv.appendChild(nameEl);
+            infoDiv.appendChild(sourceEl);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'manage-item-actions';
+
+            // Kategorie-Auswahl-Dropdown
+            const select = document.createElement('select');
+            select.className = 'manage-category-select';
+            SUPERMARKET_CATEGORIES.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.name;
+                opt.textContent = cat.name;
+                if (cat.name === item.currentCategory) opt.selected = true;
+                select.appendChild(opt);
+            });
+
+            select.addEventListener('change', () => {
+                categoryOverrides[item.displayName.toLowerCase()] = select.value;
+                saveCategoryOverrides();
+                renderShoppingList();
+            });
+
+            // Vorrat / Löschen-Button
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'btn-remove-from-cart';
+            delBtn.title = item.isCustom ? 'Artikel löschen' : 'Habe ich schon zu Hause (vom Zettel streichen)';
+            delBtn.textContent = isExcluded ? '↩' : '🗑️';
+
+            delBtn.addEventListener('click', () => {
+                if (item.isCustom) {
+                    customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.id) !== item.key);
+                    saveCustomShoppingItems();
+                } else {
+                    if (excludedShoppingKeys.has(item.key)) {
+                        excludedShoppingKeys.delete(item.key);
+                    } else {
+                        excludedShoppingKeys.add(item.key);
+                    }
+                    saveExcludedShoppingKeys();
+                }
+                renderManageShoppingModal();
+                renderShoppingList();
+            });
+
+            actionsDiv.appendChild(select);
+            actionsDiv.appendChild(delBtn);
+
+            row.appendChild(infoDiv);
+            row.appendChild(actionsDiv);
+
+            manageListContainer.appendChild(row);
+        });
+    }
+
+    if (btnOpenManage) {
+        btnOpenManage.addEventListener('click', () => {
+            renderManageShoppingModal();
+            if (manageModal) manageModal.classList.remove('hidden');
+        });
+    }
+
+    const closeManageModal = () => {
+        if (manageModal) manageModal.classList.add('hidden');
+        renderShoppingList();
+    };
+
+    if (btnCloseManage) btnCloseManage.addEventListener('click', closeManageModal);
+    if (btnSaveManage) btnSaveManage.addEventListener('click', closeManageModal);
 
     // Zeitraum-Buttons in der Einkaufsliste
     const btnTf3Days = document.getElementById('btn-timeframe-3days');

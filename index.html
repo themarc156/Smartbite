@@ -56,8 +56,9 @@
                     <button id="btn-timeframe-monday" class="btn-filter">Bis Mo</button>
                 </div>
                 <div class="shopping-action-buttons">
-                    <button id="btn-clear-completed-items" class="btn btn-nav" title="Erledigte abräumen">🧹</button>
-                    <button id="btn-copy-shopping-list" class="btn btn-primary" title="Als Text kopieren">📋</button>
+                    <button type="button" id="btn-open-manage-shopping" class="btn btn-nav" title="Gänge sortieren & Vorräte streichen">🏷️</button>
+                    <button type="button" id="btn-clear-completed-items" class="btn btn-nav" title="Erledigte abräumen">🧹</button>
+                    <button type="button" id="btn-copy-shopping-list" class="btn btn-primary" title="Als Text kopieren">📋</button>
                 </div>
             </div>
 
@@ -246,7 +247,22 @@
         </section>
     </main>
 
-    <!-- (Altes Einkaufslisten-Modal entfernt, da jetzt als eigenständige Ansicht integriert) -->
+    <!-- Modal: Einkaufsliste verwalten (Gänge zuweisen & Vorrat streichen) -->
+    <div id="shopping-manage-modal" class="modal hidden">
+        <div class="modal-content manage-modal-content">
+            <header class="modal-header">
+                <button type="button" id="btn-close-manage-shopping" class="btn btn-danger btn-close-top">✖</button>
+                <h2 style="font-size: 1.1rem; margin: 0; color: var(--accent-primary);">🏷️ Gänge & Vorräte anpassen</h2>
+                <button type="button" id="btn-save-manage-shopping" class="btn btn-primary" style="height: 32px; font-weight: 700;">Fertig ✓</button>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
+                <p class="subtitle" style="margin-bottom: 0.75rem;">
+                    Weise Artikel dem richtigen Gang zu oder entferne Zutaten, die du schon zu Hause hast (🗑️):
+                </p>
+                <div id="shopping-manage-items-list" class="manage-items-scroll-list"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal: Rezept Detail-Ansicht & In-Place Bearbeitung -->
     <div id="recipe-view-modal" class="modal hidden">
