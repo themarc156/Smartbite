@@ -218,7 +218,6 @@ async function loadData(silent = false) {
                 localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
             }
             if (Array.isArray(data.shopping.checkedKeys) && data.shopping.checkedKeys.length > 0) {
-                // Lokale Haken mit Server-Haken vereinen, anstatt sie blind zu leeren
                 data.shopping.checkedKeys.forEach(k => checkedShoppingKeys.add(k));
                 localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
             }
@@ -227,7 +226,8 @@ async function loadData(silent = false) {
                 localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
             }
             if (data.shopping.categoryOverrides && typeof data.shopping.categoryOverrides === 'object') {
-                categoryOverrides = data.shopping.categoryOverrides;
+                // Manuelle Zuweisungen zusammenführen statt blind zu überschreiben
+                categoryOverrides = Object.assign({}, categoryOverrides, data.shopping.categoryOverrides);
                 localStorage.setItem('smartbite_category_overrides', JSON.stringify(categoryOverrides));
             }
             if (Array.isArray(data.shopping.excludedKeys)) {
@@ -1260,60 +1260,64 @@ const SUPERMARKET_CATEGORIES = [
     }
 ];
 
-// Intelligente Kategorisierung mit Prioritaets-Matching (Spezifisch vor Allgemein)
+function matchesWord(text, keywordList) {
+    return keywordList.some(k => text.includes(k));
+}
+
+// Zentrale, priorisierte Supermarkt-Kategorisierung
 function categorizeIngredient(text) {
+    if (!text) return '📦 Sonstige Lebensmittel';
     const lower = text.toLowerCase().trim();
 
-    // 0. GELERNTES WÖRTERBUCH PRÜFEN (Manuelle Zuweisungen aus dem [🏷️]-Overlay haben Vorrang!)
+    // 0. MANUELLE GANG-ZUWEISUNGEN AUS DEM [🏷️]-OVERLAY HABEN IMMER VORRANG
     if (categoryOverrides[lower]) {
         return categoryOverrides[lower];
     }
-    // Auch Wortteil-Prüfung bei manuellen Overrides
-    for (const [overrideTerm, targetCategory] of Object.entries(categoryOverrides)) {
-        if (lower.includes(overrideTerm)) {
-            return targetCategory;
+    for (const [term, cat] of Object.entries(categoryOverrides)) {
+        if (term && (lower.includes(term) || term.includes(lower))) {
+            return cat;
         }
     }
 
-    // 1. ZUERST: Drogerie & Haushalt pruefen (damit 'allzwecktücher', 'spülmittel' etc. sofort abgefangen werden)
+    // 1. DROGERIE & HAUSHALT
     const drogerieCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Drogerie'));
-    if (drogerieCat && drogerieCat.keywords.some(k => lower.includes(k))) {
+    if (drogerieCat && matchesWord(lower, drogerieCat.keywords)) {
         return drogerieCat.name;
     }
 
-    // 2. ZWEITENS: Gewürze & verarbeitete Pulver pruefen (z.B. 'paprika edelsüß', 'paprikapulver' VOR frischer Paprika)
+    // 2. GEWÜRZE, SAUCEN & PULVER (VOR frischem Gemüse!)
     const gewuerzeCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Gewürze'));
-    if (gewuerzeCat && gewuerzeCat.keywords.some(k => lower.includes(k))) {
+    if (gewuerzeCat && matchesWord(lower, gewuerzeCat.keywords)) {
         return gewuerzeCat.name;
     }
 
-    // 3. DRITTENS: Vorrat & Dosen pruefen (z.B. 'tomatenmark', 'gehackte tomaten' VOR frischen Tomaten)
+    // 3. VORRAT, TEIGWAREN & DOSEN (Tomatenmark, gestückelte Tomaten etc. VOR frischen Tomaten!)
     const vorratCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Vorrat'));
-    if (vorratCat && vorratCat.keywords.some(k => lower.includes(k))) {
+    if (vorratCat && matchesWord(lower, vorratCat.keywords)) {
         return vorratCat.name;
     }
 
-    // 4. VIERTENS: Kuehlregal pruefen
+    // 4. KÜHLREGAL & MOLKEREI (inkl. Skyr, Butter, Milch, Käse)
     const kuehlCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Kühlregal'));
-    if (kuehlCat && kuehlCat.keywords.some(k => lower.includes(k))) {
+    if (kuehlCat && matchesWord(lower, kuehlCat.keywords)) {
         return kuehlCat.name;
     }
 
-    // 5. FUENFTENS: Fleisch, Fisch & Frischetheke pruefen
+    // 5. FLEISCH, FISCH & FRISCHETHEKE
     const fleischCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Fleisch'));
-    if (fleischCat && fleischCat.keywords.some(k => lower.includes(k))) {
+    if (fleischCat && matchesWord(lower, fleischCat.keywords)) {
         return fleischCat.name;
     }
 
-    // 6. SECHSTENS: Backwaren & Teige pruefen
+    // 6. BROT & BACKWAREN
     const backCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Backwaren'));
-    if (backCat && backCat.keywords.some(k => lower.includes(k))) {
+    if (backCat && matchesWord(lower, backCat.keywords)) {
         return backCat.name;
     }
 
-    // 7. SIEBTENS: Frisches Obst & Gemuese pruefen (jetzt sicher vor Tomatenmark oder Paprikapulver)
+    // 7. FRISCHES OBST & GEMÜSE (erst jetzt, damit keine verarbeiteten Produkte hier landen)
     const obstCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Obst'));
-    if (obstCat && obstCat.keywords.some(k => lower.includes(k))) {
+    if (obstCat && matchesWord(lower, obstCat.keywords)) {
         return obstCat.name;
     }
 
@@ -1428,15 +1432,7 @@ function bindLongPress(element, onTrigger) {
     element.addEventListener('mouseleave', onEnd);
 }
 
-function categorizeIngredient(text) {
-    const lower = text.toLowerCase();
-    for (const cat of SUPERMARKET_CATEGORIES) {
-        if (cat.keywords.some(k => lower.includes(k))) {
-            return cat.name;
-        }
-    }
-    return '📦 Sonstige Lebensmittel';
-}
+// (Alte doppelte Hilfsfunktion entfernt - zentrale Funktion weiter unten aktiv)
 
 function parseAndAggregateIngredients(rawList) {
     const aggregated = {};
@@ -2102,7 +2098,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             select.addEventListener('change', () => {
-                categoryOverrides[item.displayName.toLowerCase()] = select.value;
+                const targetKey = item.displayName.toLowerCase().trim();
+                categoryOverrides[targetKey] = select.value;
+                item.currentCategory = select.value;
                 saveCategoryOverrides();
                 renderShoppingList();
             });
