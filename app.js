@@ -1665,24 +1665,7 @@ function renderShoppingList() {
             leftDiv.appendChild(textSpan);
             li.appendChild(leftDiv);
 
-            if (item.isCustom) {
-                const delBtn = document.createElement('button');
-                delBtn.type = 'button';
-                delBtn.className = 'btn-delete-custom-item';
-                delBtn.textContent = '✖';
-                delBtn.title = 'Artikel löschen';
-                delBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.id) !== item.id);
-                    checkedShoppingKeys.delete(itemKey);
-                    saveCustomShoppingItems();
-                    saveCheckedShoppingKeys();
-                    renderShoppingList();
-                });
-                li.appendChild(delBtn);
-            }
-
-            // ✖-Button fuer ALLE Artikel (2-Klick-Sicherheitsabfrage)
+            // Genau EIN ✖-Button fuer jeden Artikel (mit 2-Klick-Sicherheitsabfrage)
             const delBtn = document.createElement('button');
             delBtn.type = 'button';
             delBtn.className = 'btn-delete-custom-item';
@@ -1704,8 +1687,13 @@ function renderShoppingList() {
                 }
 
                 if (item.isCustom) {
-                    customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.id) !== item.key);
+                    customShoppingItems = customShoppingItems.filter(c => {
+                        const cKey = typeof c === 'string' ? c : (c.id || c.name);
+                        return cKey !== item.id && cKey !== item.key;
+                    });
+                    checkedShoppingKeys.delete(itemKey);
                     saveCustomShoppingItems();
+                    saveCheckedShoppingKeys();
                 } else {
                     excludedShoppingKeys.add(item.key);
                     saveExcludedShoppingKeys();
@@ -1734,29 +1722,33 @@ function renderShoppingList() {
     }
 
     // Erledigt-Bereich rendern (Im Einkaufswagen)
-    const doneCaret = document.getElementById('done-caret-icon');
-    if (completedItemsList.length > 0) {
-        doneSection.classList.remove('hidden');
-        doneCount.textContent = completedItemsList.length;
-        doneContainer.classList.toggle('hidden', !isDoneSectionOpen);
-        if (doneCaret) doneCaret.textContent = isDoneSectionOpen ? '▴' : '▾';
-
-        completedItemsList.forEach(({ item, itemKey }) => {
-            const doneDiv = document.createElement('div');
-            doneDiv.className = 'shopping-done-item';
-            doneDiv.title = 'Tippen zum Wiederherstellen';
-            doneDiv.innerHTML = `<span>✓ ${item.displayName}</span> <span style="font-size: 0.72rem; color: var(--accent-primary);">Wiederherstellen ↩</span>`;
+    if (doneSection && doneContainer && doneCount) {
+        if (completedItemsList.length > 0) {
+            doneSection.classList.remove('hidden');
+            doneCount.textContent = completedItemsList.length;
+            doneContainer.classList.toggle('hidden', !isDoneSectionOpen);
             
-            doneDiv.addEventListener('click', () => {
-                checkedShoppingKeys.delete(itemKey);
-                saveCheckedShoppingKeys();
-                renderShoppingList();
-            });
+            const doneCaret = document.getElementById('done-caret-icon');
+            if (doneCaret) doneCaret.textContent = isDoneSectionOpen ? '▴' : '▾';
 
-            doneContainer.appendChild(doneDiv);
-        });
-    } else {
-        doneSection.classList.add('hidden');
+            completedItemsList.forEach(({ item, itemKey }) => {
+                const doneDiv = document.createElement('div');
+                doneDiv.className = 'shopping-done-item';
+                doneDiv.title = 'Tippen zum Wiederherstellen';
+                doneDiv.innerHTML = `<span>✓ ${item.displayName}</span> <span style="font-size: 0.72rem; color: var(--accent-primary); font-weight: 700;">Wiederherstellen ↩</span>`;
+                
+                doneDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    checkedShoppingKeys.delete(itemKey);
+                    saveCheckedShoppingKeys();
+                    renderShoppingList();
+                });
+
+                doneContainer.appendChild(doneDiv);
+            });
+        } else {
+            doneSection.classList.add('hidden');
+        }
     }
 }
 
