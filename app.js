@@ -1351,7 +1351,7 @@ function saveStaplesCatalog() {
     localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
     syncShoppingToApi();
 }
-let isDoneSectionOpen = false;
+let isDoneSectionOpen = true; // Einkaufswagen ist standardmaessig geoeffnet, sobald Artikel drin liegen
 let undoSnackbarTimeout = null;
 let lastCompletedKey = null;
 
@@ -1387,7 +1387,7 @@ function bindLongPress(element, onTrigger) {
     let startY = 0;
 
     const onStart = (e) => {
-        if (e.target && (e.target.closest('.btn-delete-custom-item') || e.target.type === 'checkbox')) return;
+        if (e.target && e.target.closest('.btn-delete-custom-item')) return;
         const touch = e.touches ? e.touches[0] : e;
         startX = touch.clientX;
         startY = touch.clientY;
@@ -1396,16 +1396,16 @@ function bindLongPress(element, onTrigger) {
         timer = setTimeout(() => {
             element.classList.remove('holding');
             if (navigator.vibrate) {
-                try { navigator.vibrate(35); } catch (_) {}
+                try { navigator.vibrate(40); } catch (_) {}
             }
             onTrigger();
-        }, 350);
+        }, 280);
     };
 
     const onMove = (e) => {
         if (!timer) return;
         const touch = e.touches ? e.touches[0] : e;
-        if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+        if (Math.abs(touch.clientX - startX) > 12 || Math.abs(touch.clientY - startY) > 12) {
             if (timer) clearTimeout(timer);
             timer = null;
             element.classList.remove('holding');
@@ -1424,6 +1424,7 @@ function bindLongPress(element, onTrigger) {
     element.addEventListener('touchmove', onMove, { passive: true });
     element.addEventListener('touchend', onEnd, { passive: true });
     element.addEventListener('touchcancel', onEnd, { passive: true });
+    element.addEventListener('contextmenu', (e) => e.preventDefault());
 
     element.addEventListener('mousedown', (e) => {
         if (e.button === 0) onStart(e);
@@ -2009,6 +2010,9 @@ document.addEventListener('DOMContentLoaded', () => {
             manageListContainer.innerHTML = '<p class="subtitle" style="text-align: center;">Keine Artikel im aktuellen Zeitraum vorhanden.</p>';
             return;
         }
+
+        // Alphabetisch von A bis Z sortieren
+        allItems.sort((a, b) => a.displayName.localeCompare(b.displayName, 'de', { sensitivity: 'base' }));
 
         allItems.forEach(item => {
             const row = document.createElement('div');
