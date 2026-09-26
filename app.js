@@ -218,8 +218,10 @@ async function loadData(silent = false) {
                 localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
             }
             if (Array.isArray(data.shopping.checkedKeys)) {
-                checkedShoppingKeys = new Set(data.shopping.checkedKeys);
-                localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
+                if (data.shopping.checkedKeys.length > 0 || checkedShoppingKeys.size === 0) {
+                    checkedShoppingKeys = new Set(data.shopping.checkedKeys);
+                    localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
+                }
             }
             if (Array.isArray(data.shopping.staples) && data.shopping.staples.length > 0) {
                 staplesCatalog = data.shopping.staples;
@@ -1384,10 +1386,11 @@ function bindLongPress(element, onTrigger) {
     let startX = 0;
     let startY = 0;
 
-    const start = (e) => {
-        if (e.target && e.target.closest('.btn-delete-custom-item')) return;
-        startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-        startY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
+    const onStart = (e) => {
+        if (e.target && (e.target.closest('.btn-delete-custom-item') || e.target.type === 'checkbox')) return;
+        const touch = e.touches ? e.touches[0] : e;
+        startX = touch.clientX;
+        startY = touch.clientY;
         element.classList.add('holding');
 
         timer = setTimeout(() => {
@@ -1399,7 +1402,17 @@ function bindLongPress(element, onTrigger) {
         }, 350);
     };
 
-    const cancel = () => {
+    const onMove = (e) => {
+        if (!timer) return;
+        const touch = e.touches ? e.touches[0] : e;
+        if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+            if (timer) clearTimeout(timer);
+            timer = null;
+            element.classList.remove('holding');
+        }
+    };
+
+    const onEnd = () => {
         if (timer) {
             clearTimeout(timer);
             timer = null;
@@ -1407,20 +1420,19 @@ function bindLongPress(element, onTrigger) {
         element.classList.remove('holding');
     };
 
-    const move = (e) => {
-        if (!timer) return;
-        const currentX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
-        const currentY = e.clientY || (e.touches && e.touches[0].clientY) || 0;
-        if (Math.abs(currentX - startX) > 8 || Math.abs(currentY - startY) > 8) {
-            cancel();
-        }
-    };
+    element.addEventListener('touchstart', onStart, { passive: true });
+    element.addEventListener('touchmove', onMove, { passive: true });
+    element.addEventListener('touchend', onEnd, { passive: true });
+    element.addEventListener('touchcancel', onEnd, { passive: true });
 
-    element.addEventListener('pointerdown', start);
-    element.addEventListener('pointerup', cancel);
-    element.addEventListener('pointerleave', cancel);
-    element.addEventListener('pointercancel', cancel);
-    element.addEventListener('pointermove', move);
+    element.addEventListener('mousedown', (e) => {
+        if (e.button === 0) onStart(e);
+    });
+    element.addEventListener('mousemove', (e) => {
+        if (e.buttons === 1) onMove(e);
+    });
+    element.addEventListener('mouseup', onEnd);
+    element.addEventListener('mouseleave', onEnd);
 }
 
 function categorizeIngredient(text) {
@@ -1670,12 +1682,20 @@ function renderShoppingList() {
                 li.appendChild(delBtn);
             }
 
-            // Long-Press Interaktion
-            bindLongPress(li, () => {
+            const triggerCheck = () => {
                 checkedShoppingKeys.add(itemKey);
                 saveCheckedShoppingKeys();
                 showUndoSnackbar(item.displayName, itemKey);
                 renderShoppingList();
+            };
+
+            // 1. Long-Press auf die gesamte Zeile
+            bindLongPress(li, triggerCheck);
+
+            // 2. Direktes Antippen der Checkbox
+            checkbox.addEventListener('change', (e) => {
+                e.stopPropagation();
+                triggerCheck();
             });
 
             listEl.appendChild(li);
@@ -1689,10 +1709,13 @@ function renderShoppingList() {
         container.innerHTML = '<p class="subtitle" style="text-align: center; margin-top: 2rem;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
     }
 
-    // Erledigt-Bereich rendern
+    // Erledigt-Bereich rendern (Im Einkaufswagen)
+    const doneCaret = document.getElementById('done-caret-icon');
     if (completedItemsList.length > 0) {
         doneSection.classList.remove('hidden');
         doneCount.textContent = completedItemsList.length;
+        doneContainer.classList.toggle('hidden', !isDoneSectionOpen);
+        if (doneCaret) doneCaret.textContent = isDoneSectionOpen ? '▴' : '▾';
 
         completedItemsList.forEach(({ item, itemKey }) => {
             const doneDiv = document.createElement('div');
