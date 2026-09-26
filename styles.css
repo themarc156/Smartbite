@@ -1775,15 +1775,19 @@ textarea {
     gap: 0.4rem;
 }
 
+.ingredient-item,
+.ingredient-item * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-touch-callout: none !important;
+}
+
 .ingredient-item {
     display: flex;
     align-items: center;
     justify-content: flex-start;
     gap: 0.65rem;
     cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    -webkit-touch-callout: none;
     padding: 0.45rem 0.55rem;
     border-radius: 6px;
     background-color: rgba(255, 255, 255, 0.03);

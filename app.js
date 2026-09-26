@@ -1410,7 +1410,13 @@ function bindLongPress(element, onTrigger) {
     element.addEventListener('touchmove', onMove, { passive: true });
     element.addEventListener('touchend', onEnd, { passive: true });
     element.addEventListener('touchcancel', onEnd, { passive: true });
-    element.addEventListener('contextmenu', (e) => e.preventDefault());
+    
+    // Unterdrueckt das Kopieren/Teilen-Menue auf allen Mobilgeraeten
+    element.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    });
 
     element.addEventListener('mousedown', (e) => {
         if (e.button === 0) onStart(e);
