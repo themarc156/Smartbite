@@ -1731,20 +1731,20 @@ function renderShoppingList() {
         if (completedItemsList.length > 0) {
             doneSection.classList.remove('hidden');
             doneCount.textContent = completedItemsList.length;
-            doneContainer.classList.toggle('hidden', !isDoneSectionOpen);
-            
-            const doneCaret = document.getElementById('done-caret-icon');
-            if (doneCaret) doneCaret.textContent = isDoneSectionOpen ? '▴' : '▾';
 
             completedItemsList.forEach(({ item, itemKey }) => {
                 const doneDiv = document.createElement('div');
                 doneDiv.className = 'shopping-done-item';
                 doneDiv.title = 'Tippen zum Wiederherstellen';
-                doneDiv.innerHTML = `<span>✓ ${item.displayName}</span> <span style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 700;">Wiederherstellen ↩</span>`;
+                doneDiv.innerHTML = `
+                    <span style="text-decoration: line-through; opacity: 0.75;">✓ ${item.displayName}</span>
+                    <span style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 700; text-decoration: none;">Wiederherstellen ↩</span>
+                `;
                 
                 doneDiv.addEventListener('click', (e) => {
                     e.stopPropagation();
                     checkedShoppingKeys.delete(itemKey);
+                    if (item.id) checkedShoppingKeys.delete(item.id);
                     checkedShoppingKeys.delete(item.displayName.toLowerCase().trim());
                     saveCheckedShoppingKeys();
                     renderShoppingList();
@@ -1755,6 +1755,15 @@ function renderShoppingList() {
         } else {
             doneSection.classList.add('hidden');
         }
+    }
+
+    const btnDoneClearInline = document.getElementById('btn-done-clear-inline');
+    if (btnDoneClearInline) {
+        btnDoneClearInline.onclick = (e) => {
+            e.stopPropagation();
+            const btnClear = document.getElementById('btn-clear-completed-items');
+            if (btnClear) btnClear.click();
+        };
     }
 }
 
@@ -2134,32 +2143,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddCustom = document.getElementById('btn-add-custom-item');
 
     const handleAddCustom = () => {
-        const val = customInput ? customInput.value.trim() : '';
-        if (val) {
-            const autoCategory = categorizeIngredient(val);
-            const newItem = { 
-                id: `custom-${Date.now()}`, 
-                name: val,
-                category: autoCategory
-            };
-
-            customShoppingItems.push(newItem);
-            saveCustomShoppingItems();
-
-            // Automatisch dauerhaft im Wörterbuch merken, falls noch nicht vorhanden
-            if (!staplesCatalog.some(s => s.name.toLowerCase() === val.toLowerCase())) {
-                staplesCatalog.push({
-                    id: `staple-${Date.now()}`,
+            const val = customInput ? customInput.value.trim() : '';
+            if (val) {
+                const autoCategory = categorizeIngredient(val);
+                const newId = `custom-${Date.now()}`;
+                const newItem = { 
+                    id: newId, 
                     name: val,
                     category: autoCategory
-                });
-                saveStaplesCatalog();
-            }
+                };
 
-            customInput.value = '';
-            renderShoppingList();
-        }
-    };
+                // Sicherstellen, dass der neu hinzugefügte Artikel aktiv ist
+                checkedShoppingKeys.delete(newId);
+                checkedShoppingKeys.delete(val.toLowerCase());
+                saveCheckedShoppingKeys();
+
+                customShoppingItems.push(newItem);
+                saveCustomShoppingItems();
+
+                if (!staplesCatalog.some(s => s.name.toLowerCase() === val.toLowerCase())) {
+                    staplesCatalog.push({
+                        id: `staple-${Date.now()}`,
+                        name: val,
+                        category: autoCategory
+                    });
+                    saveStaplesCatalog();
+                }
+
+                customInput.value = '';
+                renderShoppingList();
+            }
+        };
 
     if (btnAddCustom) btnAddCustom.addEventListener('click', handleAddCustom);
     if (customInput) customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddCustom(); });
