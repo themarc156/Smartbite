@@ -186,6 +186,17 @@ def save_plan():
     save_data(data)
     return jsonify({"status": "success"})
 
+@app.route("/api/shopping", methods=["POST"])
+def save_shopping():
+    data = load_data()
+    payload = request.json or {}
+    if "shopping" not in data:
+        data["shopping"] = {}
+    data["shopping"]["customItems"] = payload.get("customItems", [])
+    data["shopping"]["checkedKeys"] = payload.get("checkedKeys", [])
+    save_data(data)
+    return jsonify({"status": "success"})
+
 @app.route("/api/upload", methods=["POST"])
 def upload_image():
     if "image" not in request.files:

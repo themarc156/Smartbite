@@ -203,17 +203,97 @@ function getMonday(d) {
     return new Date(d.setDate(diff));
 }
 
-async function loadData() {
+async function loadData(silent = false) {
     try {
         const res = await fetch('/api/data');
         if (!res.ok) throw new Error('API Fehler');
         const data = await res.json();
         appState.dishes = data.dishes || [];
         appState.currentPlan = data.plan || [];
+
+        // 1. Cloud-Sync für Einkaufsliste übernehmen
+        if (data.shopping) {
+            if (Array.isArray(data.shopping.customItems)) {
+                customShoppingItems = data.shopping.customItems;
+                localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
+            }
+            if (Array.isArray(data.shopping.checkedKeys)) {
+                checkedShoppingKeys = new Set(data.shopping.checkedKeys);
+                localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
+            }
+        }
+
+        // 3. Rollierenden 4-Wochen-Plan sicherstellen
+        alignRollingPlan();
+
+        if (appState.currentView === 'shopping') {
+            renderShoppingList();
+        } else if (appState.currentView !== 'add') {
+            renderApp();
+        }
     } catch (e) {
         console.error('Ladefehler:', e);
     }
-    renderApp();
+}
+
+async function syncShoppingToApi() {
+    try {
+        await fetch('/api/shopping', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customItems: customShoppingItems,
+                checkedKeys: [...checkedShoppingKeys]
+            })
+        });
+    } catch (err) {
+        console.warn('Einkaufslisten-Sync fehlgeschlagen:', err);
+    }
+}
+
+function alignRollingPlan() {
+    if (!appState.currentPlan || appState.currentPlan.length === 0) {
+        generate4WeekPlan();
+        return;
+    }
+
+    const startMonday = getMonday(new Date());
+    const startMondayMs = startMonday.setHours(0, 0, 0, 0);
+
+    // Behalte alle Tage ab aktuellem Montag
+    let validDays = appState.currentPlan.filter(d => {
+        const dMidnight = new Date(d.dateTimeline).setHours(0, 0, 0, 0);
+        return dMidnight >= startMondayMs;
+    });
+
+    // Fehlende Tage bis 28 Tage rollierend hinten anhängen
+    if (validDays.length < CONFIG.TOTAL_DAYS) {
+        let lastDateMs = validDays.length > 0 
+            ? validDays[validDays.length - 1].dateTimeline 
+            : (startMondayMs - 86400000);
+
+        const needed = CONFIG.TOTAL_DAYS - validDays.length;
+        for (let i = 1; i <= needed; i++) {
+            const nextDate = new Date(lastDateMs + (i * 86400000));
+            validDays.push({
+                id: `day-${Date.now()}-${validDays.length}`,
+                dateTimeline: nextDate.getTime(),
+                dateString: nextDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' }),
+                dayName: nextDate.toLocaleDateString('de-DE', { weekday: 'long' }),
+                kw: getWeekNumber(nextDate),
+                dishName: 'Noch nichts geplant',
+                dishId: null,
+                isUnplanned: true,
+                isMeat: null,
+                isHighCarb: false,
+                isEmergency: false
+            });
+        }
+        appState.currentPlan = validDays;
+        savePlanToApi();
+    } else {
+        appState.currentPlan = validDays;
+    }
 }
 
 async function saveDishToApi(dishPayload) {
@@ -508,7 +588,7 @@ function renderApp() {
 
         dishCountSpan.textContent = filteredDishes.length;
         dishList.innerHTML = '';
-        dishList.classList.toggle('grid-view', appState.isGridView);
+        dishList.classList.toggle('grid-view', appState.isGridView && filteredDishes.length > 0);
 
         const selectModeBar = document.getElementById('select-mode-actions-bar');
         if (selectModeBar) {
@@ -521,6 +601,18 @@ function renderApp() {
         } else {
             dishList.classList.remove('select-mode');
             if (instructionText) instructionText.textContent = "Klicke auf ein Gericht für Rezeptdetails und Zubereitung.";
+        }
+
+        // 5. Empty State für leere Suchergebnisse
+        if (filteredDishes.length === 0) {
+            const emptyLi = document.createElement('li');
+            emptyLi.style.cssText = 'padding: 2.5rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; border: none; background: transparent; width: 100%; grid-column: 1 / -1;';
+            emptyLi.innerHTML = `
+                <span style="font-size: 2.2rem; opacity: 0.6;">🔍</span>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Keine passenden Gerichte gefunden.</p>
+                <button type="button" class="btn btn-primary" style="height: 34px; font-size: 0.82rem; margin-top: 0.2rem;" onclick="switchView('add')">➕ Neues Rezept anlegen</button>
+            `;
+            dishList.appendChild(emptyLi);
         }
 
         filteredDishes.forEach(dish => {
@@ -848,6 +940,11 @@ function switchView(viewName, animationType = 'fade') {
 
     appState.currentView = viewName;
 
+    // 2. Stiller Hintergrund-Sync beim Betreten eines Tab-Bereichs
+    if (viewName !== 'add') {
+        loadData(true);
+    }
+
     if (viewName === 'plan' && appState.currentPlan.length === 0) {
         generate4WeekPlan();
     }
@@ -1108,10 +1205,12 @@ let lastCompletedKey = null;
 
 function saveCustomShoppingItems() {
     localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
+    syncShoppingToApi();
 }
 
 function saveCheckedShoppingKeys() {
     localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
+    syncShoppingToApi();
 }
 
 function showUndoSnackbar(itemName, key) {
@@ -1555,6 +1654,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeImageLightbox();
             }
         }
+    });
+
+    // 2. Automatisches Nachladen beim Zurueckkehren in die App (Browser-Tab-Fokus)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            loadData(true);
+        }
+    });
+
+    window.addEventListener('focus', () => {
+        loadData(true);
     });
 
     // Portionen-Scaler Buttons
