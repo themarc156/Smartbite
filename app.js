@@ -2023,12 +2023,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Manuelle Artikel integrieren (gleiche Namen mit Rezept-Zutaten verschmelzen)
         customShoppingItems.forEach(c => {
             const name = typeof c === 'string' ? c : c.name;
-            const key = name.toLowerCase();
+            const key = name.toLowerCase().trim();
+            const id = typeof c === 'string' ? c : (c.id || key);
             
             if (currentItemsMap[key]) {
                 if (!currentItemsMap[key].sources.includes('Manuell')) {
                     currentItemsMap[key].sources.push('Manuell');
                 }
+                currentItemsMap[key].isCustom = true;
+                currentItemsMap[key].customId = id;
             } else {
                 currentItemsMap[key] = {
                     key: key,
@@ -2036,7 +2039,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentCategory: categoryOverrides[key] || (c.category ? c.category : categorizeIngredient(name)),
                     sources: ['Manuell'],
                     isCustom: true,
-                    customId: typeof c === 'string' ? c : c.id
+                    customId: id
                 };
             }
         });
@@ -2102,18 +2105,27 @@ document.addEventListener('DOMContentLoaded', () => {
             delBtn.addEventListener('click', () => {
                 if (item.isCustom) {
                     customShoppingItems = customShoppingItems.filter(c => {
-                        const cKey = (typeof c === 'string' ? c : c.name).toLowerCase();
-                        return cKey !== item.key;
+                        const cName = (typeof c === 'string' ? c : c.name).toLowerCase().trim();
+                        const cId = typeof c === 'string' ? c : c.id;
+                        return cName !== item.key && cId !== item.customId;
                     });
-                    saveCustomShoppingItems();
-                }
-                
-                if (excludedShoppingKeys.has(item.key)) {
                     excludedShoppingKeys.delete(item.key);
+                    checkedShoppingKeys.delete(item.key);
+                    if (item.customId) {
+                        excludedShoppingKeys.delete(item.customId);
+                        checkedShoppingKeys.delete(item.customId);
+                    }
+                    saveCustomShoppingItems();
+                    saveExcludedShoppingKeys();
+                    saveCheckedShoppingKeys();
                 } else {
-                    excludedShoppingKeys.add(item.key);
+                    if (excludedShoppingKeys.has(item.key)) {
+                        excludedShoppingKeys.delete(item.key);
+                    } else {
+                        excludedShoppingKeys.add(item.key);
+                    }
+                    saveExcludedShoppingKeys();
                 }
-                saveExcludedShoppingKeys();
 
                 renderManageShoppingModal();
                 renderShoppingList();
@@ -2169,21 +2181,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (val) {
                 const autoCategory = categorizeIngredient(val);
                 const newId = `custom-${Date.now()}`;
+                const cleanKey = val.toLowerCase().trim();
                 const newItem = { 
                     id: newId, 
                     name: val,
                     category: autoCategory
                 };
 
-                // Sicherstellen, dass der neu hinzugefügte Artikel aktiv ist
+                // Sicherstellen, dass der Artikel weder im Wagen noch als "schon zu Hause" markiert ist
                 checkedShoppingKeys.delete(newId);
-                checkedShoppingKeys.delete(val.toLowerCase());
+                checkedShoppingKeys.delete(cleanKey);
                 saveCheckedShoppingKeys();
+
+                excludedShoppingKeys.delete(newId);
+                excludedShoppingKeys.delete(cleanKey);
+                saveExcludedShoppingKeys();
 
                 customShoppingItems.push(newItem);
                 saveCustomShoppingItems();
 
-                if (!staplesCatalog.some(s => s.name.toLowerCase() === val.toLowerCase())) {
+                if (!staplesCatalog.some(s => s.name.toLowerCase() === cleanKey)) {
                     staplesCatalog.push({
                         id: `staple-${Date.now()}`,
                         name: val,
