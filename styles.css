@@ -1679,8 +1679,8 @@ textarea {
 .ingredient-item {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    justify-content: flex-start;
+    gap: 0.65rem;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -1692,6 +1692,17 @@ textarea {
     transition: background-color 0.2s, border-color 0.2s, transform 0.1s;
     position: relative;
     touch-action: pan-y;
+    text-align: left;
+}
+
+.ingredient-item input[type="checkbox"] {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.ingredient-item span {
+    flex: 1;
+    text-align: left;
 }
 
 /* Visuelles Feedback beim Halten (Long-Press) */
