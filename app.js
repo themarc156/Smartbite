@@ -1611,17 +1611,18 @@ function renderShoppingList() {
         return;
     }
 
-    const allKnownCatNames = [...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel'];
+    // Alle vorhandenen Kategorien dynamisch erfassen
+    const allCategoriesToRender = Object.keys(categorizedMap);
     let activeCategoriesCount = 0;
     const completedItemsList = [];
 
-    allKnownCatNames.forEach(catName => {
+    allCategoriesToRender.forEach(catName => {
         const items = categorizedMap[catName] || [];
         const activeItems = [];
 
         items.forEach(item => {
-            const itemKey = item.id || item.displayName.toLowerCase();
-            if (checkedShoppingKeys.has(itemKey)) {
+            const itemKey = item.key || item.id || item.displayName.toLowerCase().trim();
+            if (checkedShoppingKeys.has(itemKey) || checkedShoppingKeys.has(item.displayName.toLowerCase().trim())) {
                 completedItemsList.push({ item, itemKey });
             } else {
                 activeItems.push({ item, itemKey });
@@ -1703,9 +1704,10 @@ function renderShoppingList() {
             });
             li.appendChild(delBtn);
 
-            // Ausschließlich Long-Press (~350ms) legt den Artikel in den Einkaufswagen
+            // Ausschließlich Long-Press (~280ms) legt den Artikel in den Einkaufswagen
             bindLongPress(li, () => {
                 checkedShoppingKeys.add(itemKey);
+                checkedShoppingKeys.add(item.displayName.toLowerCase().trim());
                 saveCheckedShoppingKeys();
                 showUndoSnackbar(item.displayName, itemKey);
                 renderShoppingList();
@@ -1736,11 +1738,12 @@ function renderShoppingList() {
                 const doneDiv = document.createElement('div');
                 doneDiv.className = 'shopping-done-item';
                 doneDiv.title = 'Tippen zum Wiederherstellen';
-                doneDiv.innerHTML = `<span>✓ ${item.displayName}</span> <span style="font-size: 0.72rem; color: var(--accent-primary); font-weight: 700;">Wiederherstellen ↩</span>`;
+                doneDiv.innerHTML = `<span>✓ ${item.displayName}</span> <span style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 700;">Wiederherstellen ↩</span>`;
                 
                 doneDiv.addEventListener('click', (e) => {
                     e.stopPropagation();
                     checkedShoppingKeys.delete(itemKey);
+                    checkedShoppingKeys.delete(item.displayName.toLowerCase().trim());
                     saveCheckedShoppingKeys();
                     renderShoppingList();
                 });

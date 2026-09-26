@@ -1835,11 +1835,14 @@ textarea {
     background-color: rgba(231, 76, 60, 0.15);
 }
 
-/* Zuklappbarer Erledigt-Bereich */
+/* Gut sichtbarer Einkaufswagen-Bereich */
 .shopping-done-section {
     margin-top: 1.5rem;
-    padding-top: 1rem;
-    border-top: 1px dashed var(--border-color);
+    margin-bottom: 2.5rem;
+    padding: 0.75rem;
+    background: rgba(16, 185, 129, 0.06);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: var(--radius);
 }
 
 .btn-toggle-done {
@@ -1847,15 +1850,19 @@ textarea {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid var(--border-color);
-    color: var(--text-muted);
-    padding: 0.55rem 0.75rem;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #34d399;
+    padding: 0.6rem 0.8rem;
     border-radius: var(--radius);
-    font-size: 0.82rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: background-color 0.15s, color 0.15s;
+    transition: background-color 0.15s;
+}
+
+.btn-toggle-done:hover {
+    background: rgba(16, 185, 129, 0.2);
 }
 
 .btn-toggle-done:hover {
@@ -1950,8 +1957,17 @@ textarea {
 }
 
 .ingredient-item input[type="checkbox"] {
-    cursor: pointer;
-    accent-color: var(--accent-success);
+    margin: 0;
+    flex-shrink: 0;
+    pointer-events: none; /* Verhindert Direktklicks; Abhaken geht nur per Long-Press */
+}
+
+.btn-delete-custom-item.confirm-mode {
+    color: var(--accent-danger) !important;
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    background: rgba(239, 68, 68, 0.15) !important;
+    padding: 0.2rem 0.5rem !important;
 }
 
 .wake-lock-indicator {
