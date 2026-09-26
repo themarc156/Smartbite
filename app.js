@@ -1215,37 +1215,86 @@ function resetDishForm() {
     document.getElementById('btn-delete-in-form').classList.add('hidden');
 }
 
-// Wörterbuch für die Regal-Reihenfolge im Supermarkt inkl. Drogerie & Haushalt
+// Strukturierte Supermarkt-Kategorien (Reihenfolge bestimmt die Anzeige im Laden)
 const SUPERMARKET_CATEGORIES = [
     {
         name: '🍏 Obst & Gemüse',
-        keywords: ['zwiebel', 'knoblauch', 'tomate', 'paprika', 'kartoffel', 'salat', 'gurke', 'karotte', 'möhre', 'zucchini', 'ananas', 'basilikum', 'kräuter', 'avocado', 'petersilie', 'apfel', 'zitrone', 'champignon', 'pilz', 'banane', 'beeren', 'obst', 'gemüse']
+        keywords: ['zwiebel', 'knoblauch', 'tomate', 'paprika', 'kartoffel', 'salat', 'gurke', 'karotte', 'möhre', 'zucchini', 'ananas', 'basilikum', 'kräuter', 'avocado', 'petersilie', 'apfel', 'äpfel', 'zitrone', 'champignon', 'pilz', 'pilze', 'banane', 'bananen', 'beeren', 'erdbeeren', 'himbeeren', 'blaubeeren', 'obst', 'gemüse', 'ingwer', 'lauch', 'porree', 'spinat', 'brokkoli', 'blumenkohl', 'kohlrabi', 'kürbis', 'aubergine', 'radieschen', 'sellerie', 'limette', 'orange', 'birne', 'weintrauben', 'trauben', 'schnittlauch', 'dill', 'rosmarin', 'thymian', 'koriander', 'minze']
     },
     {
         name: '🍞 Brot & Backwaren',
-        keywords: ['brot', 'toast', 'brötchen', 'buns', 'wrap', 'tortilla', 'mehl', 'hefe', 'pizzateig', 'grieß', 'baguette', 'croissant']
+        keywords: ['brot', 'toast', 'toastbrot', 'brötchen', 'buns', 'burgerbrötchen', 'wrap', 'wraps', 'tortilla', 'tortillas', 'mehl', 'weizenmehl', 'dinkelmehl', 'hefe', 'frischhefe', 'trockenhefe', 'pizzateig', 'blätterteig', 'grieß', 'weichweizengrieß', 'baguette', 'croissant', 'fladenbrot', 'pita', 'semmelbrösel', 'paniermehl']
     },
     {
         name: '🥩 Fleisch, Fisch & Frischetheke',
-        keywords: ['hackfleisch', 'rinderhack', 'hähnchen', 'schinken', 'speck', 'matjes', 'wurst', 'pinkel', 'patty', 'rind', 'lachs', 'fisch', 'fleisch', 'putenfleisch', 'bratwurst']
+        keywords: ['hackfleisch', 'rinderhack', 'gemischtes hack', 'hähnchen', 'hähnchenbrust', 'hühnchen', 'schinken', 'kochschinken', 'rohschinken', 'parmaschinken', 'speck', 'bacon', 'matjes', 'matjesfilet', 'wurst', 'wiener', 'bratwurst', 'pinkel', 'kohlwurst', 'patty', 'patties', 'rind', 'rindersteak', 'gulasch', 'lachs', 'lachsfilet', 'fisch', 'thunfisch', 'garnelen', 'shrimps', 'fleisch', 'putenfleisch', 'pute', 'schweinefleisch', 'salami']
     },
     {
         name: '🧀 Kühlregal & Molkerei',
-        keywords: ['milch', 'butter', 'käse', 'gouda', 'feta', 'quark', 'sahne', 'ei', 'eier', 'frischkäse', 'mozzarella', 'creme fraiche', 'joghurt', 'maultaschen', 'hafermilch', 'parmesan']
+        keywords: ['milch', 'vollmilch', 'hafermilch', 'mandelmilch', 'sojamilch', 'butter', 'margarine', 'käse', 'gouda', 'geriebener käse', 'streukäse', 'feta', 'schafskäse', 'quark', 'magerquark', 'kräuterquark', 'sahne', 'schlagsahne', 'schmand', 'saure sahne', 'creme fraiche', 'ei', 'eier', 'frischkäse', 'mozzarella', 'parmesan', 'grana padano', 'cheddar', 'joghurt', 'naturjoghurt', 'maultaschen', 'tortelloni', 'gnocchi', 'hefe']
     },
     {
         name: '🍝 Vorrat, Teigwaren & Dosen',
-        keywords: ['nudel', 'spaghetti', 'pasta', 'reis', 'kidneybohne', 'bohne', 'mais', 'dose', 'tomatenmark', 'passierte tomaten', 'gehackte tomaten', 'brühe', 'zucker', 'öl', 'olivenöl', 'haferflocken', 'linsen', 'kokosmilch', 'kaffee', 'kaffeebohnen', 'tee']
+        keywords: ['tomatenmark', 'gehackte tomaten', 'passierte tomaten', 'dosentomaten', 'schältomaten', 'nudel', 'nudeln', 'spaghetti', 'penne', 'fusilli', 'pasta', 'lasagneplatten', 'reis', 'basmatireis', 'jasminreis', 'milchreis', 'kidneybohne', 'kidneybohnen', 'bohne', 'bohnen', 'weiße bohnen', 'kichererbsen', 'mais', 'dose mais', 'dose', 'konserve', 'brühe', 'gemüsebrühe', 'hühnerbrühe', 'rinderbrühe', 'zucker', 'puderzucker', 'brauner zucker', 'öl', 'olivenöl', 'rapsöl', 'sonnenblumenöl', 'kokosöl', 'haferflocken', 'linsen', 'rote linsen', 'kokosmilch', 'kaffee', 'kaffeebohnen', 'espressbohnen', 'tee', 'essig', 'balsamico', 'apfelessig', 'senf', 'ketchup', 'mayo', 'mayonnaise', 'sauerkirschen', 'apfelmus']
     },
     {
         name: '🥫 Gewürze, Saucen & Snacks',
-        keywords: ['salz', 'pfeffer', 'oregano', 'zimt', 'curry', 'paprikapulver', 'chili', 'kreuzkümmel', 'senf', 'ketchup', 'mayo', 'remoulade', 'sauce', 'soße', 'chips', 'nüsse', 'schokolade']
+        keywords: ['paprika edelsüß', 'paprikapulver', 'paprika rosenscharf', 'paprika gewürz', 'salz', 'meersalz', 'pfeffer', 'schwarzer pfeffer', 'oregano', 'zimt', 'curry', 'currypulver', 'chili', 'chiliflocken', 'chilipulver', 'kreuzkümmel', 'cumin', 'muskat', 'muskatnuss', 'kurkuma', 'lorbeer', 'lorbeerblätter', 'vanillezucker', 'backpulver', 'natron', 'sojasoße', 'sojasauce', 'worcestersauce', 'remoulade', 'sauce', 'soße', 'pesto', 'chips', 'erdnüsse', 'nüsse', 'mandeln', 'walnüsse', 'schokolade', 'kakao']
     },
     {
         name: '🧼 Drogerie & Haushalt',
-        keywords: ['spülmaschinentabs', 'tabs', 'klopapier', 'toilettenpapier', 'müllbeutel', 'alufolie', 'backpapier', 'küchenrolle', 'seife', 'duschgel', 'shampoo', 'zahnpasta', 'waschmittel', 'spülmittel', 'schwamm', 'taschentücher', 'haushalt']
+        keywords: ['spülmaschinentabs', 'tabs', 'klarspüler', 'spülmaschinensalz', 'maschinensalz', 'spülmittel', 'allzweckreiniger', 'allzwecktücher', 'feuchttücher', 'reinigungstücher', 'putzlappen', 'schwamm', 'spülschwamm', 'küchenrolle', 'zewa', 'klopapier', 'toilettenpapier', 'taschentücher', 'kosmetiktücher', 'müllbeutel', 'mülltüten', 'müllsäcke', 'alufolie', 'alupapier', 'backpapier', 'frischhaltefolie', 'gefrierbeutel', 'zipperbeutel', 'waschmittel', 'vollwaschmittel', 'weichspüler', 'fleckensalz', 'entkalker', 'kalkreiniger', 'glasreiniger', 'seife', 'flüssigseife', 'duschgel', 'shampoo', 'haarkur', 'spülung', 'zahnpasta', 'zahncreme', 'zahnbürste', 'deo', 'deodorant', 'handcreme', 'haushalt']
     }
 ];
+
+// Intelligente Kategorisierung mit Prioritaets-Matching (Spezifisch vor Allgemein)
+function categorizeIngredient(text) {
+    const lower = text.toLowerCase().trim();
+
+    // 1. ZUERST: Drogerie & Haushalt pruefen (damit 'allzwecktücher', 'spülmittel' etc. sofort abgefangen werden)
+    const drogerieCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Drogerie'));
+    if (drogerieCat && drogerieCat.keywords.some(k => lower.includes(k))) {
+        return drogerieCat.name;
+    }
+
+    // 2. ZWEITENS: Gewürze & verarbeitete Pulver pruefen (z.B. 'paprika edelsüß', 'paprikapulver' VOR frischer Paprika)
+    const gewuerzeCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Gewürze'));
+    if (gewuerzeCat && gewuerzeCat.keywords.some(k => lower.includes(k))) {
+        return gewuerzeCat.name;
+    }
+
+    // 3. DRITTENS: Vorrat & Dosen pruefen (z.B. 'tomatenmark', 'gehackte tomaten' VOR frischen Tomaten)
+    const vorratCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Vorrat'));
+    if (vorratCat && vorratCat.keywords.some(k => lower.includes(k))) {
+        return vorratCat.name;
+    }
+
+    // 4. VIERTENS: Kuehlregal pruefen
+    const kuehlCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Kühlregal'));
+    if (kuehlCat && kuehlCat.keywords.some(k => lower.includes(k))) {
+        return kuehlCat.name;
+    }
+
+    // 5. FUENFTENS: Fleisch, Fisch & Frischetheke pruefen
+    const fleischCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Fleisch'));
+    if (fleischCat && fleischCat.keywords.some(k => lower.includes(k))) {
+        return fleischCat.name;
+    }
+
+    // 6. SECHSTENS: Backwaren & Teige pruefen
+    const backCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Backwaren'));
+    if (backCat && backCat.keywords.some(k => lower.includes(k))) {
+        return backCat.name;
+    }
+
+    // 7. SIEBTENS: Frisches Obst & Gemuese pruefen (jetzt sicher vor Tomatenmark oder Paprikapulver)
+    const obstCat = SUPERMARKET_CATEGORIES.find(c => c.name.includes('Obst'));
+    if (obstCat && obstCat.keywords.some(k => lower.includes(k))) {
+        return obstCat.name;
+    }
+
+    return '📦 Sonstige Lebensmittel';
+}
 
 const DEFAULT_STAPLES = [
     { id: 'staple-tabs', name: 'Spülmaschinentabs', category: '🧼 Drogerie & Haushalt' },
