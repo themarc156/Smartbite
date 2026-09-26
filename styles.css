@@ -1868,3 +1868,91 @@ textarea {
     line-height: 1.6;
     color: var(--text-muted);
 }
+
+/* Interaktive Zubereitungsschritte im Koch-Modus */
+.instructions-interactive-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.instruction-step-card {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.65rem 0.75rem;
+    display: flex;
+    gap: 0.65rem;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: background-color 0.15s, border-color 0.15s, opacity 0.2;
+}
+
+.instruction-step-card:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    border-color: var(--accent-primary);
+}
+
+.instruction-step-num {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+    background: rgba(245, 158, 11, 0.12);
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.instruction-step-text {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text-main);
+    flex: 1;
+}
+
+.instruction-step-card.checked {
+    opacity: 0.45;
+    text-decoration: line-through;
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+.instruction-step-card.checked .instruction-step-num {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+}
+
+/* Footer Backup-Button */
+.database-footer-area {
+    margin-top: 2rem;
+    margin-bottom: 2.5rem;
+    display: flex;
+    justify-content: center;
+    padding: 0.5rem 0;
+}
+
+.btn-footer-backup {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 0.55rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.btn-footer-backup:hover {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    background: rgba(245, 158, 11, 0.08);
+}

@@ -540,7 +540,49 @@ function openRecipeModal(dish) {
     renderRecipeIngredients(dish);
 
     const instructionsEl = document.getElementById('recipe-view-instructions');
-    instructionsEl.textContent = dish.instructions || 'Keine Zubereitungsschritte hinterlegt.';
+    instructionsEl.innerHTML = '';
+
+    const rawInstructions = (dish.instructions || '').trim();
+    if (!rawInstructions) {
+        instructionsEl.textContent = 'Keine Zubereitungsschritte hinterlegt.';
+    } else {
+        const lines = rawInstructions.split('\n').map(s => s.trim()).filter(Boolean);
+        const container = document.createElement('div');
+        container.className = 'instructions-interactive-list';
+
+        lines.forEach((line, idx) => {
+            const card = document.createElement('div');
+            card.className = 'instruction-step-card';
+
+            const numSpan = document.createElement('span');
+            numSpan.className = 'instruction-step-num';
+            
+            // Erkennt führende Nummern wie "1.", "2." oder nummeriert automatisch
+            const match = line.match(/^(\d+)[.)]\s*(.*)$/);
+            let text = line;
+            if (match) {
+                numSpan.textContent = match[1];
+                text = match[2];
+            } else {
+                numSpan.textContent = idx + 1;
+            }
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'instruction-step-text';
+            textSpan.textContent = text;
+
+            card.appendChild(numSpan);
+            card.appendChild(textSpan);
+
+            card.addEventListener('click', () => {
+                card.classList.toggle('checked');
+            });
+
+            container.appendChild(card);
+        });
+
+        instructionsEl.appendChild(container);
+    }
 
     enableWakeLock();
     document.getElementById('recipe-view-modal').classList.remove('hidden');
@@ -2153,6 +2195,33 @@ document.addEventListener('DOMContentLoaded', () => {
         btnJumpToday.addEventListener('click', () => {
             appState.currentWeekPage = 0;
             renderApp();
+        });
+    }
+
+    // 1-Klick Backup-Download (JSON-Export)
+    const btnBackup = document.getElementById('btn-download-backup');
+    if (btnBackup) {
+        btnBackup.addEventListener('click', () => {
+            const fullData = {
+                dishes: appState.dishes,
+                plan: appState.currentPlan,
+                shopping: {
+                    customItems: customShoppingItems,
+                    checkedKeys: [...checkedShoppingKeys]
+                },
+                exportDate: new Date().toISOString()
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            const now = new Date();
+            const dateStamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+            
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `smartbite-backup-${dateStamp}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
         });
     }
 
