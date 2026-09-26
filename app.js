@@ -2227,7 +2227,26 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
     if (btnAddCustom) btnAddCustom.addEventListener('click', handleAddCustom);
-    if (customInput) customInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAddCustom(); });
+    if (customInput) {
+        customInput.addEventListener('keydown', (e) => { 
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleAddCustom(); 
+            }
+        });
+
+        // Vorschlag aus der Liste antippen fuegt den Artikel direkt hinzu und leert das Feld
+        customInput.addEventListener('input', () => {
+            const currentVal = customInput.value.trim().toLowerCase();
+            if (!currentVal) return;
+
+            const matchedStaple = staplesCatalog.find(s => s.name.toLowerCase().trim() === currentVal);
+            if (matchedStaple) {
+                customInput.value = matchedStaple.name;
+                handleAddCustom();
+            }
+        });
+    }
 
     // (Dauerbrenner-Modal entfernt – Autocomplete im Eingabefeld bleibt aktiv)
 
