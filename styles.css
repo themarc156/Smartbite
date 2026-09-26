@@ -1897,52 +1897,10 @@ textarea {
     color: var(--text-main);
 }
 
-/* Undo Snackbar Toast */
-.shopping-undo-snackbar {
-    position: fixed;
-    bottom: 1.25rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #1e293b;
-    border: 1px solid #38bdf8;
-    color: #ffffff;
-    padding: 0.55rem 1rem;
-    border-radius: 30px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    z-index: 9999;
-    font-size: 0.82rem;
-    animation: slideUpToast 0.18s cubic-bezier(0.25, 1, 0.5, 1);
-    white-space: nowrap;
-}
-
-.btn-snackbar-undo {
-    background: rgba(56, 189, 248, 0.2);
-    border: 1px solid #38bdf8;
-    color: #38bdf8;
-    font-weight: 700;
-    padding: 0.25rem 0.65rem;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.78rem;
-    transition: background-color 0.15s;
-}
-
-.btn-snackbar-undo:hover {
-    background: rgba(56, 189, 248, 0.35);
-}
-
-@keyframes slideUpToast {
-    from {
-        opacity: 0;
-        transform: translate(-50%, 15px);
-    }
-    to {
-        opacity: 1;
-        transform: translate(-50%, 0);
-    }
+.btn-done-clear.confirm-mode {
+    background: var(--accent-danger) !important;
+    color: #ffffff !important;
+    border-color: var(--accent-danger) !important;
 }
 
 .ingredient-item:hover {

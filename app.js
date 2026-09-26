@@ -1352,9 +1352,7 @@ function saveStaplesCatalog() {
     localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
     syncShoppingToApi();
 }
-let isDoneSectionOpen = false; // Einkaufswagen ist standardmaessig eingeklappt
-let undoSnackbarTimeout = null;
-let lastCompletedKey = null;
+let isDoneSectionOpen = true;
 
 function saveCustomShoppingItems() {
     localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
@@ -1367,21 +1365,7 @@ function saveCheckedShoppingKeys() {
     syncShoppingToApi();
 }
 
-function showUndoSnackbar(itemName, key) {
-    lastCompletedKey = key;
-    const snackbar = document.getElementById('shopping-undo-snackbar');
-    const message = document.getElementById('snackbar-message');
-    if (!snackbar || !message) return;
-
-    message.textContent = `✓ ${itemName} im Wagen`;
-    snackbar.classList.remove('hidden');
-
-    if (undoSnackbarTimeout) clearTimeout(undoSnackbarTimeout);
-    undoSnackbarTimeout = setTimeout(() => {
-        snackbar.classList.add('hidden');
-        lastCompletedKey = null;
-    }, 5000);
-}
+// (Snackbar-Hilfsfunktion entfernt)
 
 function bindLongPress(element, onTrigger) {
     let timer = null;
@@ -1401,7 +1385,7 @@ function bindLongPress(element, onTrigger) {
                 try { navigator.vibrate(40); } catch (_) {}
             }
             onTrigger();
-        }, 280);
+        }, 450); // Bewusster 450ms Long-Press gegen Fehlbedienung
     };
 
     const onMove = (e) => {
@@ -1702,12 +1686,11 @@ function renderShoppingList() {
             });
             li.appendChild(delBtn);
 
-            // Ausschließlich Long-Press (~280ms) legt den Artikel in den Einkaufswagen
+            // Ausschließlich Long-Press (450ms) legt den Artikel in den Einkaufswagen
             bindLongPress(li, () => {
                 checkedShoppingKeys.add(itemKey);
                 checkedShoppingKeys.add(item.displayName.toLowerCase().trim());
                 saveCheckedShoppingKeys();
-                showUndoSnackbar(item.displayName, itemKey);
                 renderShoppingList();
             });
 
@@ -1783,8 +1766,31 @@ function renderShoppingList() {
     if (btnDoneClearInline) {
         btnDoneClearInline.onclick = (e) => {
             e.stopPropagation();
-            const btnClear = document.getElementById('btn-clear-completed-items');
-            if (btnClear) btnClear.click();
+
+            if (!btnDoneClearInline.classList.contains('confirm-mode')) {
+                btnDoneClearInline.classList.add('confirm-mode');
+                btnDoneClearInline.textContent = 'Sicher leeren? ⚠️';
+                setTimeout(() => {
+                    if (btnDoneClearInline) {
+                        btnDoneClearInline.classList.remove('confirm-mode');
+                        btnDoneClearInline.textContent = 'Wagen leeren 🧹';
+                    }
+                }, 3000);
+                return;
+            }
+
+            // Ausfuehren nach zweitem Klick
+            customShoppingItems = customShoppingItems.filter(c => {
+                const key = typeof c === 'string' ? c : (c.id || c.name);
+                return !checkedShoppingKeys.has(key) && !checkedShoppingKeys.has((typeof c === 'string' ? c : c.name).toLowerCase().trim());
+            });
+            saveCustomShoppingItems();
+            checkedShoppingKeys.clear();
+            saveCheckedShoppingKeys();
+
+            btnDoneClearInline.classList.remove('confirm-mode');
+            btnDoneClearInline.textContent = 'Wagen leeren 🧹';
+            renderShoppingList();
         };
     }
 }
@@ -2259,37 +2265,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Undo-Button in der Snackbar
-    const btnSnackbarUndo = document.getElementById('btn-snackbar-undo');
-    if (btnSnackbarUndo) {
-        btnSnackbarUndo.addEventListener('click', () => {
-            if (lastCompletedKey) {
-                checkedShoppingKeys.delete(lastCompletedKey);
-                saveCheckedShoppingKeys();
-                lastCompletedKey = null;
-            }
-            const snackbar = document.getElementById('shopping-undo-snackbar');
-            if (snackbar) snackbar.classList.add('hidden');
-            if (undoSnackbarTimeout) clearTimeout(undoSnackbarTimeout);
-            renderShoppingList();
-        });
-    }
+    // (Snackbar-Listener entfernt)
 
-    // Erledigte Artikel komplett leeren (Wagen leeren / nach dem Einkauf)
-    const btnClearCompleted = document.getElementById('btn-clear-completed-items');
-    if (btnClearCompleted) {
-        btnClearCompleted.addEventListener('click', () => {
-            // Löscht auch erledigte manuelle Artikel aus der Datenbank
-            customShoppingItems = customShoppingItems.filter(c => {
-                const key = typeof c === 'string' ? c : c.id;
-                return !checkedShoppingKeys.has(key);
-            });
-            saveCustomShoppingItems();
-            checkedShoppingKeys.clear();
-            saveCheckedShoppingKeys();
-            renderShoppingList();
-        });
-    }
+    // (Alter Top-Bar Button entfernt)
 
     // Als Text kopieren (nur noch offene Artikel)
     const btnCopy = document.getElementById('btn-copy-shopping-list');
