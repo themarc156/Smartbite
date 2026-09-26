@@ -915,6 +915,7 @@ function openEditRecipeForm(dish) {
 let activeEditorTargetId = null;
 
 function updateTextTriggerStatuses() {
+    // 1. Hauptformular
     const ingVal = document.getElementById('dish-ingredients') ? document.getElementById('dish-ingredients').value.trim() : '';
     const insVal = document.getElementById('dish-instructions') ? document.getElementById('dish-instructions').value.trim() : '';
 
@@ -940,6 +941,35 @@ function updateTextTriggerStatuses() {
         } else {
             insStatus.textContent = 'Noch keine Schritte';
             insStatus.style.color = 'var(--text-muted)';
+        }
+    }
+
+    // 2. Modal-Bearbeitungsformular
+    const modalIngVal = document.getElementById('modal-edit-ingredients') ? document.getElementById('modal-edit-ingredients').value.trim() : '';
+    const modalInsVal = document.getElementById('modal-edit-instructions') ? document.getElementById('modal-edit-instructions').value.trim() : '';
+
+    const modalIngStatus = document.getElementById('modal-ingredients-status');
+    const modalInsStatus = document.getElementById('modal-instructions-status');
+
+    if (modalIngStatus) {
+        if (modalIngVal) {
+            const count = modalIngVal.split('\n').filter(Boolean).length;
+            modalIngStatus.textContent = `${count} Zutat${count > 1 ? 'en' : ''} hinterlegt ✓`;
+            modalIngStatus.style.color = 'var(--accent-success)';
+        } else {
+            modalIngStatus.textContent = 'Noch keine Zutaten';
+            modalIngStatus.style.color = 'var(--text-muted)';
+        }
+    }
+
+    if (modalInsStatus) {
+        if (modalInsVal) {
+            const count = modalInsVal.split('\n').filter(Boolean).length;
+            modalInsStatus.textContent = `${count} Schritt${count > 1 ? 'e' : ''} hinterlegt ✓`;
+            modalInsStatus.style.color = 'var(--accent-success)';
+        } else {
+            modalInsStatus.textContent = 'Noch keine Schritte';
+            modalInsStatus.style.color = 'var(--text-muted)';
         }
     }
 }
@@ -1526,6 +1556,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('modal-edit-emergency').checked = !!dish.isEmergency;
         document.getElementById('modal-edit-ingredients').value = dish.ingredients || '';
         document.getElementById('modal-edit-instructions').value = dish.instructions || '';
+        
+        updateTextTriggerStatuses();
+
         document.getElementById('modal-edit-image-file').value = '';
         const previewFileInput = document.getElementById('modal-edit-preview-file');
         if (previewFileInput) previewFileInput.value = '';
@@ -1533,6 +1566,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (modalCamInput) modalCamInput.value = '';
         const modalHintLabel = document.getElementById('modal-preview-file-hint');
         if (modalHintLabel) modalHintLabel.textContent = '';
+        const modalShotLabel = document.getElementById('modal-screenshot-file-hint');
+        if (modalShotLabel) modalShotLabel.textContent = '';
 
         const deleteBtn = document.getElementById('btn-modal-delete-dish');
         deleteBtn.classList.remove('confirm-mode');
@@ -1837,44 +1872,62 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Dateinamen-Feedback im Hauptformular
     const hintLabel = document.getElementById('preview-file-name-label');
+    const camInput = document.getElementById('dish-preview-file-cam');
     const galInput = document.getElementById('dish-preview-file');
     const shotInput = document.getElementById('dish-image-file');
     const shotLabel = document.getElementById('screenshot-file-name-label');
 
-    if (galInput && hintLabel) {
-        galInput.addEventListener('change', () => {
-            if (galInput.files.length > 0) {
-                hintLabel.textContent = `✓ Foto gewählt: ${galInput.files[0].name}`;
+    if (camInput) {
+        camInput.addEventListener('change', () => {
+            if (camInput.files.length > 0) {
+                if (galInput) galInput.value = '';
+                if (hintLabel) hintLabel.textContent = `✓ Foto geknipst: ${camInput.files[0].name}`;
             }
         });
     }
-
+    if (galInput) {
+        galInput.addEventListener('change', () => {
+            if (galInput.files.length > 0) {
+                if (camInput) camInput.value = '';
+                if (hintLabel) hintLabel.textContent = `✓ Aus Galerie: ${galInput.files[0].name}`;
+            }
+        });
+    }
     if (shotInput && shotLabel) {
         shotInput.addEventListener('change', () => {
             if (shotInput.files.length > 0) {
-                shotLabel.textContent = `✓ Screenshot gewählt: ${shotInput.files[0].name}`;
+                shotLabel.textContent = `✓ Screenshot: ${shotInput.files[0].name}`;
             }
         });
     }
 
     // Dateinamen-Feedback im Bearbeiten-Modal
     const modalHintLabel = document.getElementById('modal-preview-file-hint');
+    const modalCamInput = document.getElementById('modal-edit-preview-file-cam');
     const modalGalInput = document.getElementById('modal-edit-preview-file');
     const modalShotInput = document.getElementById('modal-edit-image-file');
     const modalShotLabel = document.getElementById('modal-screenshot-file-hint');
 
-    if (modalGalInput && modalHintLabel) {
-        modalGalInput.addEventListener('change', () => {
-            if (modalGalInput.files.length > 0) {
-                modalHintLabel.textContent = `✓ Foto gewählt: ${modalGalInput.files[0].name}`;
+    if (modalCamInput) {
+        modalCamInput.addEventListener('change', () => {
+            if (modalCamInput.files.length > 0) {
+                if (modalGalInput) modalGalInput.value = '';
+                if (modalHintLabel) modalHintLabel.textContent = `✓ Foto geknipst: ${modalCamInput.files[0].name}`;
             }
         });
     }
-
+    if (modalGalInput) {
+        modalGalInput.addEventListener('change', () => {
+            if (modalGalInput.files.length > 0) {
+                if (modalCamInput) modalCamInput.value = '';
+                if (modalHintLabel) modalHintLabel.textContent = `✓ Aus Galerie: ${modalGalInput.files[0].name}`;
+            }
+        });
+    }
     if (modalShotInput && modalShotLabel) {
         modalShotInput.addEventListener('change', () => {
             if (modalShotInput.files.length > 0) {
-                modalShotLabel.textContent = `✓ Screenshot gewählt: ${modalShotInput.files[0].name}`;
+                modalShotLabel.textContent = `✓ Screenshot: ${modalShotInput.files[0].name}`;
             }
         });
     }
