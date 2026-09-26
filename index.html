@@ -77,13 +77,16 @@
 
             <div id="shopping-list-container" class="shopping-categories-container"></div>
 
-            <!-- Feste Kachel: Bereits im Einkaufswagen -->
+            <!-- Zuklappbare Kachel: Bereits im Einkaufswagen -->
             <div id="shopping-done-section" class="shopping-done-section hidden">
-                <div class="shopping-done-header">
-                    <span style="font-weight: 700; color: #34d399; font-size: 0.9rem;">🛒 Bereits im Einkaufswagen (<span id="done-items-count">0</span>)</span>
+                <div id="shopping-done-toggle-bar" class="shopping-done-header">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                        <span id="done-caret-icon" style="color: #34d399; font-size: 0.9rem;">▾</span>
+                        <span style="font-weight: 700; color: #34d399; font-size: 0.9rem;">🛒 Im Einkaufswagen (<span id="done-items-count">0</span>)</span>
+                    </div>
                     <button type="button" id="btn-done-clear-inline" class="btn-done-clear" title="Wagen leeren">Wagen leeren 🧹</button>
                 </div>
-                <div id="shopping-done-items-container" class="shopping-done-items-container"></div>
+                <div id="shopping-done-items-container" class="shopping-done-items-container hidden"></div>
             </div>
         </section>
 

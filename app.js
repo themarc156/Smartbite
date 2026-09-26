@@ -1352,7 +1352,7 @@ function saveStaplesCatalog() {
     localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
     syncShoppingToApi();
 }
-let isDoneSectionOpen = true; // Einkaufswagen ist standardmaessig geoeffnet, sobald Artikel drin liegen
+let isDoneSectionOpen = false; // Einkaufswagen ist standardmaessig eingeklappt
 let undoSnackbarTimeout = null;
 let lastCompletedKey = null;
 
@@ -1594,14 +1594,18 @@ function renderShoppingList() {
         });
     }
 
-    // Datalist für Autocomplete aktualisieren
+    // Datalist für Autocomplete aktualisieren (ausgeschlossene/gelöschte Artikel ignorieren)
     const datalist = document.getElementById('shopping-staples-datalist');
     if (datalist) {
         datalist.innerHTML = '';
         staplesCatalog.forEach(staple => {
-            const opt = document.createElement('option');
-            opt.value = staple.name;
-            datalist.appendChild(opt);
+            const stapleKey = staple.name.toLowerCase().trim();
+            // Nicht in der Such-/Vorschlagsliste anzeigen, wenn der Artikel gestrichen/ausgeschlossen wurde
+            if (!excludedShoppingKeys.has(stapleKey)) {
+                const opt = document.createElement('option');
+                opt.value = staple.name;
+                datalist.appendChild(opt);
+            }
         });
     }
 
@@ -1722,6 +1726,7 @@ function renderShoppingList() {
     const doneSection = document.getElementById('shopping-done-section');
     const doneContainer = document.getElementById('shopping-done-items-container');
     const doneCount = document.getElementById('done-items-count');
+    const doneCaret = document.getElementById('done-caret-icon');
 
     if (doneSection && doneContainer && doneCount) {
         doneContainer.innerHTML = '';
@@ -1730,6 +1735,10 @@ function renderShoppingList() {
             doneSection.classList.remove('hidden');
             doneSection.style.display = 'block';
             doneCount.textContent = completedItemsList.length;
+
+            // Container gemäß isDoneSectionOpen ein- oder ausblenden
+            doneContainer.classList.toggle('hidden', !isDoneSectionOpen);
+            if (doneCaret) doneCaret.textContent = isDoneSectionOpen ? '▴' : '▾';
 
             completedItemsList.forEach(({ item, itemKey }) => {
                 const doneDiv = document.createElement('div');
@@ -1755,6 +1764,19 @@ function renderShoppingList() {
             doneSection.classList.add('hidden');
             doneSection.style.display = 'none';
         }
+    }
+
+    // Toggle-Funktion fuer den Einkaufswagen
+    const doneToggleBar = document.getElementById('shopping-done-toggle-bar');
+    if (doneToggleBar) {
+        doneToggleBar.onclick = (e) => {
+            if (e.target.closest('#btn-done-clear-inline')) return; // Klick auf Leeren abfangen
+            isDoneSectionOpen = !isDoneSectionOpen;
+            const containerEl = document.getElementById('shopping-done-items-container');
+            const caretEl = document.getElementById('done-caret-icon');
+            if (containerEl) containerEl.classList.toggle('hidden', !isDoneSectionOpen);
+            if (caretEl) caretEl.textContent = isDoneSectionOpen ? '▴' : '▾';
+        };
     }
 
     const btnDoneClearInline = document.getElementById('btn-done-clear-inline');

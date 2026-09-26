@@ -1849,9 +1849,10 @@ textarea {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid rgba(16, 185, 129, 0.2);
-    padding-bottom: 0.45rem;
-    margin-bottom: 0.6rem;
+    padding-bottom: 0.35rem;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .btn-done-clear {
