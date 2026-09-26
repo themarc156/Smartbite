@@ -1606,14 +1606,8 @@ function renderShoppingList() {
     }
 
     const container = document.getElementById('shopping-list-container');
-    container.innerHTML = '';
+    if (container) container.innerHTML = '';
 
-    if (Object.keys(categorizedMap).length === 0) {
-        container.innerHTML = '<p class="subtitle" style="text-align: center; margin-top: 2rem;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
-        return;
-    }
-
-    // Alle vorhandenen Kategorien dynamisch erfassen
     const allCategoriesToRender = Object.keys(categorizedMap);
     let activeCategoriesCount = 0;
     const completedItemsList = [];
@@ -1695,9 +1689,7 @@ function renderShoppingList() {
                         const cKey = typeof c === 'string' ? c : (c.id || c.name);
                         return cKey !== item.id && cKey !== item.key;
                     });
-                    checkedShoppingKeys.delete(itemKey);
                     saveCustomShoppingItems();
-                    saveCheckedShoppingKeys();
                 } else {
                     excludedShoppingKeys.add(item.key);
                     saveExcludedShoppingKeys();
@@ -1719,17 +1711,24 @@ function renderShoppingList() {
         });
 
         groupEl.appendChild(listEl);
-        container.appendChild(groupEl);
+        if (container) container.appendChild(groupEl);
     });
 
-    if (activeCategoriesCount === 0 && completedItemsList.length === 0) {
+    if (activeCategoriesCount === 0 && completedItemsList.length === 0 && container) {
         container.innerHTML = '<p class="subtitle" style="text-align: center; margin-top: 2rem;">Keine Zutaten für den gewählten Zeitraum gefunden.</p>';
     }
 
     // Erledigt-Bereich rendern (Im Einkaufswagen)
+    const doneSection = document.getElementById('shopping-done-section');
+    const doneContainer = document.getElementById('shopping-done-items-container');
+    const doneCount = document.getElementById('done-items-count');
+
     if (doneSection && doneContainer && doneCount) {
+        doneContainer.innerHTML = '';
+
         if (completedItemsList.length > 0) {
             doneSection.classList.remove('hidden');
+            doneSection.style.display = 'block';
             doneCount.textContent = completedItemsList.length;
 
             completedItemsList.forEach(({ item, itemKey }) => {
@@ -1754,6 +1753,7 @@ function renderShoppingList() {
             });
         } else {
             doneSection.classList.add('hidden');
+            doneSection.style.display = 'none';
         }
     }
 
