@@ -1682,20 +1682,44 @@ function renderShoppingList() {
                 li.appendChild(delBtn);
             }
 
-            const triggerCheck = () => {
+            // ✖-Button fuer ALLE Artikel (2-Klick-Sicherheitsabfrage)
+            const delBtn = document.createElement('button');
+            delBtn.type = 'button';
+            delBtn.className = 'btn-delete-custom-item';
+            delBtn.textContent = '✖';
+            delBtn.title = item.isCustom ? 'Artikel löschen' : 'Habe ich schon daheim (vom Zettel streichen)';
+            
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!delBtn.classList.contains('confirm-mode')) {
+                    delBtn.classList.add('confirm-mode');
+                    delBtn.textContent = 'Sicher? ⚠️';
+                    setTimeout(() => {
+                        if (delBtn) {
+                            delBtn.classList.remove('confirm-mode');
+                            delBtn.textContent = '✖';
+                        }
+                    }, 3000);
+                    return;
+                }
+
+                if (item.isCustom) {
+                    customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.id) !== item.key);
+                    saveCustomShoppingItems();
+                } else {
+                    excludedShoppingKeys.add(item.key);
+                    saveExcludedShoppingKeys();
+                }
+                renderShoppingList();
+            });
+            li.appendChild(delBtn);
+
+            // Ausschließlich Long-Press (~350ms) legt den Artikel in den Einkaufswagen
+            bindLongPress(li, () => {
                 checkedShoppingKeys.add(itemKey);
                 saveCheckedShoppingKeys();
                 showUndoSnackbar(item.displayName, itemKey);
                 renderShoppingList();
-            };
-
-            // 1. Long-Press auf die gesamte Zeile
-            bindLongPress(li, triggerCheck);
-
-            // 2. Direktes Antippen der Checkbox
-            checkbox.addEventListener('change', (e) => {
-                e.stopPropagation();
-                triggerCheck();
             });
 
             listEl.appendChild(li);
@@ -1939,7 +1963,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Vorübergehend ohne Excludes parsen, um alle anpassbaren Artikel anzuzeigen
+        // Deduplizierung: Alle gleichen Zutaten & manuelle Einträge bündeln
         const currentItemsMap = {};
 
         rawList.forEach(({ text, dishName }) => {
@@ -1955,28 +1979,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentItemsMap[key] = {
                         key: key,
                         displayName: item,
-                        currentCategory: categorizeIngredient(item),
+                        currentCategory: categoryOverrides[key] || categorizeIngredient(item),
                         sources: [dishName],
                         isCustom: false
                     };
                 } else {
-                    if (!currentItemsMap[key].sources.includes(dishName)) currentItemsMap[key].sources.push(dishName);
+                    if (!currentItemsMap[key].sources.includes(dishName)) {
+                        currentItemsMap[key].sources.push(dishName);
+                    }
                 }
             });
         });
 
-        // Manuelle Artikel hinzufügen
+        // Manuelle Artikel integrieren (gleiche Namen mit Rezept-Zutaten verschmelzen)
         customShoppingItems.forEach(c => {
             const name = typeof c === 'string' ? c : c.name;
-            const id = typeof c === 'string' ? c : c.id;
-            currentItemsMap[id] = {
-                key: id,
-                displayName: name,
-                currentCategory: categoryOverrides[name.toLowerCase()] || (c.category ? c.category : categorizeIngredient(name)),
-                sources: ['Manuell'],
-                isCustom: true,
-                rawItem: c
-            };
+            const key = name.toLowerCase();
+            
+            if (currentItemsMap[key]) {
+                if (!currentItemsMap[key].sources.includes('Manuell')) {
+                    currentItemsMap[key].sources.push('Manuell');
+                }
+            } else {
+                currentItemsMap[key] = {
+                    key: key,
+                    displayName: name,
+                    currentCategory: categoryOverrides[key] || (c.category ? c.category : categorizeIngredient(name)),
+                    sources: ['Manuell'],
+                    isCustom: true,
+                    customId: typeof c === 'string' ? c : c.id
+                };
+            }
         });
 
         const allItems = Object.values(currentItemsMap);
@@ -2036,16 +2069,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             delBtn.addEventListener('click', () => {
                 if (item.isCustom) {
-                    customShoppingItems = customShoppingItems.filter(c => (typeof c === 'string' ? c : c.id) !== item.key);
+                    customShoppingItems = customShoppingItems.filter(c => {
+                        const cKey = (typeof c === 'string' ? c : c.name).toLowerCase();
+                        return cKey !== item.key;
+                    });
                     saveCustomShoppingItems();
-                } else {
-                    if (excludedShoppingKeys.has(item.key)) {
-                        excludedShoppingKeys.delete(item.key);
-                    } else {
-                        excludedShoppingKeys.add(item.key);
-                    }
-                    saveExcludedShoppingKeys();
                 }
+                
+                if (excludedShoppingKeys.has(item.key)) {
+                    excludedShoppingKeys.delete(item.key);
+                } else {
+                    excludedShoppingKeys.add(item.key);
+                }
+                saveExcludedShoppingKeys();
+
                 renderManageShoppingModal();
                 renderShoppingList();
             });
