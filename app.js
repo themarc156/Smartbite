@@ -329,6 +329,14 @@ function swapDaysInPlan(sourceDayId, targetDayId) {
     renderApp();
 }
 
+const COOKING_UNITS = '(?:g|kg|mg|ml|cl|dl|l|liter|tl|el|msp|prise|prisen|dose|dosen|pkg|pck|packung|packungen|becher|bund|zehe|zehen|stk|stück|scheibe|scheiben|glas|gläser|tasse|tassen|blatt|blätter|tropfen|cups?|tbsp|tsp|oz|lbs?)';
+
+function splitIngredientAmountAndName(text) {
+    // Erkennt: "500g Tomaten", "2 EL Öl", "1 Dose Mais" oder "5 Tomaten", "1/2 Zwiebel"
+    const regex = new RegExp(`^([\\d.,/]+(?:\\s*${COOKING_UNITS}\\.?)?)\\s+(.*)$`, 'i');
+    return text.match(regex);
+}
+
 function renderRecipeIngredients(dish) {
     const ingredientsList = document.getElementById('recipe-view-ingredients');
     ingredientsList.innerHTML = '';
@@ -349,8 +357,9 @@ function renderRecipeIngredients(dish) {
         checkbox.type = 'checkbox';
         
         const textSpan = document.createElement('span');
-        const match = scaledText.match(/^([\d.,/]+(?:\s*[a-zA-ZäöüÄÖÜß]+)?)\s*(.*)$/);
-        if (match && match[1]) {
+        const match = splitIngredientAmountAndName(scaledText);
+
+        if (match && match[1] && match[2]) {
             textSpan.innerHTML = `<strong style="color: var(--accent-primary);">${match[1]}</strong> ${match[2]}`;
         } else {
             textSpan.textContent = scaledText;
@@ -1179,12 +1188,11 @@ function parseAndAggregateIngredients(rawList) {
     const aggregated = {};
 
     rawList.forEach(({ text, dishName }) => {
-        // Trennt führende Mengenangaben (z.B. "500g", "2 Dosen", "1") vom Zutatennamen
-        const match = text.match(/^([\d.,/]+(?:\s*[a-zA-Z]+)?)\s+(.*)$/);
+        const match = splitIngredientAmountAndName(text.trim());
         let amount = '';
         let item = text.trim();
 
-        if (match) {
+        if (match && match[1] && match[2]) {
             amount = match[1].trim();
             item = match[2].trim();
         }
