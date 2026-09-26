@@ -211,17 +211,16 @@ async function loadData(silent = false) {
         appState.dishes = data.dishes || [];
         appState.currentPlan = data.plan || [];
 
-        // 1. Cloud-Sync für Einkaufsliste, Dauerbrenner & gelernte Gänge übernehmen
+        // 1. Cloud-Sync für Einkaufsliste, Dauerbrenner & gelernte Gänge (lokale Session schützen)
         if (data.shopping) {
             if (Array.isArray(data.shopping.customItems)) {
                 customShoppingItems = data.shopping.customItems;
                 localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
             }
-            if (Array.isArray(data.shopping.checkedKeys)) {
-                if (data.shopping.checkedKeys.length > 0 || checkedShoppingKeys.size === 0) {
-                    checkedShoppingKeys = new Set(data.shopping.checkedKeys);
-                    localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
-                }
+            if (Array.isArray(data.shopping.checkedKeys) && data.shopping.checkedKeys.length > 0) {
+                // Lokale Haken mit Server-Haken vereinen, anstatt sie blind zu leeren
+                data.shopping.checkedKeys.forEach(k => checkedShoppingKeys.add(k));
+                localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
             }
             if (Array.isArray(data.shopping.staples) && data.shopping.staples.length > 0) {
                 staplesCatalog = data.shopping.staples;
@@ -232,8 +231,10 @@ async function loadData(silent = false) {
                 localStorage.setItem('smartbite_category_overrides', JSON.stringify(categoryOverrides));
             }
             if (Array.isArray(data.shopping.excludedKeys)) {
-                excludedShoppingKeys = new Set(data.shopping.excludedKeys);
-                localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
+                if (data.shopping.excludedKeys.length > 0) {
+                    data.shopping.excludedKeys.forEach(k => excludedShoppingKeys.add(k));
+                    localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
+                }
             }
         }
 
@@ -1362,6 +1363,7 @@ function saveCustomShoppingItems() {
 
 function saveCheckedShoppingKeys() {
     localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
+    // Asynchroner Server-Sync ohne Blockieren der UI
     syncShoppingToApi();
 }
 
