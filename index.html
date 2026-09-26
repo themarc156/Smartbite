@@ -279,8 +279,11 @@
 
                 <!-- Screenshot / Infomaterial -->
                 <div id="recipe-view-image-container" class="recipe-image-container hidden">
-                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Hinterlegter Screenshot / Info:</h4>
-                    <img id="recipe-view-image" src="" alt="Screenshot">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                        <h4 style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Hinterlegter Screenshot / Info:</h4>
+                        <span style="font-size: 0.72rem; color: var(--accent-primary);">🔍 Tippen zum Zoomen</span>
+                    </div>
+                    <img id="recipe-view-image" src="" alt="Screenshot" class="zoomable-recipe-img">
                 </div>
 
                 <div class="recipe-section">
@@ -392,6 +395,22 @@
             <div class="recipe-view-body" style="padding-bottom: 0;">
                 <textarea id="text-editor-modal-input" placeholder="Hier tippen..." class="fullscreen-modal-textarea"></textarea>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal: Zoom-Lightbox fuer Screenshots & Bilder -->
+    <div id="image-lightbox-modal" class="image-lightbox-modal hidden">
+        <div class="lightbox-top-bar">
+            <div class="lightbox-zoom-hint">Doppeltippen / Aufziehen zum Zoomen</div>
+            <div class="lightbox-controls">
+                <button type="button" id="btn-lightbox-zoom-out" class="btn-lightbox-action" title="Herauszoomen">-</button>
+                <button type="button" id="btn-lightbox-reset" class="btn-lightbox-action" title="Zurücksetzen">1x</button>
+                <button type="button" id="btn-lightbox-zoom-in" class="btn-lightbox-action" title="Heranzoomen">+</button>
+                <button type="button" id="btn-close-lightbox" class="btn-lightbox-close" title="Schließen">✖</button>
+            </div>
+        </div>
+        <div id="lightbox-viewport" class="lightbox-viewport">
+            <img id="lightbox-img" src="" alt="Großansicht" class="lightbox-img">
         </div>
     </div>
 

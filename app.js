@@ -93,6 +93,57 @@ async function compressImageFile(file, maxWidth = 1200, quality = 0.82) {
 
 let wakeLockSentinel = null;
 
+// Lightbox Zoom & Pan State
+const lightboxState = {
+    scale: 1,
+    translateX: 0,
+    translateY: 0,
+    minScale: 1,
+    maxScale: 5,
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+    initialPinchDistance: 0,
+    initialScale: 1,
+    lastTapTime: 0
+};
+
+function updateLightboxTransform() {
+    const img = document.getElementById('lightbox-img');
+    const resetBtn = document.getElementById('btn-lightbox-reset');
+    if (!img) return;
+
+    img.style.transform = `translate(${lightboxState.translateX}px, ${lightboxState.translateY}px) scale(${lightboxState.scale})`;
+    if (resetBtn) {
+        resetBtn.textContent = `${Math.round(lightboxState.scale * 10) / 10}x`;
+    }
+}
+
+function resetLightboxZoom() {
+    lightboxState.scale = 1;
+    lightboxState.translateX = 0;
+    lightboxState.translateY = 0;
+    updateLightboxTransform();
+}
+
+function openImageLightbox(src, alt = 'Rezeptbild') {
+    if (!src) return;
+    const modal = document.getElementById('image-lightbox-modal');
+    const img = document.getElementById('lightbox-img');
+    if (!modal || !img) return;
+
+    img.src = src;
+    img.alt = alt;
+    resetLightboxZoom();
+    modal.classList.remove('hidden');
+}
+
+function closeImageLightbox() {
+    const modal = document.getElementById('image-lightbox-modal');
+    if (modal) modal.classList.add('hidden');
+    resetLightboxZoom();
+}
+
 const appState = {
     dishes: [],
     currentPlan: [],
@@ -1378,6 +1429,125 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const recipeViewModal = document.getElementById('recipe-view-modal');
     const shoppingListModal = document.getElementById('shopping-list-modal');
+
+    // Lightbox Öffner für Rezept-Bilder & Screenshots
+    const recipeScreenshotImg = document.getElementById('recipe-view-image');
+    const recipePreviewImg = document.getElementById('recipe-preview-image');
+
+    if (recipeScreenshotImg) {
+        recipeScreenshotImg.addEventListener('click', () => {
+            if (recipeScreenshotImg.src) openImageLightbox(recipeScreenshotImg.src, recipeScreenshotImg.alt);
+        });
+    }
+
+    if (recipePreviewImg) {
+        recipePreviewImg.addEventListener('click', () => {
+            if (recipePreviewImg.src) openImageLightbox(recipePreviewImg.src, recipePreviewImg.alt);
+        });
+    }
+
+    // Lightbox Buttons & Steuerung
+    const btnCloseLightbox = document.getElementById('btn-close-lightbox');
+    const btnZoomIn = document.getElementById('btn-lightbox-zoom-in');
+    const btnZoomOut = document.getElementById('btn-lightbox-zoom-out');
+    const btnResetZoom = document.getElementById('btn-lightbox-reset');
+    const lightboxViewport = document.getElementById('lightbox-viewport');
+
+    if (btnCloseLightbox) btnCloseLightbox.addEventListener('click', closeImageLightbox);
+
+    if (btnZoomIn) {
+        btnZoomIn.addEventListener('click', () => {
+            lightboxState.scale = Math.min(lightboxState.maxScale, lightboxState.scale + 0.5);
+            updateLightboxTransform();
+        });
+    }
+
+    if (btnZoomOut) {
+        btnZoomOut.addEventListener('click', () => {
+            lightboxState.scale = Math.max(lightboxState.minScale, lightboxState.scale - 0.5);
+            if (lightboxState.scale === 1) {
+                lightboxState.translateX = 0;
+                lightboxState.translateY = 0;
+            }
+            updateLightboxTransform();
+        });
+    }
+
+    if (btnResetZoom) btnResetZoom.addEventListener('click', resetLightboxZoom);
+
+    // Touch-Gesten für Lightbox (Pinch-to-Zoom, Pan & Double-Tap)
+    if (lightboxViewport) {
+        lightboxViewport.addEventListener('pointerdown', (e) => {
+            if (e.target.closest('.btn-lightbox-action, .btn-lightbox-close')) return;
+            lightboxState.isDragging = true;
+            lightboxState.startX = e.clientX - lightboxState.translateX;
+            lightboxState.startY = e.clientY - lightboxState.translateY;
+
+            // Double-Tap Erkennung
+            const now = Date.now();
+            if (now - lightboxState.lastTapTime < 300) {
+                if (lightboxState.scale > 1) {
+                    resetLightboxZoom();
+                } else {
+                    lightboxState.scale = 2.5;
+                    updateLightboxTransform();
+                }
+                lightboxState.lastTapTime = 0;
+                lightboxState.isDragging = false;
+                return;
+            }
+            lightboxState.lastTapTime = now;
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!lightboxState.isDragging || lightboxState.scale <= 1) return;
+            lightboxState.translateX = e.clientX - lightboxState.startX;
+            lightboxState.translateY = e.clientY - lightboxState.startY;
+            updateLightboxTransform();
+        });
+
+        window.addEventListener('pointerup', () => {
+            lightboxState.isDragging = false;
+        });
+
+        // Touch Pinch-to-Zoom
+        lightboxViewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                lightboxState.isDragging = false;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                lightboxState.initialPinchDistance = Math.hypot(dx, dy);
+                lightboxState.initialScale = lightboxState.scale;
+            }
+        }, { passive: true });
+
+        lightboxViewport.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && lightboxState.initialPinchDistance > 0) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const currentDistance = Math.hypot(dx, dy);
+                const factor = currentDistance / lightboxState.initialPinchDistance;
+                lightboxState.scale = Math.min(lightboxState.maxScale, Math.max(lightboxState.minScale, lightboxState.initialScale * factor));
+                updateLightboxTransform();
+            }
+        }, { passive: true });
+
+        lightboxViewport.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                lightboxState.initialPinchDistance = 0;
+            }
+        }, { passive: true });
+    }
+
+    // ESC schließt Lightbox
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('image-lightbox-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeImageLightbox();
+            }
+        }
+    });
 
     // Portionen-Scaler Buttons
     document.getElementById('btn-portion-dec').addEventListener('click', () => {
