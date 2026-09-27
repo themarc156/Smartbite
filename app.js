@@ -236,6 +236,10 @@ async function loadData(silent = false) {
                     localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
                 }
             }
+            if (Array.isArray(data.shopping.categoryOrder) && data.shopping.categoryOrder.length > 0) {
+                categoryOrder = data.shopping.categoryOrder;
+                localStorage.setItem('smartbite_category_order', JSON.stringify(categoryOrder));
+            }
         }
 
         // 3. Rollierenden 4-Wochen-Plan sicherstellen
@@ -261,7 +265,8 @@ async function syncShoppingToApi() {
                 checkedKeys: [...checkedShoppingKeys],
                 staples: staplesCatalog,
                 categoryOverrides: categoryOverrides,
-                excludedKeys: [...excludedShoppingKeys]
+                excludedKeys: [...excludedShoppingKeys],
+                categoryOrder: categoryOrder
             })
         });
     } catch (err) {
@@ -1337,6 +1342,24 @@ let checkedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_che
 let staplesCatalog = JSON.parse(localStorage.getItem('smartbite_staples_catalog') || 'null') || [...DEFAULT_STAPLES];
 let categoryOverrides = JSON.parse(localStorage.getItem('smartbite_category_overrides') || '{}');
 let excludedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_excluded_shopping') || '[]'));
+let categoryOrder = JSON.parse(localStorage.getItem('smartbite_category_order') || 'null');
+
+function getOrderedCategoryNames() {
+    const defaultNames = [...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel'];
+    if (!categoryOrder || !Array.isArray(categoryOrder) || categoryOrder.length === 0) {
+        return defaultNames;
+    }
+    const ordered = categoryOrder.filter(name => defaultNames.includes(name));
+    defaultNames.forEach(name => {
+        if (!ordered.includes(name)) ordered.push(name);
+    });
+    return ordered;
+}
+
+function saveCategoryOrder() {
+    localStorage.setItem('smartbite_category_order', JSON.stringify(categoryOrder));
+    syncShoppingToApi();
+}
 
 function saveCategoryOverrides() {
     localStorage.setItem('smartbite_category_overrides', JSON.stringify(categoryOverrides));
@@ -1590,7 +1613,13 @@ function renderShoppingList() {
     const container = document.getElementById('shopping-list-container');
     if (container) container.innerHTML = '';
 
-    const allCategoriesToRender = Object.keys(categorizedMap);
+    // Kategorien in der benutzerdefinierten Gang-Reihenfolge rendern
+    const orderedNames = getOrderedCategoryNames();
+    const allCategoriesToRender = orderedNames.filter(name => categorizedMap[name]);
+    Object.keys(categorizedMap).forEach(name => {
+        if (!allCategoriesToRender.includes(name)) allCategoriesToRender.push(name);
+    });
+
     let activeCategoriesCount = 0;
     const completedItemsList = [];
 
@@ -1612,11 +1641,17 @@ function renderShoppingList() {
 
         const groupEl = document.createElement('div');
         groupEl.className = 'shopping-category-group';
+        groupEl.dataset.category = catName;
 
         const titleEl = document.createElement('div');
         titleEl.className = 'shopping-category-title';
-        titleEl.textContent = catName;
+        titleEl.innerHTML = `
+            <span>${catName}</span>
+            <span class="cat-drag-handle" title="Halten und ziehen zum Umsortieren der Gänge">⠿</span>
+        `;
         groupEl.appendChild(titleEl);
+
+        bindCategoryDragAndDrop(groupEl, catName);
 
         const listEl = document.createElement('ul');
         listEl.className = 'ingredients-rendered-list';
@@ -1787,6 +1822,125 @@ function renderShoppingList() {
             renderShoppingList();
         };
     }
+}
+
+let draggedCategoryName = null;
+
+function reorderCategories(fromCatName, toCatName) {
+    let order = [...getOrderedCategoryNames()];
+    const fromIndex = order.indexOf(fromCatName);
+    const toIndex = order.indexOf(toCatName);
+
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    order.splice(fromIndex, 1);
+    order.splice(toIndex, 0, fromCatName);
+
+    categoryOrder = order;
+    saveCategoryOrder();
+    renderShoppingList();
+}
+
+function bindCategoryDragAndDrop(groupEl, catName) {
+    const handle = groupEl.querySelector('.cat-drag-handle');
+    if (!handle) return;
+
+    groupEl.setAttribute('draggable', 'true');
+
+    // Desktop Drag & Drop
+    groupEl.addEventListener('dragstart', (e) => {
+        draggedCategoryName = catName;
+        e.dataTransfer.effectAllowed = 'move';
+        groupEl.classList.add('category-dragging');
+    });
+
+    groupEl.addEventListener('dragend', () => {
+        draggedCategoryName = null;
+        groupEl.classList.remove('category-dragging');
+        document.querySelectorAll('.shopping-category-group').forEach(el => el.classList.remove('category-drag-over'));
+    });
+
+    groupEl.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (draggedCategoryName && draggedCategoryName !== catName) {
+            groupEl.classList.add('category-drag-over');
+        }
+    });
+
+    groupEl.addEventListener('dragleave', () => {
+        groupEl.classList.remove('category-drag-over');
+    });
+
+    groupEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        groupEl.classList.remove('category-drag-over');
+        if (draggedCategoryName && draggedCategoryName !== catName) {
+            reorderCategories(draggedCategoryName, catName);
+        }
+        draggedCategoryName = null;
+    });
+
+    // Touch Drag & Drop (Smartphone / iPad)
+    let touchTimer = null;
+    let isTouchDragging = false;
+    let initialY = 0;
+
+    handle.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) return;
+        initialY = e.touches[0].clientY;
+        draggedCategoryName = catName;
+        
+        touchTimer = setTimeout(() => {
+            isTouchDragging = true;
+            if (navigator.vibrate) {
+                try { navigator.vibrate(30); } catch (_) {}
+            }
+            groupEl.classList.add('category-dragging');
+        }, 180);
+    }, { passive: true });
+
+    handle.addEventListener('touchmove', (e) => {
+        if (!isTouchDragging) {
+            if (Math.abs(e.touches[0].clientY - initialY) > 10) {
+                clearTimeout(touchTimer);
+            }
+            return;
+        }
+        e.preventDefault();
+        const touch = e.touches[0];
+        const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+        const targetGroup = targetElement ? targetElement.closest('.shopping-category-group') : null;
+
+        document.querySelectorAll('.shopping-category-group').forEach(el => el.classList.remove('category-drag-over'));
+        if (targetGroup && targetGroup !== groupEl) {
+            targetGroup.classList.add('category-drag-over');
+        }
+    }, { passive: false });
+
+    handle.addEventListener('touchend', (e) => {
+        clearTimeout(touchTimer);
+        if (isTouchDragging) {
+            isTouchDragging = false;
+            groupEl.classList.remove('category-dragging');
+            const touch = e.changedTouches[0];
+            const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetGroup = targetElement ? targetElement.closest('.shopping-category-group') : null;
+
+            if (targetGroup && targetGroup.dataset.category && targetGroup.dataset.category !== catName) {
+                reorderCategories(catName, targetGroup.dataset.category);
+            }
+            document.querySelectorAll('.shopping-category-group').forEach(el => el.classList.remove('category-drag-over'));
+        }
+        draggedCategoryName = null;
+    }, { passive: true });
+
+    handle.addEventListener('touchcancel', () => {
+        clearTimeout(touchTimer);
+        isTouchDragging = false;
+        groupEl.classList.remove('category-dragging');
+        document.querySelectorAll('.shopping-category-group').forEach(el => el.classList.remove('category-drag-over'));
+        draggedCategoryName = null;
+    }, { passive: true });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
