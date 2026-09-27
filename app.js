@@ -2895,13 +2895,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Ebene 1: Haupttyp (Exklusiv – Alle, Backen, Veggie, Flexi, Fleisch)
+    // Ebene 1: Haupttyp (Exklusiv – Alle, Veggie, Flexi, Fleisch, Backen)
     const mainFilterBtns = {
         all: document.getElementById('filter-all'),
-        baking: document.getElementById('filter-baking'),
         veggie: document.getElementById('filter-veggie'),
         flex: document.getElementById('filter-flex'),
-        meat: document.getElementById('filter-meat')
+        meat: document.getElementById('filter-meat'),
+        baking: document.getElementById('filter-baking')
     };
 
     Object.entries(mainFilterBtns).forEach(([key, btn]) => {
@@ -2921,11 +2921,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSubLow) {
         btnSubLow.addEventListener('click', () => {
-            if (appState.carbFilter === 'low') {
-                appState.carbFilter = null;
+            if (appState.subFilterCarb === 'low') {
+                appState.subFilterCarb = null;
                 btnSubLow.classList.remove('active');
             } else {
-                appState.carbFilter = 'low';
+                appState.subFilterCarb = 'low';
                 btnSubLow.classList.add('active');
                 if (btnSubHigh) btnSubHigh.classList.remove('active');
             }
@@ -2935,11 +2935,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSubHigh) {
         btnSubHigh.addEventListener('click', () => {
-            if (appState.carbFilter === 'high') {
-                appState.carbFilter = null;
+            if (appState.subFilterCarb === 'high') {
+                appState.subFilterCarb = null;
                 btnSubHigh.classList.remove('active');
             } else {
-                appState.carbFilter = 'high';
+                appState.subFilterCarb = 'high';
                 btnSubHigh.classList.add('active');
                 if (btnSubLow) btnSubLow.classList.remove('active');
             }
@@ -2949,8 +2949,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSubEmergency) {
         btnSubEmergency.addEventListener('click', () => {
-            appState.emergencyFilter = !appState.emergencyFilter;
-            btnSubEmergency.classList.toggle('active', appState.emergencyFilter);
+            appState.subFilterEmergency = !appState.subFilterEmergency;
+            btnSubEmergency.classList.toggle('active', appState.subFilterEmergency);
             renderApp();
         });
     }

@@ -512,29 +512,27 @@ textarea {
     flex: 1;
 }
 
-/* Filter-Layout: Links Spalte mit "Alle" und "Backen", rechts 2x3 Grid */
-.filter-layout-container {
+/* 2x4 Filter-Grid (Zeile 1: Alle, Veggie, Flexi, Fleisch | Zeile 2: Backen, Low, High, Notfall) */
+.filter-grid-2x4 {
     display: grid;
-    grid-template-columns: 78px 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.35rem;
     margin-bottom: 0.75rem;
     width: 100%;
 }
 
-.filter-left-col {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-}
-
-.btn-filter-side {
-    height: 30px;
+.filter-grid-2x4 .btn-filter {
+    height: 32px;
+    padding: 0 0.2rem !important;
+    font-size: 0.78rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 !important;
-    font-size: 0.78rem;
-    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 700;
 }
 
 .btn-filter-baking.active {
@@ -543,21 +541,21 @@ textarea {
     color: #ffffff !important;
 }
 
-.filter-subgrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.35rem;
+.filter-grid-2x4 .btn-filter-sub {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px dashed var(--border-color);
+    color: var(--text-muted);
 }
 
-.filter-subgrid .btn-filter {
-    padding: 0.4rem 0.15rem;
-    font-size: 0.78rem;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    white-space: nowrap;
+.filter-grid-2x4 .btn-filter-sub:hover {
+    color: var(--text-main);
+    border-color: #555;
+}
+
+.filter-grid-2x4 .btn-filter-sub.active {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+    border: 1px solid var(--accent-primary) !important;
+    color: var(--accent-primary) !important;
 }
 
 /* Drag & Drop Stabilisierung für Rezept-Karten */

@@ -127,21 +127,18 @@
                     <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
                 </div>
 
-                <div class="filter-two-tier-container">
-                    <!-- Ebene 1: Haupttyp (immer genau 1 aktiv) -->
-                    <div class="filter-tier-main">
-                        <button id="filter-main-all" class="btn-filter btn-filter-main active">Alle</button>
-                        <button id="filter-main-veggie" class="btn-filter btn-filter-main">🌱 Veggie</button>
-                        <button id="filter-main-flex" class="btn-filter btn-filter-main">🍲 Flexi</button>
-                        <button id="filter-main-meat" class="btn-filter btn-filter-main">🥩 Fleisch</button>
-                        <button id="filter-main-baking" class="btn-filter btn-filter-main btn-filter-baking">🍰 Backen</button>
-                    </div>
-                    <!-- Ebene 2: Zusatz-Schalter (an/aus kombinierbar) -->
-                    <div class="filter-tier-sub">
-                        <button id="filter-sub-lowcarb" class="btn-filter btn-filter-sub">🥗 Low</button>
-                        <button id="filter-sub-highcarb" class="btn-filter btn-filter-sub">🌾 High</button>
-                        <button id="filter-sub-emergency" class="btn-filter btn-filter-sub">🚨 Notfall</button>
-                    </div>
+                <div class="filter-grid-2x4">
+                    <!-- Zeile 1: Haupttypen -->
+                    <button type="button" id="filter-all" class="btn-filter active">Alle</button>
+                    <button type="button" id="filter-veggie" class="btn-filter">🌱 Veggie</button>
+                    <button type="button" id="filter-flex" class="btn-filter">🍲 Flexi</button>
+                    <button type="button" id="filter-meat" class="btn-filter">🥩 Fleisch</button>
+
+                    <!-- Zeile 2: Backen + Kombinierbare Sub-Filter -->
+                    <button type="button" id="filter-baking" class="btn-filter btn-filter-baking">🍰 Backen</button>
+                    <button type="button" id="filter-lowcarb" class="btn-filter btn-filter-sub">🥗 Low</button>
+                    <button type="button" id="filter-highcarb" class="btn-filter btn-filter-sub">🌾 High</button>
+                    <button type="button" id="filter-emergency" class="btn-filter btn-filter-sub">🚨 Notfall</button>
                 </div>
 
                 <div class="card" style="padding: 0; background: transparent; border: none;">
