@@ -615,6 +615,8 @@ function openRecipeModal(dish) {
     document.getElementById('recipe-view-modal').classList.remove('hidden');
 }
 
+let isDragActionActive = false;
+
 function reorderDishes(sourceDishId, targetDishId) {
     if (!sourceDishId || !targetDishId || sourceDishId === targetDishId) return;
     const sourceIdx = appState.dishes.findIndex(d => d.id === sourceDishId);
@@ -714,24 +716,30 @@ function renderApp() {
 
         filteredDishes.forEach(dish => {
             const li = document.createElement('li');
-            li.dataset.dishId = dish.id;
             li.setAttribute('draggable', 'true');
+            li.dataset.dishId = dish.id;
 
             // Desktop Drag & Drop
             li.addEventListener('dragstart', (e) => {
+                isDragActionActive = true;
                 appState.draggedDishId = dish.id;
-                e.dataTransfer.effectAllowed = 'move';
                 li.classList.add('dish-card-dragging');
+                e.dataTransfer.setData('text/plain', dish.id);
+                e.dataTransfer.effectAllowed = 'move';
             });
 
             li.addEventListener('dragend', () => {
-                appState.draggedDishId = null;
                 li.classList.remove('dish-card-dragging');
-                document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                document.querySelectorAll('.dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                setTimeout(() => {
+                    isDragActionActive = false;
+                    appState.draggedDishId = null;
+                }, 100);
             });
 
             li.addEventListener('dragover', (e) => {
                 e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
                 if (appState.draggedDishId && appState.draggedDishId !== dish.id) {
                     li.classList.add('dish-card-drag-over');
                 }
@@ -744,47 +752,48 @@ function renderApp() {
             li.addEventListener('drop', (e) => {
                 e.preventDefault();
                 li.classList.remove('dish-card-drag-over');
-                if (appState.draggedDishId && appState.draggedDishId !== dish.id) {
-                    reorderDishes(appState.draggedDishId, dish.id);
+                const sourceId = e.dataTransfer.getData('text/plain') || appState.draggedDishId;
+                if (sourceId && sourceId !== dish.id) {
+                    reorderDishes(sourceId, dish.id);
                 }
                 appState.draggedDishId = null;
             });
 
-            // Touch Drag & Drop (Smartphone: 300ms Halten)
+            // Touch Drag & Drop (Smartphone Long-Press)
             let touchTimer = null;
             let isTouchDragging = false;
-            let startX = 0;
             let startY = 0;
+            let startX = 0;
 
             li.addEventListener('touchstart', (e) => {
                 if (e.touches.length !== 1) return;
                 startX = e.touches[0].clientX;
                 startY = e.touches[0].clientY;
-                appState.draggedDishId = dish.id;
 
                 touchTimer = setTimeout(() => {
                     isTouchDragging = true;
+                    isDragActionActive = true;
+                    appState.draggedDishId = dish.id;
                     if (navigator.vibrate) {
                         try { navigator.vibrate(35); } catch (_) {}
                     }
                     li.classList.add('dish-card-dragging');
-                }, 300);
+                }, 280);
             }, { passive: true });
 
             li.addEventListener('touchmove', (e) => {
                 if (!isTouchDragging) {
-                    const touch = e.touches[0];
-                    if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+                    if (Math.hypot(e.touches[0].clientX - startX, e.touches[0].clientY - startY) > 12) {
                         clearTimeout(touchTimer);
                     }
                     return;
                 }
                 e.preventDefault();
                 const touch = e.touches[0];
-                const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
-                const targetLi = targetEl ? targetEl.closest('#dish-list li') : null;
+                const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetLi = targetElement ? targetElement.closest('.dish-list li') : null;
 
-                document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                document.querySelectorAll('.dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
                 if (targetLi && targetLi !== li) {
                     targetLi.classList.add('dish-card-drag-over');
                 }
@@ -793,29 +802,33 @@ function renderApp() {
             li.addEventListener('touchend', (e) => {
                 clearTimeout(touchTimer);
                 if (isTouchDragging) {
-                    isTouchDragging = false;
                     li.classList.remove('dish-card-dragging');
                     const touch = e.changedTouches[0];
-                    const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
-                    const targetLi = targetEl ? targetEl.closest('#dish-list li') : null;
+                    const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const targetLi = targetElement ? targetElement.closest('.dish-list li') : null;
 
                     if (targetLi && targetLi.dataset.dishId && targetLi.dataset.dishId !== dish.id) {
                         reorderDishes(dish.id, targetLi.dataset.dishId);
                     }
-                    document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                    document.querySelectorAll('.dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                    setTimeout(() => {
+                        isTouchDragging = false;
+                        isDragActionActive = false;
+                        appState.draggedDishId = null;
+                    }, 120);
                 }
-                appState.draggedDishId = null;
             }, { passive: true });
 
             li.addEventListener('touchcancel', () => {
                 clearTimeout(touchTimer);
                 isTouchDragging = false;
+                isDragActionActive = false;
                 li.classList.remove('dish-card-dragging');
-                document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                document.querySelectorAll('.dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
                 appState.draggedDishId = null;
             }, { passive: true });
 
-            // 1. Grid-Ansicht Rendern
+            // 1. Grid-Ansicht
             if (appState.isGridView) {
                 const displayImg = dish.previewImage || dish.image;
                 if (displayImg) {
@@ -823,6 +836,7 @@ function renderApp() {
                     img.src = displayImg;
                     img.className = 'dish-card-img';
                     img.alt = dish.name;
+                    img.setAttribute('draggable', 'false');
                     li.appendChild(img);
                 } else {
                     const placeholder = document.createElement('div');
@@ -848,7 +862,7 @@ function renderApp() {
                 li.appendChild(cardBody);
 
                 li.addEventListener('click', () => {
-                    if (isTouchDragging) return;
+                    if (isDragActionActive) return;
                     if (appState.selectModeForDayId) {
                         assignDishToDay(appState.selectModeForDayId, dish);
                         appState.selectModeForDayId = null;
@@ -858,7 +872,7 @@ function renderApp() {
                     }
                 });
             } else {
-                // 2. Reine Listen-Ansicht
+                // 2. Listen-Ansicht
                 const leftSide = document.createElement('div');
                 leftSide.className = 'dish-left-side';
 
@@ -866,27 +880,18 @@ function renderApp() {
                 toggleTypeBtn.className = 'btn-toggle-status active';
                 toggleTypeBtn.title = 'Typ umschalten (Veggie / Fleisch / Flexi / Backen)';
                 
-                if (dish.isMeat === 'baking') {
-                    toggleTypeBtn.textContent = '🍰';
-                } else if (dish.isMeat === true) {
-                    toggleTypeBtn.textContent = '🥩';
-                } else if (dish.isMeat === false) {
-                    toggleTypeBtn.textContent = '🌱';
-                } else {
-                    toggleTypeBtn.textContent = '🍲';
-                }
+                if (dish.isMeat === 'baking') toggleTypeBtn.textContent = '🍰';
+                else if (dish.isMeat === true) toggleTypeBtn.textContent = '🥩';
+                else if (dish.isMeat === false) toggleTypeBtn.textContent = '🌱';
+                else toggleTypeBtn.textContent = '🍲';
 
                 toggleTypeBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
-                    if (dish.isMeat === false) {
-                        dish.isMeat = true;
-                    } else if (dish.isMeat === true) {
-                        dish.isMeat = null;
-                    } else if (dish.isMeat === null || dish.isMeat === undefined) {
-                        dish.isMeat = 'baking';
-                    } else {
-                        dish.isMeat = false;
-                    }
+                    if (dish.isMeat === false) dish.isMeat = true;
+                    else if (dish.isMeat === true) dish.isMeat = 'baking';
+                    else if (dish.isMeat === 'baking') dish.isMeat = null;
+                    else dish.isMeat = false;
+
                     await saveDishToApi(dish);
                     renderApp();
                 });
@@ -895,7 +900,7 @@ function renderApp() {
                 nameSpan.className = 'dish-clickable-name';
                 nameSpan.textContent = dish.name;
                 nameSpan.addEventListener('click', () => {
-                    if (isTouchDragging) return;
+                    if (isDragActionActive) return;
                     if (appState.selectModeForDayId) {
                         assignDishToDay(appState.selectModeForDayId, dish);
                         appState.selectModeForDayId = null;
@@ -2890,39 +2895,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Ebene 1: Haupttyp Filter (Exklusiv)
+    // Ebene 1: Haupttyp (Exklusiv – Alle, Backen, Veggie, Flexi, Fleisch)
     const mainFilterBtns = {
-        all: document.getElementById('filter-main-all'),
-        veggie: document.getElementById('filter-main-veggie'),
-        flex: document.getElementById('filter-main-flex'),
-        meat: document.getElementById('filter-main-meat'),
-        baking: document.getElementById('filter-main-baking')
+        all: document.getElementById('filter-all'),
+        baking: document.getElementById('filter-baking'),
+        veggie: document.getElementById('filter-veggie'),
+        flex: document.getElementById('filter-flex'),
+        meat: document.getElementById('filter-meat')
     };
 
-    Object.keys(mainFilterBtns).forEach(key => {
-        const btn = mainFilterBtns[key];
-        if (btn) {
-            btn.addEventListener('click', () => {
-                Object.values(mainFilterBtns).forEach(b => { if (b) b.classList.remove('active'); });
-                btn.classList.add('active');
-                appState.mainFilter = key;
-                renderApp();
-            });
-        }
+    Object.entries(mainFilterBtns).forEach(([key, btn]) => {
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            Object.values(mainFilterBtns).forEach(b => { if (b) b.classList.remove('active'); });
+            btn.classList.add('active');
+            appState.mainFilter = key;
+            renderApp();
+        });
     });
 
-    // Ebene 2: Sub-Filter Schalter (An/Aus toggelbar)
-    const btnSubLow = document.getElementById('filter-sub-lowcarb');
-    const btnSubHigh = document.getElementById('filter-sub-highcarb');
-    const btnSubEmergency = document.getElementById('filter-sub-emergency');
+    // Ebene 2: Sub-Filter (Kombinierbare Toggles – Low, High, Notfall)
+    const btnSubLow = document.getElementById('filter-lowcarb');
+    const btnSubHigh = document.getElementById('filter-highcarb');
+    const btnSubEmergency = document.getElementById('filter-emergency');
 
     if (btnSubLow) {
         btnSubLow.addEventListener('click', () => {
-            if (appState.subFilterCarb === 'low') {
-                appState.subFilterCarb = null;
+            if (appState.carbFilter === 'low') {
+                appState.carbFilter = null;
                 btnSubLow.classList.remove('active');
             } else {
-                appState.subFilterCarb = 'low';
+                appState.carbFilter = 'low';
                 btnSubLow.classList.add('active');
                 if (btnSubHigh) btnSubHigh.classList.remove('active');
             }
@@ -2932,11 +2935,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSubHigh) {
         btnSubHigh.addEventListener('click', () => {
-            if (appState.subFilterCarb === 'high') {
-                appState.subFilterCarb = null;
+            if (appState.carbFilter === 'high') {
+                appState.carbFilter = null;
                 btnSubHigh.classList.remove('active');
             } else {
-                appState.subFilterCarb = 'high';
+                appState.carbFilter = 'high';
                 btnSubHigh.classList.add('active');
                 if (btnSubLow) btnSubLow.classList.remove('active');
             }
@@ -2946,9 +2949,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnSubEmergency) {
         btnSubEmergency.addEventListener('click', () => {
-            appState.subFilterEmergency = !appState.subFilterEmergency;
-            btnSubEmergency.classList.toggle('active', appState.subFilterEmergency);
-            btnSubEmergency.classList.toggle('active-danger', appState.subFilterEmergency);
+            appState.emergencyFilter = !appState.emergencyFilter;
+            btnSubEmergency.classList.toggle('active', appState.emergencyFilter);
             renderApp();
         });
     }

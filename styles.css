@@ -512,35 +512,29 @@ textarea {
     flex: 1;
 }
 
-/* 2-Ebenen Filterstruktur */
-.filter-two-tier-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
+/* Filter-Layout: Links Spalte mit "Alle" und "Backen", rechts 2x3 Grid */
+.filter-layout-container {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 0.35rem;
     margin-bottom: 0.75rem;
     width: 100%;
 }
 
-.filter-tier-main {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.3rem;
+.filter-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
 }
 
-.filter-tier-sub {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.3rem;
-}
-
-.btn-filter-main, .btn-filter-sub {
+.btn-filter-side {
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 0.2rem !important;
-    font-size: 0.76rem;
-    white-space: nowrap;
+    padding: 0 !important;
+    font-size: 0.78rem;
+    width: 100%;
 }
 
 .btn-filter-baking.active {
@@ -549,35 +543,50 @@ textarea {
     color: #ffffff !important;
 }
 
-.btn-filter-sub {
-    background-color: rgba(255, 255, 255, 0.03);
-    border: 1px dashed var(--border-color);
+.filter-subgrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem;
 }
 
-.btn-filter-sub.active {
-    background-color: var(--bg-card);
-    border: 1px solid var(--accent-primary);
-    color: var(--accent-primary);
-    box-shadow: 0 0 6px rgba(245, 158, 11, 0.2);
+.filter-subgrid .btn-filter {
+    padding: 0.4rem 0.15rem;
+    font-size: 0.78rem;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
 }
 
-.btn-filter-sub.active-danger {
-    border-color: var(--accent-danger) !important;
-    color: var(--accent-danger) !important;
-    box-shadow: 0 0 6px rgba(239, 68, 68, 0.2) !important;
+/* Drag & Drop Stabilisierung für Rezept-Karten */
+.dish-list li {
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
 }
 
-/* Drag & Drop Feedback für Rezeptkarten */
+.dish-card-img,
+.dish-card-placeholder,
+.dish-card-body,
+.dish-card-title,
+.recipe-badges-container {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
 .dish-list li.dish-card-dragging {
-    opacity: 0.35;
-    border: 2px dashed var(--accent-primary);
+    opacity: 0.35 !important;
     transform: scale(0.96);
+    border: 2px dashed var(--accent-primary) !important;
 }
 
 .dish-list li.dish-card-drag-over {
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
-    transform: translateY(-3px);
+    border: 2px solid var(--accent-primary) !important;
+    background-color: rgba(245, 158, 11, 0.14) !important;
+    transform: scale(1.02);
 }
 
 /* Kamera vs. Galerie Upload-Buttons */
