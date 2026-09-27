@@ -1992,32 +1992,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Deduplizierung: Alle gleichen Zutaten & manuelle Einträge bündeln
+        // Deduplizierung: Alle gleichen Zutaten & manuelle Einträge bündeln (ohne Komma-Splitting)
         const currentItemsMap = {};
 
         rawList.forEach(({ text, dishName }) => {
-            const subItems = text.includes(',') && !text.match(/^[\d.,/]+\s/) 
-                ? text.split(',').map(s => s.trim()).filter(Boolean)
-                : [text.trim()];
+            const line = text.trim();
+            if (!line) return;
 
-            subItems.forEach(subText => {
-                const match = splitIngredientAmountAndName(subText);
-                const item = (match && match[1] && match[2]) ? match[2].trim() : subText;
-                const key = item.toLowerCase();
-                if (!currentItemsMap[key]) {
-                    currentItemsMap[key] = {
-                        key: key,
-                        displayName: item,
-                        currentCategory: categoryOverrides[key] || categorizeIngredient(item),
-                        sources: [dishName],
-                        isCustom: false
-                    };
-                } else {
-                    if (!currentItemsMap[key].sources.includes(dishName)) {
-                        currentItemsMap[key].sources.push(dishName);
-                    }
+            const match = splitIngredientAmountAndName(line);
+            const item = (match && match[1] && match[2]) ? match[2].trim() : line;
+            const key = item.toLowerCase().trim();
+
+            if (!currentItemsMap[key]) {
+                currentItemsMap[key] = {
+                    key: key,
+                    displayName: item,
+                    currentCategory: categoryOverrides[key] || categorizeIngredient(item),
+                    sources: [dishName],
+                    isCustom: false
+                };
+            } else {
+                if (!currentItemsMap[key].sources.includes(dishName)) {
+                    currentItemsMap[key].sources.push(dishName);
                 }
-            });
+            }
         });
 
         // Manuelle Artikel integrieren (gleiche Namen mit Rezept-Zutaten verschmelzen)
