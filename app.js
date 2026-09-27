@@ -154,6 +154,8 @@ const appState = {
     searchQuery: '',
     selectModeForDayId: null,     
     currentViewingDishId: null,   
+    currentViewingDish: null,
+    currentViewingDayId: null,
     draggedDayId: null,
     draggedDishId: null,
     isGridView: true,
@@ -493,8 +495,10 @@ function switchRecipeModalMode(mode) {
 }
 
 
-function openRecipeModal(dish) {
-    appState.currentViewingDishId = dish.id;
+function openRecipeModal(dish, dayId = null) {
+    appState.currentViewingDishId = dish.id || null;
+    appState.currentViewingDish = dish;
+    appState.currentViewingDayId = dayId;
     appState.currentPortions = 4;
     switchRecipeModalMode('view');
     
@@ -1053,17 +1057,17 @@ function renderApp() {
                     } else {
                         const targetDish = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
                         if (targetDish) {
-                            openRecipeModal(targetDish);
+                            openRecipeModal(targetDish, day.id);
                         } else {
                             openRecipeModal({
-                                id: day.dishId,
+                                id: null,
                                 name: day.dishName,
                                 isMeat: day.isMeat,
                                 isHighCarb: day.isHighCarb,
                                 isEmergency: day.isEmergency,
                                 ingredients: '',
-                                instructions: 'Freitext-Gericht (kein hinterlegtes Rezept).'
-                            });
+                                instructions: ''
+                            }, day.id);
                         }
                     }
                 });
@@ -2605,12 +2609,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Umschalten in den Bearbeitungsmodus direkt im Modal
+    // Umschalten in den Bearbeitungsmodus direkt im Modal (auch für Freitext-Gerichte)
     document.getElementById('btn-edit-recipe').addEventListener('click', () => {
-        const dish = appState.dishes.find(d => d.id === appState.currentViewingDishId);
+        const dish = (appState.currentViewingDishId ? appState.dishes.find(d => d.id === appState.currentViewingDishId) : null) || appState.currentViewingDish;
         if (!dish) return;
 
-        document.getElementById('modal-edit-id').value = dish.id;
+        document.getElementById('modal-edit-id').value = dish.id || '';
         document.getElementById('modal-edit-name').value = dish.name || '';
         document.getElementById('modal-edit-url').value = dish.sourceUrl || '';
         
@@ -2643,7 +2647,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const deleteBtn = document.getElementById('btn-modal-delete-dish');
         deleteBtn.classList.remove('confirm-mode');
-        deleteBtn.textContent = '🗑️ Löschen';
+        deleteBtn.textContent = dish.id ? '🗑️ Löschen' : '❌ Tag leeren';
+
+        const editTitleEl = document.getElementById('recipe-edit-modal-title');
+        if (editTitleEl) {
+            editTitleEl.textContent = dish.id ? 'Rezept bearbeiten' : 'Als Rezept speichern';
+        }
 
         switchRecipeModalMode('edit');
     });
@@ -2653,42 +2662,52 @@ document.addEventListener('DOMContentLoaded', () => {
         switchRecipeModalMode('view');
     });
 
-    // (Pillen-Auswahl wird direkt über inline onclick="setMeatPill(...)" gesteuert)
-
-    // Löschen direkt aus dem Modal-Editor mit 2-Klick-Sicherheitsabfrage
+    // Löschen direkt aus dem Modal-Editor mit Sicherheitsabfrage
     document.getElementById('btn-modal-delete-dish').addEventListener('click', async () => {
         const deleteBtn = document.getElementById('btn-modal-delete-dish');
         const dishId = document.getElementById('modal-edit-id').value;
-        if (!dishId) return;
 
         if (!deleteBtn.classList.contains('confirm-mode')) {
             deleteBtn.classList.add('confirm-mode');
-            deleteBtn.textContent = 'Wirklich löschen? ⚠️';
+            deleteBtn.textContent = 'Wirklich entfernen? ⚠️';
             setTimeout(() => {
                 if (deleteBtn) {
                     deleteBtn.classList.remove('confirm-mode');
-                    deleteBtn.textContent = '🗑️ Löschen';
+                    deleteBtn.textContent = dishId ? '🗑️ Löschen' : '❌ Tag leeren';
                 }
             }, 3000);
             return;
         }
 
-        await deleteDishFromApi(dishId);
+        if (dishId) {
+            await deleteDishFromApi(dishId);
+        } else if (appState.currentViewingDayId) {
+            const dayIdx = appState.currentPlan.findIndex(d => d.id === appState.currentViewingDayId);
+            if (dayIdx !== -1) {
+                appState.currentPlan[dayIdx].dishName = 'Noch nichts geplant';
+                appState.currentPlan[dayIdx].dishId = null;
+                appState.currentPlan[dayIdx].isUnplanned = true;
+                savePlanToApi();
+            }
+        }
+
         recipeViewModal.classList.add('hidden');
         appState.currentViewingDishId = null;
+        appState.currentViewingDish = null;
+        appState.currentViewingDayId = null;
         renderApp();
     });
 
     // Absenden des Bearbeitungs-Formulars im Modal
     document.getElementById('modal-dish-edit-form').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const editId = document.getElementById('modal-edit-id').value;
+        const editId = document.getElementById('modal-edit-id').value.trim();
         const name = document.getElementById('modal-edit-name').value.trim();
         if (!name) return;
 
         const fileInput = document.getElementById('modal-edit-image-file');
         const previewFileInput = document.getElementById('modal-edit-preview-file');
-        const existingDish = appState.dishes.find(d => d.id === editId);
+        const existingDish = editId ? appState.dishes.find(d => d.id === editId) : null;
         
         let imageUrl = existingDish ? (existingDish.image || '') : '';
         let previewImageUrl = existingDish ? (existingDish.previewImage || '') : '';
@@ -2734,7 +2753,7 @@ document.addEventListener('DOMContentLoaded', () => {
         else if (meatValRaw === 'veggie') meatVal = false;
 
         const updatedPayload = {
-            id: editId,
+            id: editId || undefined,
             name: name,
             sourceUrl: document.getElementById('modal-edit-url').value.trim(),
             isEmergency: document.getElementById('modal-edit-emergency').checked,
@@ -2749,8 +2768,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await saveDishToApi(updatedPayload);
         if (res.dish) {
             const idx = appState.dishes.findIndex(d => d.id === res.dish.id);
-            if (idx !== -1) appState.dishes[idx] = res.dish;
-            openRecipeModal(res.dish);
+            if (idx !== -1) {
+                appState.dishes[idx] = res.dish;
+            } else {
+                appState.dishes.push(res.dish);
+            }
+
+            // Falls das Gericht aus einem Freitext-Tag stammt: Tag im Speiseplan mit der neuen ID verknüpfen
+            if (appState.currentViewingDayId) {
+                const dayIndex = appState.currentPlan.findIndex(d => d.id === appState.currentViewingDayId);
+                if (dayIndex !== -1) {
+                    appState.currentPlan[dayIndex].dishId = res.dish.id;
+                    appState.currentPlan[dayIndex].dishName = res.dish.name;
+                    appState.currentPlan[dayIndex].isMeat = res.dish.isMeat;
+                    appState.currentPlan[dayIndex].isHighCarb = res.dish.isHighCarb;
+                    appState.currentPlan[dayIndex].isEmergency = res.dish.isEmergency;
+                    appState.currentPlan[dayIndex].isUnplanned = false;
+                    savePlanToApi();
+                }
+            }
+
+            openRecipeModal(res.dish, appState.currentViewingDayId);
         }
 
         renderApp();
