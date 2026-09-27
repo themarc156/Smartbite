@@ -392,13 +392,14 @@ function assignDishToDay(dayId, dishObj) {
     if (dayIndex === -1) return;
 
     appState.currentPlan[dayIndex].dishName = dishObj.name;
-    appState.currentPlan[dayIndex].dishId = dishObj.id;
-    appState.currentPlan[dayIndex].isEmergency = dishObj.isEmergency || false;
-    appState.currentPlan[dayIndex].isMeat = dishObj.isMeat || false;
-    appState.currentPlan[dayIndex].isHighCarb = dishObj.isHighCarb || false;
+    appState.currentPlan[dayIndex].dishId = dishObj.id || null;
+    appState.currentPlan[dayIndex].isEmergency = Boolean(dishObj.isEmergency);
+    appState.currentPlan[dayIndex].isMeat = dishObj.isMeat !== undefined ? dishObj.isMeat : null;
+    appState.currentPlan[dayIndex].isHighCarb = Boolean(dishObj.isHighCarb);
+    appState.currentPlan[dayIndex].isUnplanned = Boolean(dishObj.isUnplanned);
 
-    savePlanToApi();
     renderApp();
+    savePlanToApi();
 }
 
 function swapDaysInPlan(sourceDayId, targetDayId) {
@@ -1000,12 +1001,7 @@ function switchView(viewName, animationType = 'fade') {
 
     appState.currentView = viewName;
 
-    // 2. Stiller Hintergrund-Sync beim Betreten eines Tab-Bereichs
-    if (viewName !== 'add') {
-        loadData(true);
-    }
-
-    if (viewName === 'plan' && appState.currentPlan.length === 0) {
+    if (viewName === 'plan' && (!appState.currentPlan || appState.currentPlan.length === 0)) {
         generate4WeekPlan();
     }
 }
@@ -1248,7 +1244,7 @@ const SUPERMARKET_CATEGORIES = [
     },
     {
         name: '🍝 Vorrat, Teigwaren & Dosen',
-        keywords: ['tomatenmark', 'tube tomatenmark', 'gehackte tomaten', 'gestückelte tomaten', 'passierte tomaten', 'dosentomaten', 'schältomaten', 'nudel', 'nudeln', 'spaghetti', 'penne', 'fusilli', 'pasta', 'lasagneplatten', 'reis', 'basmatireis', 'jasminreis', 'milchreis', 'kidneybohne', 'kidneybohnen', 'bohne', 'bohnen', 'weiße bohnen', 'kichererbsen', 'mais', 'dose mais', 'dose', 'konserve', 'brühe', 'gemüsebrühe', 'hühnerbrühe', 'rinderbrühe', 'zucker', 'puderzucker', 'brauner zucker', 'öl', 'olivenöl', 'rapsöl', 'sonnenblumenöl', 'kokosöl', 'haferflocken', 'linsen', 'rote linsen', 'kokosmilch', 'kaffee', 'kaffeebohnen', 'espressbohnen', 'tee', 'essig', 'balsamico', 'apfelessig', 'senf', 'ketchup', 'mayo', 'mayonnaise', 'sauerkirschen', 'apfelmus']
+        keywords: ['tomatenmark', 'tube tomatenmark', 'gehackte tomaten', 'gestückelte tomaten', 'stückige tomaten', 'tomaten, stückig', 'tomaten stückig', 'passierte tomaten', 'dosentomaten', 'schältomaten', 'nudel', 'nudeln', 'spaghetti', 'penne', 'fusilli', 'pasta', 'lasagneplatten', 'reis', 'basmatireis', 'jasminreis', 'milchreis', 'kidneybohne', 'kidneybohnen', 'bohne', 'bohnen', 'weiße bohnen', 'kichererbsen', 'mais', 'dose mais', 'dose', 'konserve', 'brühe', 'gemüsebrühe', 'hühnerbrühe', 'rinderbrühe', 'zucker', 'puderzucker', 'brauner zucker', 'öl', 'olivenöl', 'rapsöl', 'sonnenblumenöl', 'kokosöl', 'haferflocken', 'linsen', 'rote linsen', 'kokosmilch', 'kaffee', 'kaffeebohnen', 'espressbohnen', 'tee', 'essig', 'balsamico', 'apfelessig', 'senf', 'ketchup', 'mayo', 'mayonnaise', 'sauerkirschen', 'apfelmus']
     },
     {
         name: '🥫 Gewürze, Saucen & Snacks',
@@ -1438,37 +1434,33 @@ function parseAndAggregateIngredients(rawList) {
     const aggregated = {};
 
     rawList.forEach(({ text, dishName }) => {
-        // Trennt Komma-Zutaten (z.B. "Salz, Pfeffer, Oregano" -> 3 Zutaten)
-        const subItems = text.includes(',') && !text.match(/^[\d.,/]+\s/) 
-            ? text.split(',').map(s => s.trim()).filter(Boolean)
-            : [text.trim()];
+        const line = text.trim();
+        if (!line) return;
 
-        subItems.forEach(subText => {
-            const match = splitIngredientAmountAndName(subText);
-            let amount = '';
-            let item = subText;
+        const match = splitIngredientAmountAndName(line);
+        let amount = '';
+        let item = line;
 
-            if (match && match[1] && match[2]) {
-                amount = match[1].trim();
-                item = match[2].trim();
-            }
+        if (match && match[1] && match[2]) {
+            amount = match[1].trim();
+            item = match[2].trim();
+        }
 
-            const key = item.toLowerCase();
-            
-            // Überspringen, falls Zutat als Vorrat gestrichen wurde
-            if (excludedShoppingKeys.has(key)) return;
+        const key = item.toLowerCase().trim();
+        
+        // Überspringen, falls Zutat als Vorrat gestrichen wurde
+        if (excludedShoppingKeys.has(key)) return;
 
-            if (!aggregated[key]) {
-                aggregated[key] = {
-                    key: key,
-                    displayName: item,
-                    category: categorizeIngredient(item),
-                    sources: []
-                };
-            }
+        if (!aggregated[key]) {
+            aggregated[key] = {
+                key: key,
+                displayName: item,
+                category: categorizeIngredient(item),
+                sources: []
+            };
+        }
 
-            aggregated[key].sources.push({ amount, dishName });
-        });
+        aggregated[key].sources.push({ amount, dishName });
     });
 
     return aggregated;
