@@ -2080,6 +2080,14 @@ function bindCategoryDragAndDrop(groupEl, catName) {
     }, { passive: true });
 }
 
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+            console.warn('ServiceWorker Registrierung fehlgeschlagen:', err);
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadData();
 

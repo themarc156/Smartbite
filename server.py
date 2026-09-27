@@ -117,6 +117,13 @@ def javascript():
 def manifest():
     return send_from_directory(BASE_DIR, "manifest.json")
 
+@app.route("/sw.js")
+def service_worker():
+    response = send_from_directory(BASE_DIR, "sw.js")
+    response.headers["Content-Type"] = "application/javascript"
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    return response
+
 @app.route("/icon.png")
 def icon():
     return send_from_directory(BASE_DIR, "icon.png")
