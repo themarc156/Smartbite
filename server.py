@@ -179,6 +179,22 @@ def delete_dish(dish_id):
     save_data(data)
     return jsonify({"status": "success"})
 
+@app.route("/api/dishes/reorder", methods=["POST"])
+def reorder_dishes():
+    data = load_data()
+    payload = request.json or {}
+    ordered_ids = payload.get("orderedIds", [])
+    if ordered_ids:
+        dish_map = {d["id"]: d for d in data.get("dishes", [])}
+        new_dishes = [dish_map[d_id] for d_id in ordered_ids if d_id in dish_map]
+        existing_ids = set(ordered_ids)
+        for d in data.get("dishes", []):
+            if d["id"] not in existing_ids:
+                new_dishes.append(d)
+        data["dishes"] = new_dishes
+        save_data(data)
+    return jsonify({"status": "success"})
+
 @app.route("/api/plan", methods=["POST"])
 def save_plan():
     data = load_data()
@@ -197,6 +213,7 @@ def save_shopping():
     data["shopping"]["staples"] = payload.get("staples", [])
     data["shopping"]["categoryOverrides"] = payload.get("categoryOverrides", {})
     data["shopping"]["excludedKeys"] = payload.get("excludedKeys", [])
+    data["shopping"]["categoryOrder"] = payload.get("categoryOrder", [])
     save_data(data)
     return jsonify({"status": "success"})
 

@@ -512,41 +512,72 @@ textarea {
     flex: 1;
 }
 
-/* Filter-Layout: Links Spalte mit "Alle" und "Kuchen", rechts 2x3 Grid */
-.filter-layout-container {
-    display: grid;
-    grid-template-columns: 78px 1fr;
-    gap: 0.35rem;
+/* 2-Ebenen Filterstruktur */
+.filter-two-tier-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
     margin-bottom: 0.75rem;
     width: 100%;
 }
 
-.filter-left-col {
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
+.filter-tier-main {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0.3rem;
 }
 
-.btn-filter-side {
+.filter-tier-sub {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.3rem;
+}
+
+.btn-filter-main, .btn-filter-sub {
     height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 !important;
-    font-size: 0.78rem;
-    width: 100%;
+    padding: 0 0.2rem !important;
+    font-size: 0.76rem;
+    white-space: nowrap;
 }
 
 .btn-filter-baking.active {
-    background-color: #ec4899;
-    border-color: #ec4899;
-    color: #ffffff;
+    background-color: #ec4899 !important;
+    border-color: #ec4899 !important;
+    color: #ffffff !important;
 }
 
-.filter-subgrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.35rem;
+.btn-filter-sub {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px dashed var(--border-color);
+}
+
+.btn-filter-sub.active {
+    background-color: var(--bg-card);
+    border: 1px solid var(--accent-primary);
+    color: var(--accent-primary);
+    box-shadow: 0 0 6px rgba(245, 158, 11, 0.2);
+}
+
+.btn-filter-sub.active-danger {
+    border-color: var(--accent-danger) !important;
+    color: var(--accent-danger) !important;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Drag & Drop Feedback für Rezeptkarten */
+.dish-list li.dish-card-dragging {
+    opacity: 0.35;
+    border: 2px dashed var(--accent-primary);
+    transform: scale(0.96);
+}
+
+.dish-list li.dish-card-drag-over {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+    transform: translateY(-3px);
 }
 
 /* Kamera vs. Galerie Upload-Buttons */
@@ -1756,15 +1787,49 @@ textarea {
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: 0.6rem 0.75rem;
+    transition: transform 0.15s, border-color 0.15s, background-color 0.15s;
+}
+
+.shopping-category-group.category-dragging {
+    opacity: 0.45;
+    border: 1px dashed var(--accent-primary);
+    transform: scale(0.99);
+}
+
+.shopping-category-group.category-drag-over {
+    border: 2px solid var(--accent-primary);
+    background-color: rgba(245, 158, 11, 0.08);
 }
 
 .shopping-category-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 0.88rem;
     font-weight: 700;
     color: var(--accent-primary);
     margin-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding-bottom: 0.25rem;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cat-drag-handle {
+    color: var(--text-muted);
+    font-size: 1.15rem;
+    cursor: grab;
+    padding: 0 0.35rem;
+    line-height: 1;
+    opacity: 0.5;
+    transition: opacity 0.15s, color 0.15s;
+    touch-action: none;
+}
+
+.cat-drag-handle:hover, .cat-drag-handle:active {
+    opacity: 1;
+    color: var(--accent-primary);
+    cursor: grabbing;
 }
 
 .ingredients-rendered-list {

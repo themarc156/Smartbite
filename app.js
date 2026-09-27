@@ -148,11 +148,14 @@ const appState = {
     dishes: [],
     currentPlan: [],
     currentWeekPage: 0, 
-    activeFilter: 'all',
+    mainFilter: 'all',          // 'all' | 'veggie' | 'flex' | 'meat' | 'baking'
+    subFilterCarb: null,        // null | 'low' | 'high'
+    subFilterEmergency: false,  // true | false
     searchQuery: '',
     selectModeForDayId: null,     
     currentViewingDishId: null,   
     draggedDayId: null,
+    draggedDishId: null,
     isGridView: true,
     currentPortions: 4,
     basePortions: 4,
@@ -612,6 +615,31 @@ function openRecipeModal(dish) {
     document.getElementById('recipe-view-modal').classList.remove('hidden');
 }
 
+function reorderDishes(sourceDishId, targetDishId) {
+    if (!sourceDishId || !targetDishId || sourceDishId === targetDishId) return;
+    const sourceIdx = appState.dishes.findIndex(d => d.id === sourceDishId);
+    const targetIdx = appState.dishes.findIndex(d => d.id === targetDishId);
+    if (sourceIdx === -1 || targetIdx === -1) return;
+
+    const [movedDish] = appState.dishes.splice(sourceIdx, 1);
+    appState.dishes.splice(targetIdx, 0, movedDish);
+
+    renderApp();
+    saveDishesOrderToApi();
+}
+
+async function saveDishesOrderToApi() {
+    try {
+        await fetch('/api/dishes/reorder', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderedIds: appState.dishes.map(d => d.id) })
+        });
+    } catch (err) {
+        console.error('Fehler beim Speichern der Rezept-Reihenfolge:', err);
+    }
+}
+
 function renderApp() {
     const dishCountSpan = document.getElementById('dish-count');
     const dishList = document.getElementById('dish-list');
@@ -620,6 +648,7 @@ function renderApp() {
     if (dishCountSpan && dishList) {
         let filteredDishes = [...appState.dishes];
 
+        // 1. Textsuche
         if (appState.searchQuery.trim() !== '') {
             const query = appState.searchQuery.toLowerCase();
             filteredDishes = filteredDishes.filter(d => 
@@ -629,27 +658,30 @@ function renderApp() {
             );
         }
         
-        // 1. Strikte Trennung: Backen vs. Alltagsgerichte
-        if (appState.activeFilter === 'baking') {
-            // Exklusiv nur Kuchen & Backrezepte anzeigen
+        // 2. Ebene 1: Haupttyp
+        if (appState.mainFilter === 'baking') {
             filteredDishes = filteredDishes.filter(d => d.isMeat === 'baking');
         } else {
-            // Ausnahmslos ALLE anderen Filter (Alle, High-Carb, Low-Carb, Notfall, Flexi, Veggie, Meat) schliessen Backrezepte aus
             filteredDishes = filteredDishes.filter(d => d.isMeat !== 'baking');
 
-            if (appState.activeFilter === 'highcarb') {
-                filteredDishes = filteredDishes.filter(d => d.isHighCarb === true);
-            } else if (appState.activeFilter === 'lowcarb') {
-                filteredDishes = filteredDishes.filter(d => !d.isHighCarb);
-            } else if (appState.activeFilter === 'emergency') {
-                filteredDishes = filteredDishes.filter(d => d.isEmergency === true);
-            } else if (appState.activeFilter === 'veggie') {
+            if (appState.mainFilter === 'veggie') {
                 filteredDishes = filteredDishes.filter(d => d.isMeat === false);
-            } else if (appState.activeFilter === 'flex') {
+            } else if (appState.mainFilter === 'flex') {
                 filteredDishes = filteredDishes.filter(d => d.isMeat === null || d.isMeat === undefined);
-            } else if (appState.activeFilter === 'meat') {
+            } else if (appState.mainFilter === 'meat') {
                 filteredDishes = filteredDishes.filter(d => d.isMeat === true);
             }
+        }
+
+        // 3. Ebene 2: Zusatz-Schalter (Sub-Filter)
+        if (appState.subFilterCarb === 'low') {
+            filteredDishes = filteredDishes.filter(d => !d.isHighCarb);
+        } else if (appState.subFilterCarb === 'high') {
+            filteredDishes = filteredDishes.filter(d => d.isHighCarb === true);
+        }
+
+        if (appState.subFilterEmergency) {
+            filteredDishes = filteredDishes.filter(d => d.isEmergency === true);
         }
 
         dishCountSpan.textContent = filteredDishes.length;
@@ -666,10 +698,9 @@ function renderApp() {
             if (instructionText) instructionText.innerHTML = "🎯 <strong>Auswahl-Modus:</strong> Klicke auf ein Gericht, um es in den Plan einzutragen!";
         } else {
             dishList.classList.remove('select-mode');
-            if (instructionText) instructionText.textContent = "Klicke auf ein Gericht für Rezeptdetails und Zubereitung.";
+            if (instructionText) instructionText.textContent = "Klicke auf ein Gericht für Details. Halten zum Verschieben.";
         }
 
-        // 5. Empty State für leere Suchergebnisse
         if (filteredDishes.length === 0) {
             const emptyLi = document.createElement('li');
             emptyLi.style.cssText = 'padding: 2.5rem 1rem; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; border: none; background: transparent; width: 100%; grid-column: 1 / -1;';
@@ -683,6 +714,106 @@ function renderApp() {
 
         filteredDishes.forEach(dish => {
             const li = document.createElement('li');
+            li.dataset.dishId = dish.id;
+            li.setAttribute('draggable', 'true');
+
+            // Desktop Drag & Drop
+            li.addEventListener('dragstart', (e) => {
+                appState.draggedDishId = dish.id;
+                e.dataTransfer.effectAllowed = 'move';
+                li.classList.add('dish-card-dragging');
+            });
+
+            li.addEventListener('dragend', () => {
+                appState.draggedDishId = null;
+                li.classList.remove('dish-card-dragging');
+                document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+            });
+
+            li.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (appState.draggedDishId && appState.draggedDishId !== dish.id) {
+                    li.classList.add('dish-card-drag-over');
+                }
+            });
+
+            li.addEventListener('dragleave', () => {
+                li.classList.remove('dish-card-drag-over');
+            });
+
+            li.addEventListener('drop', (e) => {
+                e.preventDefault();
+                li.classList.remove('dish-card-drag-over');
+                if (appState.draggedDishId && appState.draggedDishId !== dish.id) {
+                    reorderDishes(appState.draggedDishId, dish.id);
+                }
+                appState.draggedDishId = null;
+            });
+
+            // Touch Drag & Drop (Smartphone: 300ms Halten)
+            let touchTimer = null;
+            let isTouchDragging = false;
+            let startX = 0;
+            let startY = 0;
+
+            li.addEventListener('touchstart', (e) => {
+                if (e.touches.length !== 1) return;
+                startX = e.touches[0].clientX;
+                startY = e.touches[0].clientY;
+                appState.draggedDishId = dish.id;
+
+                touchTimer = setTimeout(() => {
+                    isTouchDragging = true;
+                    if (navigator.vibrate) {
+                        try { navigator.vibrate(35); } catch (_) {}
+                    }
+                    li.classList.add('dish-card-dragging');
+                }, 300);
+            }, { passive: true });
+
+            li.addEventListener('touchmove', (e) => {
+                if (!isTouchDragging) {
+                    const touch = e.touches[0];
+                    if (Math.abs(touch.clientX - startX) > 10 || Math.abs(touch.clientY - startY) > 10) {
+                        clearTimeout(touchTimer);
+                    }
+                    return;
+                }
+                e.preventDefault();
+                const touch = e.touches[0];
+                const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                const targetLi = targetEl ? targetEl.closest('#dish-list li') : null;
+
+                document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                if (targetLi && targetLi !== li) {
+                    targetLi.classList.add('dish-card-drag-over');
+                }
+            }, { passive: false });
+
+            li.addEventListener('touchend', (e) => {
+                clearTimeout(touchTimer);
+                if (isTouchDragging) {
+                    isTouchDragging = false;
+                    li.classList.remove('dish-card-dragging');
+                    const touch = e.changedTouches[0];
+                    const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const targetLi = targetEl ? targetEl.closest('#dish-list li') : null;
+
+                    if (targetLi && targetLi.dataset.dishId && targetLi.dataset.dishId !== dish.id) {
+                        reorderDishes(dish.id, targetLi.dataset.dishId);
+                    }
+                    document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                }
+                appState.draggedDishId = null;
+            }, { passive: true });
+
+            li.addEventListener('touchcancel', () => {
+                clearTimeout(touchTimer);
+                isTouchDragging = false;
+                li.classList.remove('dish-card-dragging');
+                document.querySelectorAll('#dish-list li').forEach(el => el.classList.remove('dish-card-drag-over'));
+                appState.draggedDishId = null;
+            }, { passive: true });
 
             // 1. Grid-Ansicht Rendern
             if (appState.isGridView) {
@@ -696,7 +827,7 @@ function renderApp() {
                 } else {
                     const placeholder = document.createElement('div');
                     placeholder.className = 'dish-card-placeholder';
-                    placeholder.textContent = dish.isMeat === true ? '🥩' : (dish.isMeat === false ? '🌱' : '🍲');
+                    placeholder.textContent = dish.isMeat === 'baking' ? '🍰' : (dish.isMeat === true ? '🥩' : (dish.isMeat === false ? '🌱' : '🍲'));
                     li.appendChild(placeholder);
                 }
 
@@ -709,7 +840,7 @@ function renderApp() {
 
                 const badges = document.createElement('div');
                 badges.className = 'recipe-badges-container';
-                const typeIcon = dish.isMeat === true ? '🥩' : (dish.isMeat === false ? '🌱' : '🍲');
+                const typeIcon = dish.isMeat === 'baking' ? '🍰' : (dish.isMeat === true ? '🥩' : (dish.isMeat === false ? '🌱' : '🍲'));
                 badges.innerHTML = `<span style="font-size: 0.85rem;">${typeIcon} ${dish.isHighCarb ? '🌾' : ''} ${dish.isEmergency ? '🚨' : ''}</span>`;
 
                 cardBody.appendChild(title);
@@ -717,6 +848,7 @@ function renderApp() {
                 li.appendChild(cardBody);
 
                 li.addEventListener('click', () => {
+                    if (isTouchDragging) return;
                     if (appState.selectModeForDayId) {
                         assignDishToDay(appState.selectModeForDayId, dish);
                         appState.selectModeForDayId = null;
@@ -726,15 +858,17 @@ function renderApp() {
                     }
                 });
             } else {
-                // 2. Reine Listen Ansicht
+                // 2. Reine Listen-Ansicht
                 const leftSide = document.createElement('div');
                 leftSide.className = 'dish-left-side';
 
                 const toggleTypeBtn = document.createElement('button');
                 toggleTypeBtn.className = 'btn-toggle-status active';
-                toggleTypeBtn.title = 'Typ umschalten (Veggie / Fleisch / Flexi)';
+                toggleTypeBtn.title = 'Typ umschalten (Veggie / Fleisch / Flexi / Backen)';
                 
-                if (dish.isMeat === true) {
+                if (dish.isMeat === 'baking') {
+                    toggleTypeBtn.textContent = '🍰';
+                } else if (dish.isMeat === true) {
                     toggleTypeBtn.textContent = '🥩';
                 } else if (dish.isMeat === false) {
                     toggleTypeBtn.textContent = '🌱';
@@ -748,6 +882,8 @@ function renderApp() {
                         dish.isMeat = true;
                     } else if (dish.isMeat === true) {
                         dish.isMeat = null;
+                    } else if (dish.isMeat === null || dish.isMeat === undefined) {
+                        dish.isMeat = 'baking';
                     } else {
                         dish.isMeat = false;
                     }
@@ -759,6 +895,7 @@ function renderApp() {
                 nameSpan.className = 'dish-clickable-name';
                 nameSpan.textContent = dish.name;
                 nameSpan.addEventListener('click', () => {
+                    if (isTouchDragging) return;
                     if (appState.selectModeForDayId) {
                         assignDishToDay(appState.selectModeForDayId, dish);
                         appState.selectModeForDayId = null;
@@ -767,11 +904,6 @@ function renderApp() {
                         openRecipeModal(dish);
                     }
                 });
-
-                // Toggle-Funktion in der Listenansicht: Klick schaltet durch (false -> true -> 'baking' -> null -> false)
-                if (dish.isMeat === 'baking') {
-                    toggleTypeBtn.textContent = '🍰';
-                }
 
                 leftSide.appendChild(toggleTypeBtn);
                 leftSide.appendChild(nameSpan);
@@ -2758,27 +2890,68 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    const filterButtons = {
-        all: document.getElementById('filter-all'),
-        baking: document.getElementById('filter-baking'),
-        veggie: document.getElementById('filter-veggie'),
-        flex: document.getElementById('filter-flex'),
-        meat: document.getElementById('filter-meat'),
-        lowcarb: document.getElementById('filter-lowcarb'),
-        highcarb: document.getElementById('filter-highcarb'),
-        emergency: document.getElementById('filter-emergency')
+    // Ebene 1: Haupttyp Filter (Exklusiv)
+    const mainFilterBtns = {
+        all: document.getElementById('filter-main-all'),
+        veggie: document.getElementById('filter-main-veggie'),
+        flex: document.getElementById('filter-main-flex'),
+        meat: document.getElementById('filter-main-meat'),
+        baking: document.getElementById('filter-main-baking')
     };
 
-    Object.keys(filterButtons).forEach(filterKey => {
-        if (filterButtons[filterKey]) {
-            filterButtons[filterKey].addEventListener('click', () => {
-                Object.values(filterButtons).forEach(btn => { if(btn) btn.classList.remove('active'); });
-                filterButtons[filterKey].classList.add('active');
-                appState.activeFilter = filterKey;
+    Object.keys(mainFilterBtns).forEach(key => {
+        const btn = mainFilterBtns[key];
+        if (btn) {
+            btn.addEventListener('click', () => {
+                Object.values(mainFilterBtns).forEach(b => { if (b) b.classList.remove('active'); });
+                btn.classList.add('active');
+                appState.mainFilter = key;
                 renderApp();
             });
         }
     });
+
+    // Ebene 2: Sub-Filter Schalter (An/Aus toggelbar)
+    const btnSubLow = document.getElementById('filter-sub-lowcarb');
+    const btnSubHigh = document.getElementById('filter-sub-highcarb');
+    const btnSubEmergency = document.getElementById('filter-sub-emergency');
+
+    if (btnSubLow) {
+        btnSubLow.addEventListener('click', () => {
+            if (appState.subFilterCarb === 'low') {
+                appState.subFilterCarb = null;
+                btnSubLow.classList.remove('active');
+            } else {
+                appState.subFilterCarb = 'low';
+                btnSubLow.classList.add('active');
+                if (btnSubHigh) btnSubHigh.classList.remove('active');
+            }
+            renderApp();
+        });
+    }
+
+    if (btnSubHigh) {
+        btnSubHigh.addEventListener('click', () => {
+            if (appState.subFilterCarb === 'high') {
+                appState.subFilterCarb = null;
+                btnSubHigh.classList.remove('active');
+            } else {
+                appState.subFilterCarb = 'high';
+                btnSubHigh.classList.add('active');
+                if (btnSubLow) btnSubLow.classList.remove('active');
+            }
+            renderApp();
+        });
+    }
+
+    if (btnSubEmergency) {
+        btnSubEmergency.addEventListener('click', () => {
+            appState.subFilterEmergency = !appState.subFilterEmergency;
+            btnSubEmergency.classList.toggle('active', appState.subFilterEmergency);
+            btnSubEmergency.classList.toggle('active-danger', appState.subFilterEmergency);
+            renderApp();
+        });
+    }
 
     document.getElementById('btn-prev-week').addEventListener('click', () => {
         if (appState.currentWeekPage > 0) { appState.currentWeekPage--; renderApp(); }
