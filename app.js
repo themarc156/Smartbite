@@ -265,6 +265,7 @@ async function syncShoppingToApi() {
         await fetch('/api/shopping', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
             body: JSON.stringify({
                 customItems: customShoppingItems,
                 checkedKeys: [...checkedShoppingKeys],
@@ -1477,7 +1478,7 @@ const DEFAULT_STAPLES = [
     { id: 'staple-banana', name: 'Bananen', category: '🍏 Obst & Gemüse' }
 ];
 
-let shoppingTimeframe = '3days';
+let shoppingTimeframe = localStorage.getItem('smartbite_shopping_timeframe') || '3days';
 let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
 let checkedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_checked_shopping') || '[]'));
 let staplesCatalog = JSON.parse(localStorage.getItem('smartbite_staples_catalog') || 'null') || [...DEFAULT_STAPLES];
@@ -2468,8 +2469,14 @@ document.addEventListener('DOMContentLoaded', () => {
         [btnTf3Days, btnTf7Days, btnTfMonday].forEach(b => { if (b) b.classList.remove('active'); });
         if (activeBtn) activeBtn.classList.add('active');
         shoppingTimeframe = mode;
+        localStorage.setItem('smartbite_shopping_timeframe', mode);
         renderShoppingList();
     };
+
+    // Gespeicherten Zeitraum beim Start auf Buttons anwenden
+    if (shoppingTimeframe === '7days' && btnTf7Days) updateTimeframeButtons(btnTf7Days, '7days');
+    else if (shoppingTimeframe === 'monday' && btnTfMonday) updateTimeframeButtons(btnTfMonday, 'monday');
+    else if (btnTf3Days) updateTimeframeButtons(btnTf3Days, '3days');
 
     if (btnTf3Days) btnTf3Days.addEventListener('click', () => updateTimeframeButtons(btnTf3Days, '3days'));
     if (btnTf7Days) btnTf7Days.addEventListener('click', () => updateTimeframeButtons(btnTf7Days, '7days'));
