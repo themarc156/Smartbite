@@ -458,9 +458,6 @@ function cleanIngredientLine(line) {
     return line.replace(/^[-•*–—+]\s*/, '').replace(/^\d+[\.\)]\s*/, '').trim();
 }
 
-function extractIngredientLines(ingredientsText) {
-    if (!ingredientsText || typeof ingredientsText !== 'string') return [];
-
 function splitIngredientAmountAndName(text) {
     const cleaned = cleanIngredientLine(text);
     // Erkennt: "500g Tomaten", "2 EL Öl", "1 Dose Mais", "5 Tomaten", "1/2 Zwiebel"
