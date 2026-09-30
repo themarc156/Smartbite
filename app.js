@@ -452,10 +452,17 @@ function swapDaysInPlan(sourceDayId, targetDayId) {
 
 const COOKING_UNITS = '(?:g|kg|mg|ml|cl|dl|l|liter|tl|el|msp|prise|prisen|dose|dosen|tube|tuben|pkg|pck|packung|packungen|becher|bund|zehe|zehen|stk|stück|scheibe|scheiben|glas|gläser|tasse|tassen|blatt|blätter|tropfen|cups?|tbsp|tsp|oz|lbs?)';
 
+function cleanIngredientLine(line) {
+    if (!line) return '';
+    // Entfernt führende Aufzählungszeichen wie "-", "•", "*", "1.", "2."
+    return line.replace(/^[-•*–—]\s*/, '').replace(/^\d+\.\s*/, '').trim();
+}
+
 function splitIngredientAmountAndName(text) {
-    // Erkennt: "500g Tomaten", "2 EL Öl", "1 Dose Mais" oder "5 Tomaten", "1/2 Zwiebel"
+    const cleaned = cleanIngredientLine(text);
+    // Erkennt: "500g Tomaten", "2 EL Öl", "1 Dose Mais", "5 Tomaten", "1/2 Zwiebel"
     const regex = new RegExp(`^([\\d.,/]+(?:\\s*${COOKING_UNITS}\\.?)?)\\s+(.*)$`, 'i');
-    return text.match(regex);
+    return cleaned.match(regex);
 }
 
 function renderRecipeIngredients(dish) {
@@ -1689,7 +1696,20 @@ function renderShoppingList() {
         );
 
         if (dish) {
-            const lines = (dish.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean);
+            let rawText = (dish.ingredients || '').trim();
+            let lines = [];
+            
+            if (rawText.includes('\n')) {
+                lines = rawText.split('\n');
+            } else if (rawText.includes(',')) {
+                // Fallback: Falls Zutaten mit Komma statt Zeilenumbruch eingetragen wurden
+                lines = rawText.split(',');
+            } else if (rawText) {
+                lines = [rawText];
+            }
+
+            lines = lines.map(cleanIngredientLine).filter(Boolean);
+
             if (lines.length > 0) {
                 lines.forEach(line => rawIngredients.push({ text: line, dishName: dish.name }));
             } else if (dish.image || dish.sourceUrl) {
@@ -1795,8 +1815,15 @@ function renderShoppingList() {
         const activeItems = [];
 
         items.forEach(item => {
-            const itemKey = item.key || item.id || item.displayName.toLowerCase().trim();
-            if (checkedShoppingKeys.has(itemKey) || checkedShoppingKeys.has(item.displayName.toLowerCase().trim())) {
+            // Eindeutiger Schlüssel für Artikel
+            const itemKey = item.isCustom ? (item.id || item.key) : `recipe_${item.displayName.toLowerCase().trim()}`;
+            
+            // Abgehakt prüfen (unterstützt sowohl den ID-Key als auch Namen)
+            const isChecked = checkedShoppingKeys.has(itemKey) || 
+                              (item.isCustom && checkedShoppingKeys.has(item.id)) ||
+                              (item.isCustom && checkedShoppingKeys.has(item.displayName.toLowerCase().trim()));
+
+            if (isChecked) {
                 completedItemsList.push({ item, itemKey });
             } else {
                 activeItems.push({ item, itemKey });
@@ -1885,7 +1912,9 @@ function renderShoppingList() {
             // Ausschließlich Long-Press (450ms) legt den Artikel in den Einkaufswagen
             bindLongPress(li, () => {
                 checkedShoppingKeys.add(itemKey);
-                checkedShoppingKeys.add(item.displayName.toLowerCase().trim());
+                if (item.isCustom && item.id) {
+                    checkedShoppingKeys.add(item.id);
+                }
                 saveCheckedShoppingKeys();
                 renderShoppingList();
             });
