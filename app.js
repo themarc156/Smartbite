@@ -1853,6 +1853,7 @@ function renderShoppingList() {
         activeItems.forEach(({ item, itemKey }) => {
             const li = document.createElement('li');
             li.className = 'ingredient-item';
+            li.setAttribute('draggable', 'false');
             li.title = 'Gedrückt halten zum Abhaken';
 
             const leftDiv = document.createElement('div');
@@ -2047,18 +2048,21 @@ function reorderCategories(fromCatName, toCatName) {
 
 function bindCategoryDragAndDrop(groupEl, catName) {
     const handle = groupEl.querySelector('.cat-drag-handle');
-    if (!handle) return;
+    const titleEl = groupEl.querySelector('.shopping-category-title');
+    if (!handle || !titleEl) return;
 
-    groupEl.setAttribute('draggable', 'true');
+    // Nur der Header ist ziehbar – die Zutatenliste darunter bleibt unberührt
+    titleEl.setAttribute('draggable', 'true');
 
     // Desktop Drag & Drop
-    groupEl.addEventListener('dragstart', (e) => {
+    titleEl.addEventListener('dragstart', (e) => {
         draggedCategoryName = catName;
+        e.dataTransfer.setData('text/plain', catName);
         e.dataTransfer.effectAllowed = 'move';
         groupEl.classList.add('category-dragging');
     });
 
-    groupEl.addEventListener('dragend', () => {
+    titleEl.addEventListener('dragend', () => {
         draggedCategoryName = null;
         groupEl.classList.remove('category-dragging');
         document.querySelectorAll('.shopping-category-group').forEach(el => el.classList.remove('category-drag-over'));
@@ -2066,6 +2070,7 @@ function bindCategoryDragAndDrop(groupEl, catName) {
 
     groupEl.addEventListener('dragover', (e) => {
         e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
         if (draggedCategoryName && draggedCategoryName !== catName) {
             groupEl.classList.add('category-drag-over');
         }
@@ -2084,13 +2089,15 @@ function bindCategoryDragAndDrop(groupEl, catName) {
         draggedCategoryName = null;
     });
 
-    // Touch Drag & Drop (Smartphone / iPad)
+    // Touch Drag & Drop: AUSSCHLIESSLICH über das ⠿-Symbol
     let touchTimer = null;
     let isTouchDragging = false;
     let initialY = 0;
+    let initialX = 0;
 
     handle.addEventListener('touchstart', (e) => {
         if (e.touches.length !== 1) return;
+        initialX = e.touches[0].clientX;
         initialY = e.touches[0].clientY;
         draggedCategoryName = catName;
         
@@ -2100,12 +2107,12 @@ function bindCategoryDragAndDrop(groupEl, catName) {
                 try { navigator.vibrate(30); } catch (_) {}
             }
             groupEl.classList.add('category-dragging');
-        }, 180);
+        }, 220);
     }, { passive: true });
 
     handle.addEventListener('touchmove', (e) => {
         if (!isTouchDragging) {
-            if (Math.abs(e.touches[0].clientY - initialY) > 10) {
+            if (Math.hypot(e.touches[0].clientX - initialX, e.touches[0].clientY - initialY) > 10) {
                 clearTimeout(touchTimer);
             }
             return;
