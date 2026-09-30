@@ -218,14 +218,28 @@ async function loadData(silent = false) {
 
         // 1. Cloud-Sync für Einkaufsliste, Dauerbrenner & gelernte Gänge (lokale Session schützen)
         if (data.shopping) {
+            // 1. Manuelle Artikel: Lokale Einträge schützen & mit Server zusammenführen
             if (Array.isArray(data.shopping.customItems)) {
-                customShoppingItems = data.shopping.customItems;
+                const serverItems = data.shopping.customItems;
+                const localMap = new Map();
+                customShoppingItems.forEach(item => {
+                    const id = typeof item === 'string' ? item : item.id;
+                    localMap.set(id, item);
+                });
+                serverItems.forEach(item => {
+                    const id = typeof item === 'string' ? item : item.id;
+                    localMap.set(id, item);
+                });
+                customShoppingItems = Array.from(localMap.values());
                 localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
             }
+
+            // 2. Einkaufswagen (Checked Keys): Lokale Häkchen niemals durch alten Server-Cache überschreiben
             if (Array.isArray(data.shopping.checkedKeys)) {
-                checkedShoppingKeys = new Set(data.shopping.checkedKeys);
+                data.shopping.checkedKeys.forEach(k => checkedShoppingKeys.add(k));
                 localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
             }
+
             if (Array.isArray(data.shopping.staples) && data.shopping.staples.length > 0) {
                 staplesCatalog = data.shopping.staples;
                 localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
@@ -234,8 +248,8 @@ async function loadData(silent = false) {
                 categoryOverrides = Object.assign({}, categoryOverrides, data.shopping.categoryOverrides);
                 localStorage.setItem('smartbite_category_overrides', JSON.stringify(categoryOverrides));
             }
-            if (Array.isArray(data.shopping.excludedKeys)) {
-                excludedShoppingKeys = new Set(data.shopping.excludedKeys);
+            if (Array.isArray(data.shopping.excludedKeys) && data.shopping.excludedKeys.length > 0) {
+                data.shopping.excludedKeys.forEach(k => excludedShoppingKeys.add(k));
                 localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
             }
             if (Array.isArray(data.shopping.categoryOrder) && data.shopping.categoryOrder.length > 0) {
@@ -1664,10 +1678,16 @@ function renderShoppingList() {
     const unparsedDishes = [];
 
     daysToInclude.forEach(day => {
-        const isUnplanned = !day.dishId && (!day.dishName || day.dishName === 'Noch nichts geplant' || day.dishName === 'Ungeplant' || day.isUnplanned);
-        if (isUnplanned) return; // Ungeplante Tage ueberspringen
+        const cleanDayDishName = (day.dishName || '').trim().toLowerCase();
+        const isUnplanned = !day.dishId && (!cleanDayDishName || cleanDayDishName === 'noch nichts geplant' || cleanDayDishName === 'ungeplant' || day.isUnplanned);
+        if (isUnplanned) return;
 
-        const dish = appState.dishes.find(d => d.id === day.dishId || d.name === day.dishName);
+        // Robuste Rezept-Suche (auch bei unterschiedlicher Groß-/Kleinschreibung oder Leerzeichen)
+        const dish = appState.dishes.find(d => 
+            (day.dishId && d.id === day.dishId) || 
+            (d.name && d.name.trim().toLowerCase() === cleanDayDishName)
+        );
+
         if (dish) {
             const lines = (dish.ingredients || '').split('\n').map(s => s.trim()).filter(Boolean);
             if (lines.length > 0) {
@@ -1677,9 +1697,9 @@ function renderShoppingList() {
                     unparsedDishes.push(dish);
                 }
             }
-        } else if (day.dishName && day.dishName !== 'Noch nichts geplant') {
+        } else if (cleanDayDishName) {
             // Freitext-Gericht ohne festes Rezept: In die Hinweisbox aufnehmen
-            const shortDay = WEEKDAY_SHORT[day.dayName] || day.dayName.slice(0, 2);
+            const shortDay = WEEKDAY_SHORT[day.dayName] || (day.dayName ? day.dayName.slice(0, 2) : '');
             if (!unparsedDishes.some(d => d.name === day.dishName)) {
                 unparsedDishes.push({
                     id: `freetext-${day.id}`,
@@ -1964,9 +1984,13 @@ function renderShoppingList() {
             checkedShoppingKeys.clear();
             saveCheckedShoppingKeys();
 
-            // Beim Leeren des Einkaufswagens auch gestrichene Vorräte für den nächsten Einkauf zurücksetzen
+            // Beim Leeren des Einkaufswagens Zustand lokal & auf Server vollständig nullen
+            checkedShoppingKeys.clear();
+            localStorage.setItem('smartbite_checked_shopping', '[]');
             excludedShoppingKeys.clear();
-            saveExcludedShoppingKeys();
+            localStorage.setItem('smartbite_excluded_shopping', '[]');
+            saveCustomShoppingItems();
+            syncShoppingToApi();
 
             btnDoneClearInline.classList.remove('confirm-mode');
             btnDoneClearInline.textContent = 'Wagen leeren 🧹';
