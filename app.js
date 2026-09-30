@@ -222,8 +222,8 @@ async function loadData(silent = false) {
                 customShoppingItems = data.shopping.customItems;
                 localStorage.setItem('smartbite_custom_shopping', JSON.stringify(customShoppingItems));
             }
-            if (Array.isArray(data.shopping.checkedKeys) && data.shopping.checkedKeys.length > 0) {
-                data.shopping.checkedKeys.forEach(k => checkedShoppingKeys.add(k));
+            if (Array.isArray(data.shopping.checkedKeys)) {
+                checkedShoppingKeys = new Set(data.shopping.checkedKeys);
                 localStorage.setItem('smartbite_checked_shopping', JSON.stringify([...checkedShoppingKeys]));
             }
             if (Array.isArray(data.shopping.staples) && data.shopping.staples.length > 0) {
@@ -231,15 +231,12 @@ async function loadData(silent = false) {
                 localStorage.setItem('smartbite_staples_catalog', JSON.stringify(staplesCatalog));
             }
             if (data.shopping.categoryOverrides && typeof data.shopping.categoryOverrides === 'object') {
-                // Manuelle Zuweisungen zusammenführen statt blind zu überschreiben
                 categoryOverrides = Object.assign({}, categoryOverrides, data.shopping.categoryOverrides);
                 localStorage.setItem('smartbite_category_overrides', JSON.stringify(categoryOverrides));
             }
             if (Array.isArray(data.shopping.excludedKeys)) {
-                if (data.shopping.excludedKeys.length > 0) {
-                    data.shopping.excludedKeys.forEach(k => excludedShoppingKeys.add(k));
-                    localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
-                }
+                excludedShoppingKeys = new Set(data.shopping.excludedKeys);
+                localStorage.setItem('smartbite_excluded_shopping', JSON.stringify([...excludedShoppingKeys]));
             }
             if (Array.isArray(data.shopping.categoryOrder) && data.shopping.categoryOrder.length > 0) {
                 categoryOrder = data.shopping.categoryOrder;
@@ -1633,8 +1630,16 @@ function parseAndAggregateIngredients(rawList) {
 
 function renderShoppingList() {
     let daysToInclude = [];
-    const todayMs = new Date().setHours(0, 0, 0, 0);
-    const upcomingDays = (appState.currentPlan || []).filter(d => d.dateTimeline >= todayMs);
+    const todayMidnight = new Date();
+    todayMidnight.setHours(0, 0, 0, 0);
+    const todayMs = todayMidnight.getTime();
+
+    // Sichere Tages-Filterung (unabhängig von Uhrzeiten/Zeitzonen)
+    const upcomingDays = (appState.currentPlan || []).filter(d => {
+        const dMidnight = new Date(d.dateTimeline);
+        dMidnight.setHours(0, 0, 0, 0);
+        return dMidnight.getTime() >= todayMs;
+    });
 
     if (shoppingTimeframe === '7days') {
         daysToInclude = upcomingDays.length >= 7 ? upcomingDays.slice(0, 7) : (appState.currentPlan || []).slice(0, 7);
@@ -1958,6 +1963,10 @@ function renderShoppingList() {
             saveCustomShoppingItems();
             checkedShoppingKeys.clear();
             saveCheckedShoppingKeys();
+
+            // Beim Leeren des Einkaufswagens auch gestrichene Vorräte für den nächsten Einkauf zurücksetzen
+            excludedShoppingKeys.clear();
+            saveExcludedShoppingKeys();
 
             btnDoneClearInline.classList.remove('confirm-mode');
             btnDoneClearInline.textContent = 'Wagen leeren 🧹';
