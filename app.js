@@ -454,9 +454,12 @@ const COOKING_UNITS = '(?:g|kg|mg|ml|cl|dl|l|liter|tl|el|msp|prise|prisen|dose|d
 
 function cleanIngredientLine(line) {
     if (!line) return '';
-    // Entfernt führende Aufzählungszeichen wie "-", "•", "*", "1.", "2."
-    return line.replace(/^[-•*–—]\s*/, '').replace(/^\d+\.\s*/, '').trim();
+    // Entfernt führende Aufzählungszeichen, Nummern und Sonderzeichen
+    return line.replace(/^[-•*–—+]\s*/, '').replace(/^\d+[\.\)]\s*/, '').trim();
 }
+
+function extractIngredientLines(ingredientsText) {
+    if (!ingredientsText || typeof ingredientsText !== 'string') return [];
 
 function splitIngredientAmountAndName(text) {
     const cleaned = cleanIngredientLine(text);
@@ -1689,11 +1692,14 @@ function renderShoppingList() {
         const isUnplanned = !day.dishId && (!cleanDayDishName || cleanDayDishName === 'noch nichts geplant' || cleanDayDishName === 'ungeplant' || day.isUnplanned);
         if (isUnplanned) return;
 
-        // Robuste Rezept-Suche (auch bei unterschiedlicher Groß-/Kleinschreibung oder Leerzeichen)
-        const dish = appState.dishes.find(d => 
-            (day.dishId && d.id === day.dishId) || 
-            (d.name && d.name.trim().toLowerCase() === cleanDayDishName)
-        );
+        // Robuste Rezept-Suche: ID-Match, exakter Namens-Match oder Fuzzy-Match (z. B. "Wraps" <-> "Wrap")
+        let dish = appState.dishes.find(d => (day.dishId && d.id === day.dishId));
+        if (!dish && cleanDayDishName) {
+            dish = appState.dishes.find(d => {
+                const dName = (d.name || '').trim().toLowerCase();
+                return dName === cleanDayDishName || dName.includes(cleanDayDishName) || cleanDayDishName.includes(dName);
+            });
+        }
 
         if (dish) {
             let rawText = (dish.ingredients || '').trim();
@@ -1815,13 +1821,10 @@ function renderShoppingList() {
         const activeItems = [];
 
         items.forEach(item => {
-            // Eindeutiger Schlüssel für Artikel
             const itemKey = item.isCustom ? (item.id || item.key) : `recipe_${item.displayName.toLowerCase().trim()}`;
             
-            // Abgehakt prüfen (unterstützt sowohl den ID-Key als auch Namen)
-            const isChecked = checkedShoppingKeys.has(itemKey) || 
-                              (item.isCustom && checkedShoppingKeys.has(item.id)) ||
-                              (item.isCustom && checkedShoppingKeys.has(item.displayName.toLowerCase().trim()));
+            // Rezept-Zutaten für geplante Tage sind standardmäßig aktiv, außer sie wurden in dieser Session per Long-Press abgehakt
+            const isChecked = checkedShoppingKeys.has(itemKey) || (item.isCustom && item.id && checkedShoppingKeys.has(item.id));
 
             if (isChecked) {
                 completedItemsList.push({ item, itemKey });
