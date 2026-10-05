@@ -57,7 +57,7 @@
                 </div>
                 <div class="shopping-action-buttons">
                     <button type="button" id="btn-open-manage-shopping" class="btn btn-nav" title="Gänge sortieren & Vorräte streichen">🏷️</button>
-                    <button type="button" id="btn-copy-shopping-list" class="btn btn-primary" title="Als Text kopieren">📋</button>
+                    <button type="button" id="btn-open-staples-modal" class="btn btn-primary" title="⭐ Dauerbrenner & Vorräte">⭐</button>
                 </div>
             </div>
 
@@ -243,6 +243,34 @@
             </div>
         </section>
     </main>
+
+    <!-- Modal: Dauerbrenner-Schnellauswahl & Katalog -->
+    <div id="shopping-staples-modal" class="modal hidden">
+        <div class="modal-content staples-modal-content">
+            <header class="modal-header">
+                <button type="button" id="btn-close-staples-modal" class="btn btn-danger btn-close-top">✖</button>
+                <h2 style="font-size: 1.1rem; margin: 0; color: var(--accent-primary);">⭐ Dauerbrenner & Vorrat</h2>
+                <button type="button" id="btn-save-staples-modal" class="btn btn-primary" style="height: 32px; font-weight: 700;">Fertig ✓</button>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
+                <p class="subtitle" style="margin-bottom: 0.75rem;">
+                    Tippe auf einen Artikel, um ihn direkt auf den Zettel zu setzen oder wieder zu entfernen:
+                </p>
+
+                <!-- Klickbare Dauerbrenner-Chips -->
+                <div id="staples-chips-container" class="staples-chips-grid"></div>
+
+                <!-- Neuen Dauerbrenner dauerhaft anlegen -->
+                <div class="staples-add-box">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem;">Neuen Dauerbrenner anlegen:</h4>
+                    <div class="staples-add-form-row">
+                        <input type="text" id="new-staple-input" placeholder="z.B. Hafermilch, Müllbeutel..." autocomplete="off" class="styled-form-input" style="padding: 0.45rem 0.65rem !important;">
+                        <button type="button" id="btn-create-staple" class="btn btn-primary" style="height: 36px; padding: 0 0.85rem !important;">Speichern ⭐</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal: Einkaufsliste verwalten (Gänge zuweisen & Vorrat streichen) -->
     <div id="shopping-manage-modal" class="modal hidden">
