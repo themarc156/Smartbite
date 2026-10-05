@@ -732,7 +732,7 @@ function renderApp() {
             emptyLi.innerHTML = `
                 <span style="font-size: 2.2rem; opacity: 0.6;">🔍</span>
                 <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">Keine passenden Gerichte gefunden.</p>
-                <button type="button" class="btn btn-primary" style="height: 34px; font-size: 0.82rem; margin-top: 0.2rem;" onclick="switchView('add')">➕ Neues Rezept anlegen</button>
+                <button type="button" class="btn btn-primary" style="height: 34px; font-size: 0.82rem; margin-top: 0.2rem;" onclick="openCreateRecipeModal()">➕ Neues Rezept anlegen</button>
             `;
             dishList.appendChild(emptyLi);
         }
@@ -1126,21 +1126,19 @@ function renderApp() {
     if (nextBtn) nextBtn.disabled = (appState.currentWeekPage === 3);
 }
 
-const VIEW_ORDER = ['shopping', 'plan', 'database', 'add'];
+const VIEW_ORDER = ['shopping', 'plan', 'database'];
 
 function switchView(viewName, animationType = 'fade') {
     const views = {
         shopping: document.getElementById('view-shopping'),
         plan: document.getElementById('view-plan'),
-        database: document.getElementById('view-database'),
-        add: document.getElementById('view-add')
+        database: document.getElementById('view-database')
     };
 
     const tabs = {
         shopping: document.getElementById('nav-btn-shopping'),
         plan: document.getElementById('nav-btn-plan'),
-        database: document.getElementById('nav-btn-database'),
-        add: document.getElementById('nav-btn-add')
+        database: document.getElementById('nav-btn-database')
     };
 
     Object.keys(views).forEach(key => {
@@ -2988,21 +2986,47 @@ document.addEventListener('DOMContentLoaded', () => {
         renderApp();
     });
 
-    document.getElementById('nav-btn-add').addEventListener('click', () => {
-        appState.selectModeForDayId = null;
-        const currentIdx = VIEW_ORDER.indexOf(appState.currentView || 'plan');
-        const targetIdx = 3;
-        const anim = targetIdx > currentIdx ? 'forward' : (targetIdx < currentIdx ? 'backward' : 'fade');
-        resetDishForm();
-        switchView('add', anim);
-    });
+    // Öffnet das Erstellungs-Modal für ein neues Rezept
+    window.openCreateRecipeModal = function() {
+        appState.currentViewingDishId = null;
+        appState.currentViewingDish = null;
+        appState.currentViewingDayId = null;
 
-    const btnCancelEdit = document.getElementById('btn-cancel-edit');
-    if (btnCancelEdit) {
-        btnCancelEdit.addEventListener('click', () => {
-            resetDishForm();
-            switchView('database');
-        });
+        document.getElementById('modal-edit-id').value = '';
+        document.getElementById('modal-edit-name').value = '';
+        document.getElementById('modal-edit-url').value = '';
+        setModalMeatPill('flex');
+        document.getElementById('modal-edit-highcarb').checked = false;
+        document.getElementById('modal-edit-emergency').checked = false;
+        document.getElementById('modal-edit-ingredients').value = '';
+        document.getElementById('modal-edit-instructions').value = '';
+
+        updateTextTriggerStatuses();
+
+        const previewFileInput = document.getElementById('modal-edit-preview-file');
+        if (previewFileInput) previewFileInput.value = '';
+        const modalCamInput = document.getElementById('modal-edit-preview-file-cam');
+        if (modalCamInput) modalCamInput.value = '';
+        const modalHintLabel = document.getElementById('modal-preview-file-hint');
+        if (modalHintLabel) modalHintLabel.textContent = '';
+        const modalShotInput = document.getElementById('modal-edit-image-file');
+        if (modalShotInput) modalShotInput.value = '';
+        const modalShotLabel = document.getElementById('modal-screenshot-file-hint');
+        if (modalShotLabel) modalShotLabel.textContent = '';
+
+        const deleteBtn = document.getElementById('btn-modal-delete-dish');
+        if (deleteBtn) deleteBtn.classList.add('hidden');
+
+        const editTitleEl = document.getElementById('recipe-edit-modal-title');
+        if (editTitleEl) editTitleEl.textContent = 'Neues Rezept anlegen';
+
+        switchRecipeModalMode('edit');
+        document.getElementById('recipe-view-modal').classList.remove('hidden');
+    };
+
+    const btnOpenAddRecipe = document.getElementById('btn-open-add-recipe');
+    if (btnOpenAddRecipe) {
+        btnOpenAddRecipe.addEventListener('click', openCreateRecipeModal);
     }
 
     // Tag leeren / auf ungeplant zuruecksetzen
