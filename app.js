@@ -2831,9 +2831,15 @@ document.addEventListener('DOMContentLoaded', () => {
         switchRecipeModalMode('edit');
     });
 
-    // Abbrechen im Modal-Edit-Modus
+    // Abbrechen im Modal-Edit-Modus (Schließt das Modal beim Neuanlegen, wechselt sonst zur Leseansicht)
     document.getElementById('btn-modal-cancel-edit').addEventListener('click', () => {
-        switchRecipeModalMode('view');
+        if (!appState.currentViewingDishId && (!appState.currentViewingDish || appState.currentViewingDish.isNew)) {
+            document.getElementById('recipe-view-modal').classList.add('hidden');
+            appState.currentViewingDish = null;
+            releaseWakeLock();
+        } else {
+            switchRecipeModalMode('view');
+        }
     });
 
     // Löschen direkt aus dem Modal-Editor mit Sicherheitsabfrage
@@ -2989,7 +2995,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Öffnet das Erstellungs-Modal für ein neues Rezept
     window.openCreateRecipeModal = function() {
         appState.currentViewingDishId = null;
-        appState.currentViewingDish = null;
+        appState.currentViewingDish = { isNew: true };
         appState.currentViewingDayId = null;
 
         document.getElementById('modal-edit-id').value = '';
