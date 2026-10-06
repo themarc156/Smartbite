@@ -159,27 +159,31 @@
     <!-- Modal: Dauerbrenner-Schnellauswahl & Katalog -->
     <div id="shopping-staples-modal" class="modal hidden">
         <div class="modal-content staples-modal-content">
-            <header class="modal-header">
-                <button type="button" id="btn-close-staples-modal" class="btn btn-danger btn-close-top">✖</button>
-                <h2 style="font-size: 1.1rem; margin: 0; color: var(--accent-primary);">⭐ Dauerbrenner & Vorrat</h2>
-                <button type="button" id="btn-save-staples-modal" class="btn btn-primary" style="height: 32px; font-weight: 700;">Fertig ✓</button>
+            <header class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-close-staples-modal" class="btn btn-danger btn-close-top">✖</button>
+                    <button type="button" id="btn-toggle-edit-staples" class="btn btn-gear" title="Dauerbrenner verwalten / löschen">✏️</button>
+                </div>
+                <h2 class="recipe-modal-title">Dauerbrenner</h2>
             </header>
             <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
-                <p class="subtitle" style="margin-bottom: 0.75rem;">
-                    Tippe auf einen Artikel, um ihn direkt auf den Zettel zu setzen oder wieder zu entfernen:
+                <p id="staples-instruction-hint" class="subtitle" style="margin-bottom: 0.75rem; text-align: center;">
+                    Tippe auf einen Artikel, um ihn auf den Zettel zu setzen:
                 </p>
 
                 <!-- Klickbare Dauerbrenner-Chips -->
                 <div id="staples-chips-container" class="staples-chips-grid"></div>
 
-                <!-- Neuen Dauerbrenner dauerhaft anlegen -->
-                <div class="staples-add-box">
+                <!-- Neuen Dauerbrenner anlegen (Nur im Bearbeiten-Modus) -->
+                <div id="staples-add-box" class="staples-add-box hidden">
                     <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem;">Neuen Dauerbrenner anlegen:</h4>
                     <div class="staples-add-form-row">
                         <input type="text" id="new-staple-input" placeholder="z.B. Hafermilch, Müllbeutel..." autocomplete="off" class="styled-form-input" style="padding: 0.45rem 0.65rem !important;">
                         <button type="button" id="btn-create-staple" class="btn btn-primary" style="height: 36px; padding: 0 0.85rem !important;">Speichern ⭐</button>
                     </div>
                 </div>
+
+                <button type="button" id="btn-save-staples-modal" class="btn btn-primary btn-modal-bottom-done">Fertig ✓</button>
             </div>
         </div>
     </div>
@@ -187,16 +191,19 @@
     <!-- Modal: Einkaufsliste verwalten (Gänge zuweisen & Vorrat streichen) -->
     <div id="shopping-manage-modal" class="modal hidden">
         <div class="modal-content manage-modal-content">
-            <header class="modal-header">
-                <button type="button" id="btn-close-manage-shopping" class="btn btn-danger btn-close-top">✖</button>
-                <h2 style="font-size: 1.1rem; margin: 0; color: var(--accent-primary);">🏷️ Gänge & Vorräte anpassen</h2>
-                <button type="button" id="btn-save-manage-shopping" class="btn btn-primary" style="height: 32px; font-weight: 700;">Fertig ✓</button>
+            <header class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-close-manage-shopping" class="btn btn-danger btn-close-top">✖</button>
+                    <div style="width: 36px;"></div> <!-- Ausgleich für zentrierten Titel -->
+                </div>
+                <h2 class="recipe-modal-title">Gänge & Vorräte anpassen</h2>
             </header>
             <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
-                <p class="subtitle" style="margin-bottom: 0.75rem;">
-                    Weise Artikel dem richtigen Gang zu oder entferne Zutaten, die du schon zu Hause hast (🗑️):
+                <p class="subtitle" style="margin-bottom: 0.75rem; text-align: center;">
+                    Weise Artikel dem richtigen Gang zu oder streiche Vorräte (🗑️):
                 </p>
                 <div id="shopping-manage-items-list" class="manage-items-scroll-list"></div>
+                <button type="button" id="btn-save-manage-shopping" class="btn btn-primary btn-modal-bottom-done">Fertig ✓</button>
             </div>
         </div>
     </div>

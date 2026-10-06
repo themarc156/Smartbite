@@ -1637,6 +1637,22 @@ textarea {
     max-height: 85vh;
 }
 
+.btn-modal-bottom-done {
+    width: 100% !important;
+    height: 44px !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    margin-top: 1rem;
+    border-radius: var(--radius);
+}
+
+.btn-gear.active-edit-mode {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    border-color: var(--accent-primary) !important;
+    color: var(--accent-primary) !important;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.3) !important;
+}
+
 .staples-chips-grid {
     display: flex;
     flex-wrap: wrap;

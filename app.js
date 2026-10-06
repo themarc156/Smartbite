@@ -2654,18 +2654,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // (Alter Top-Bar Button entfernt)
 
-    // Dauerbrenner Modal Steuerung & 1-Klick-Schnellauswahl
+    // Dauerbrenner Modal Steuerung & Bearbeitungs-Modus
     const staplesModal = document.getElementById('shopping-staples-modal');
     const btnOpenStaples = document.getElementById('btn-open-staples-modal');
     const btnCloseStaples = document.getElementById('btn-close-staples-modal');
     const btnSaveStaples = document.getElementById('btn-save-staples-modal');
+    const btnToggleEditStaples = document.getElementById('btn-toggle-edit-staples');
     const staplesChipsContainer = document.getElementById('staples-chips-container');
+    const staplesAddBox = document.getElementById('staples-add-box');
+    const staplesInstructionHint = document.getElementById('staples-instruction-hint');
     const newStapleInput = document.getElementById('new-staple-input');
     const btnCreateStaple = document.getElementById('btn-create-staple');
+
+    let isStaplesEditMode = false;
 
     function renderStaplesModal() {
         if (!staplesChipsContainer) return;
         staplesChipsContainer.innerHTML = '';
+
+        if (btnToggleEditStaples) {
+            btnToggleEditStaples.classList.toggle('active-edit-mode', isStaplesEditMode);
+        }
+
+        if (staplesAddBox) {
+            staplesAddBox.classList.toggle('hidden', !isStaplesEditMode);
+        }
+
+        if (staplesInstructionHint) {
+            staplesInstructionHint.textContent = isStaplesEditMode 
+                ? 'Bearbeitungs-Modus: Lösche Dauerbrenner (✕) oder lege neue an:' 
+                : 'Tippe auf einen Artikel, um ihn auf den Zettel zu setzen:';
+        }
 
         if (!staplesCatalog || staplesCatalog.length === 0) {
             staplesChipsContainer.innerHTML = '<p class="subtitle" style="text-align: center; width: 100%;">Noch keine Dauerbrenner hinterlegt.</p>';
@@ -2687,24 +2706,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const chip = document.createElement('div');
             chip.className = `staple-chip ${isCurrentlyOnList ? 'active' : ''}`;
-            chip.innerHTML = `
-                <span>${isCurrentlyOnList ? '✓ ' : '+ '}${staple.name}</span>
-                <button type="button" class="btn-remove-staple-def" title="Dauerbrenner dauerhaft löschen">✕</button>
-            `;
+            
+            if (isStaplesEditMode) {
+                chip.innerHTML = `
+                    <span>${staple.name}</span>
+                    <button type="button" class="btn-remove-staple-def" title="Dauerbrenner dauerhaft löschen">✕</button>
+                `;
+            } else {
+                chip.innerHTML = `<span>${isCurrentlyOnList ? '✓ ' : '+ '}${staple.name}</span>`;
+            }
 
-            // Klick auf den Chip: Auf den Zettel setzen oder wieder entfernen
+            // Klick auf den Chip: Im Normalmodus auf die Liste setzen / entfernen
             chip.addEventListener('click', (e) => {
                 if (e.target.closest('.btn-remove-staple-def')) return;
+                if (isStaplesEditMode) return; // Im Bearbeiten-Modus Klicks auf die Liste sperren
 
                 if (isCurrentlyOnList) {
-                    // Vom Zettel entfernen
                     customShoppingItems = customShoppingItems.filter(c => {
                         const cName = (typeof c === 'string' ? c : c.name).toLowerCase().trim();
                         const cId = typeof c === 'string' ? c : c.id;
                         return cName !== cleanStapleName && cId !== staple.id;
                     });
                 } else {
-                    // Auf den Zettel setzen
                     const newId = `custom-${Date.now()}`;
                     checkedShoppingKeys.delete(newId);
                     checkedShoppingKeys.delete(cleanStapleName);
@@ -2725,7 +2748,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderShoppingList();
             });
 
-            // Klick auf das kleine ✕: Dauerhaft aus dem Katalog entfernen
+            // Klick auf das ✕ im Bearbeiten-Modus: Dauerbrenner löschen
             const delDefBtn = chip.querySelector('.btn-remove-staple-def');
             if (delDefBtn) {
                 delDefBtn.addEventListener('click', (e) => {
@@ -2740,14 +2763,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    if (btnToggleEditStaples) {
+        btnToggleEditStaples.addEventListener('click', () => {
+            isStaplesEditMode = !isStaplesEditMode;
+            renderStaplesModal();
+        });
+    }
+
     if (btnOpenStaples) {
         btnOpenStaples.addEventListener('click', () => {
+            isStaplesEditMode = false;
             renderStaplesModal();
             if (staplesModal) staplesModal.classList.remove('hidden');
         });
     }
 
     const closeStaplesModal = () => {
+        isStaplesEditMode = false;
         if (staplesModal) staplesModal.classList.add('hidden');
         renderShoppingList();
     };
