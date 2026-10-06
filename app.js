@@ -2527,6 +2527,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnCloseManage) btnCloseManage.addEventListener('click', closeManageModal);
     if (btnSaveManage) btnSaveManage.addEventListener('click', closeManageModal);
 
+    // Klick auf den abgedunkelten Hintergrund schließt das Modal
+    if (manageModal) {
+        manageModal.addEventListener('click', (e) => {
+            if (e.target === manageModal) {
+                closeManageModal();
+            }
+        });
+    }
+
     // Zeitraum-Buttons in der Einkaufsliste
     const btnTf3Days = document.getElementById('btn-timeframe-3days');
     const btnTf7Days = document.getElementById('btn-timeframe-7days');
@@ -2713,7 +2722,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button type="button" class="btn-remove-staple-def" title="Dauerbrenner dauerhaft löschen">✕</button>
                 `;
             } else {
-                chip.innerHTML = `<span>${isCurrentlyOnList ? '✓ ' : '+ '}${staple.name}</span>`;
+                chip.innerHTML = `<span>${staple.name}</span>`;
             }
 
             // Klick auf den Chip: Im Normalmodus auf die Liste setzen / entfernen
@@ -2786,6 +2795,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (btnCloseStaples) btnCloseStaples.addEventListener('click', closeStaplesModal);
     if (btnSaveStaples) btnSaveStaples.addEventListener('click', closeStaplesModal);
+
+    // Klick auf den abgedunkelten Hintergrund schließt das Modal
+    if (staplesModal) {
+        staplesModal.addEventListener('click', (e) => {
+            if (e.target === staplesModal) {
+                closeStaplesModal();
+            }
+        });
+    }
 
     // Neuen Dauerbrenner dauerhaft hinzufügen
     const handleCreateStaple = () => {
