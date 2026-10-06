@@ -148,9 +148,9 @@ const appState = {
     dishes: [],
     currentPlan: [],
     currentWeekPage: 0, 
-    mainFilter: 'all',          // 'all' | 'veggie' | 'flex' | 'meat' | 'baking'
-    subFilterCarb: null,        // null | 'low' | 'high'
-    subFilterEmergency: false,  // true | false
+    selectedTypes: new Set(),   // 'veggie' | 'flex' | 'meat' | 'baking' (Multi-Select)
+    subFilterLowCarb: false,   // true | false
+    subFilterEmergency: false, // true | false
     searchQuery: '',
     selectModeForDayId: null,     
     currentViewingDishId: null,   
@@ -683,26 +683,24 @@ function renderApp() {
             );
         }
         
-        // 2. Ebene 1: Haupttyp
-        if (appState.mainFilter === 'baking') {
-            filteredDishes = filteredDishes.filter(d => d.isMeat === 'baking');
-        } else {
-            filteredDishes = filteredDishes.filter(d => d.isMeat !== 'baking');
+        // 2. Typ-Filterung (Multi-Select: Veggie, Flexi, Fleisch, Backen beliebig kombinierbar)
+        if (appState.selectedTypes.size > 0) {
+            filteredDishes = filteredDishes.filter(d => {
+                let dishType = 'flex';
+                if (d.isMeat === 'baking') dishType = 'baking';
+                else if (d.isMeat === true) dishType = 'meat';
+                else if (d.isMeat === false) dishType = 'veggie';
 
-            if (appState.mainFilter === 'veggie') {
-                filteredDishes = filteredDishes.filter(d => d.isMeat === false);
-            } else if (appState.mainFilter === 'flex') {
-                filteredDishes = filteredDishes.filter(d => d.isMeat === null || d.isMeat === undefined);
-            } else if (appState.mainFilter === 'meat') {
-                filteredDishes = filteredDishes.filter(d => d.isMeat === true);
-            }
+                return appState.selectedTypes.has(dishType);
+            });
+        } else {
+            // Standard ("Alle"): Backrezepte ausschließen
+            filteredDishes = filteredDishes.filter(d => d.isMeat !== 'baking');
         }
 
-        // 3. Ebene 2: Zusatz-Schalter (Sub-Filter)
-        if (appState.subFilterCarb === 'low') {
+        // 3. Sub-Filter Toggles (Low-Carb & Notfall)
+        if (appState.subFilterLowCarb) {
             filteredDishes = filteredDishes.filter(d => !d.isHighCarb);
-        } else if (appState.subFilterCarb === 'high') {
-            filteredDishes = filteredDishes.filter(d => d.isHighCarb === true);
         }
 
         if (appState.subFilterEmergency) {
@@ -3197,54 +3195,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Ebene 1: Haupttyp (Exklusiv – Alle, Veggie, Flexi, Fleisch, Backen)
-    const mainFilterBtns = {
-        all: document.getElementById('filter-all'),
+    // Multi-Select Typen (Kombinierbare Filter-Pillen)
+    const typeFilterBtns = {
         veggie: document.getElementById('filter-veggie'),
         flex: document.getElementById('filter-flex'),
         meat: document.getElementById('filter-meat'),
         baking: document.getElementById('filter-baking')
     };
+    const btnFilterAll = document.getElementById('filter-all');
 
-    Object.entries(mainFilterBtns).forEach(([key, btn]) => {
-        if (!btn) return;
-        btn.addEventListener('click', () => {
-            Object.values(mainFilterBtns).forEach(b => { if (b) b.classList.remove('active'); });
-            btn.classList.add('active');
-            appState.mainFilter = key;
-            renderApp();
+    const updateTypeFilterUI = () => {
+        if (btnFilterAll) btnFilterAll.classList.toggle('active', appState.selectedTypes.size === 0);
+        Object.entries(typeFilterBtns).forEach(([type, btn]) => {
+            if (btn) btn.classList.toggle('active', appState.selectedTypes.has(type));
         });
-    });
+    };
 
-    // Ebene 2: Sub-Filter (Kombinierbare Toggles – Low, High, Notfall)
-    const btnSubLow = document.getElementById('filter-lowcarb');
-    const btnSubHigh = document.getElementById('filter-highcarb');
-    const btnSubEmergency = document.getElementById('filter-emergency');
-
-    if (btnSubLow) {
-        btnSubLow.addEventListener('click', () => {
-            if (appState.subFilterCarb === 'low') {
-                appState.subFilterCarb = null;
-                btnSubLow.classList.remove('active');
-            } else {
-                appState.subFilterCarb = 'low';
-                btnSubLow.classList.add('active');
-                if (btnSubHigh) btnSubHigh.classList.remove('active');
-            }
+    if (btnFilterAll) {
+        btnFilterAll.addEventListener('click', () => {
+            appState.selectedTypes.clear();
+            updateTypeFilterUI();
             renderApp();
         });
     }
 
-    if (btnSubHigh) {
-        btnSubHigh.addEventListener('click', () => {
-            if (appState.subFilterCarb === 'high') {
-                appState.subFilterCarb = null;
-                btnSubHigh.classList.remove('active');
+    Object.entries(typeFilterBtns).forEach(([type, btn]) => {
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            if (appState.selectedTypes.has(type)) {
+                appState.selectedTypes.delete(type);
             } else {
-                appState.subFilterCarb = 'high';
-                btnSubHigh.classList.add('active');
-                if (btnSubLow) btnSubLow.classList.remove('active');
+                appState.selectedTypes.add(type);
             }
+            updateTypeFilterUI();
+            renderApp();
+        });
+    });
+
+    // Sub-Filter Toggles (Low-Carb & Notfall)
+    const btnSubLow = document.getElementById('filter-lowcarb');
+    const btnSubEmergency = document.getElementById('filter-emergency');
+
+    if (btnSubLow) {
+        btnSubLow.addEventListener('click', () => {
+            appState.subFilterLowCarb = !appState.subFilterLowCarb;
+            btnSubLow.classList.toggle('active', appState.subFilterLowCarb);
             renderApp();
         });
     }

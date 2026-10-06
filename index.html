@@ -124,18 +124,21 @@
                     <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
                 </div>
 
-                <div class="filter-grid-2x4">
-                    <!-- Zeile 1: Haupttypen -->
-                    <button type="button" id="filter-all" class="btn-filter active">Alle</button>
-                    <button type="button" id="filter-veggie" class="btn-filter">🌱 Veggie</button>
-                    <button type="button" id="filter-flex" class="btn-filter">🍲 Flexi</button>
-                    <button type="button" id="filter-meat" class="btn-filter">🥩 Fleisch</button>
+                <div class="filter-two-tier-container">
+                    <!-- Zeile 1: Multi-Select Typen (Kombinierbar) -->
+                    <div class="filter-tier-row">
+                        <button type="button" id="filter-all" class="btn-filter active">Alle</button>
+                        <button type="button" id="filter-veggie" class="btn-filter">🌱 Veggie</button>
+                        <button type="button" id="filter-flex" class="btn-filter">🍲 Flexi</button>
+                        <button type="button" id="filter-meat" class="btn-filter">🥩 Fleisch</button>
+                        <button type="button" id="filter-baking" class="btn-filter btn-filter-baking">🍰 Backen</button>
+                    </div>
 
-                    <!-- Zeile 2: Backen + Kombinierbare Sub-Filter -->
-                    <button type="button" id="filter-baking" class="btn-filter btn-filter-baking">🍰 Backen</button>
-                    <button type="button" id="filter-lowcarb" class="btn-filter btn-filter-sub">🥗 Low</button>
-                    <button type="button" id="filter-highcarb" class="btn-filter btn-filter-sub">🌾 High</button>
-                    <button type="button" id="filter-emergency" class="btn-filter btn-filter-sub">🚨 Notfall</button>
+                    <!-- Zeile 2: Sub-Filter Toggles -->
+                    <div class="filter-tier-row filter-tier-sub">
+                        <button type="button" id="filter-lowcarb" class="btn-filter btn-filter-sub">🥗 Low-Carb</button>
+                        <button type="button" id="filter-emergency" class="btn-filter btn-filter-sub">🚨 Notfall-Gericht</button>
+                    </div>
                 </div>
 
                 <div class="card" style="padding: 0; background: transparent; border: none;">

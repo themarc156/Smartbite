@@ -512,19 +512,26 @@ textarea {
     flex: 1;
 }
 
-/* 2x4 Filter-Grid (Zeile 1: Alle, Veggie, Flexi, Fleisch | Zeile 2: Backen, Low, High, Notfall) */
-.filter-grid-2x4 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+/* Filterleiste: 2 Zeilen (Typen Multi-Select + Sub-Filter) */
+.filter-two-tier-container {
+    display: flex;
+    flex-direction: column;
     gap: 0.35rem;
     margin-bottom: 0.75rem;
     width: 100%;
 }
 
-.filter-grid-2x4 .btn-filter {
+.filter-tier-row {
+    display: flex;
+    gap: 0.3rem;
+    width: 100%;
+}
+
+.filter-tier-row .btn-filter {
+    flex: 1;
     height: 32px;
     padding: 0 0.2rem !important;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -535,27 +542,27 @@ textarea {
     font-weight: 700;
 }
 
-.btn-filter-baking.active {
-    background-color: #ec4899 !important;
-    border-color: #ec4899 !important;
-    color: #ffffff !important;
-}
-
-.filter-grid-2x4 .btn-filter-sub {
+.filter-tier-sub .btn-filter-sub {
     background-color: rgba(255, 255, 255, 0.03);
     border: 1px dashed var(--border-color);
     color: var(--text-muted);
 }
 
-.filter-grid-2x4 .btn-filter-sub:hover {
+.filter-tier-sub .btn-filter-sub:hover {
     color: var(--text-main);
     border-color: #555;
 }
 
-.filter-grid-2x4 .btn-filter-sub.active {
+.filter-tier-sub .btn-filter-sub.active {
     background-color: rgba(245, 158, 11, 0.18) !important;
     border: 1px solid var(--accent-primary) !important;
     color: var(--accent-primary) !important;
+}
+
+.btn-filter-baking.active {
+    background-color: #ec4899 !important;
+    border-color: #ec4899 !important;
+    color: #ffffff !important;
 }
 
 /* Drag & Drop Stabilisierung für Rezept-Karten */
