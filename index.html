@@ -46,10 +46,14 @@
         <!-- VIEW 0: Smarte Einkaufsliste -->
         <section id="view-shopping" class="app-view hidden">
             <div class="view-header plan-header-single-row shopping-top-bar">
-                <div class="shopping-timeframe-toggle">
-                    <button id="btn-timeframe-3days" class="btn-filter active">3 Tage</button>
-                    <button id="btn-timeframe-7days" class="btn-filter">7 Tage</button>
-                    <button id="btn-timeframe-monday" class="btn-filter">Bis Mo</button>
+                <!-- Dynamischer Zeitraum-Stepper -->
+                <div class="shopping-stepper-control">
+                    <button type="button" id="btn-shopping-days-dec" class="btn btn-nav btn-stepper" title="Tage verringern">−</button>
+                    <div class="shopping-stepper-info">
+                        <span id="shopping-days-label" class="shopping-days-count">3 Tage</span>
+                        <span id="shopping-days-target-date" class="shopping-target-date">bis ...</span>
+                    </div>
+                    <button type="button" id="btn-shopping-days-inc" class="btn btn-nav btn-stepper" title="Tage erhöhen">+</button>
                 </div>
                 <div class="shopping-action-buttons">
                     <button type="button" id="btn-open-manage-shopping" class="btn btn-nav" title="Gänge sortieren & Vorräte streichen">🏷️</button>

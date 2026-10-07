@@ -1649,19 +1649,55 @@ textarea {
     padding: 0.35rem 0.5rem !important;
 }
 
-.shopping-timeframe-toggle {
+.shopping-stepper-control {
     display: flex;
-    gap: 0.25rem;
+    align-items: center;
+    gap: 0.35rem;
     flex: 1;
-    margin-bottom: 0;
+    min-width: 0;
 }
 
-.shopping-timeframe-toggle .btn-filter {
+.shopping-stepper-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     flex: 1;
-    text-align: center;
-    padding: 0.35rem 0.15rem;
-    font-size: 0.78rem;
-    height: 32px;
+    min-width: 0;
+    line-height: 1.1;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.shopping-days-count {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--accent-primary);
+    white-space: nowrap;
+}
+
+.shopping-target-date {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.btn-stepper {
+    font-size: 1.15rem !important;
+    font-weight: 800 !important;
+    color: var(--text-main);
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+}
+
+.btn-stepper:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
 }
 
 .shopping-action-buttons {

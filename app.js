@@ -1496,7 +1496,7 @@ const DEFAULT_STAPLES = [
     { id: 'staple-banana', name: 'Bananen', category: '🍏 Obst & Gemüse' }
 ];
 
-let shoppingTimeframe = localStorage.getItem('smartbite_shopping_timeframe') || '3days';
+let shoppingDays = parseInt(localStorage.getItem('smartbite_shopping_days'), 10) || 3;
 let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
 let checkedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_checked_shopping') || '[]'));
 let staplesCatalog = JSON.parse(localStorage.getItem('smartbite_staples_catalog') || 'null') || [...DEFAULT_STAPLES];
@@ -1649,37 +1649,38 @@ function parseAndAggregateIngredients(rawList) {
     return aggregated;
 }
 
+function formatShoppingTargetDate(daysCount) {
+    const target = new Date();
+    target.setDate(target.getDate() + (daysCount - 1));
+    const weekday = target.toLocaleDateString('de-DE', { weekday: 'short' });
+    const dateStr = target.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    return daysCount === 1 ? `heute (${weekday}, ${dateStr})` : `bis ${weekday}, ${dateStr}`;
+}
+
 function renderShoppingList() {
     let daysToInclude = [];
     const todayMidnight = new Date();
     todayMidnight.setHours(0, 0, 0, 0);
     const todayMs = todayMidnight.getTime();
 
-    // Sichere Tages-Filterung (unabhängig von Uhrzeiten/Zeitzonen)
+    // Sichere Tages-Filterung (ab heute)
     const upcomingDays = (appState.currentPlan || []).filter(d => {
         const dMidnight = new Date(d.dateTimeline);
         dMidnight.setHours(0, 0, 0, 0);
         return dMidnight.getTime() >= todayMs;
     });
 
-    if (shoppingTimeframe === '7days') {
-        daysToInclude = upcomingDays.length >= 7 ? upcomingDays.slice(0, 7) : (appState.currentPlan || []).slice(0, 7);
-    } else if (shoppingTimeframe === 'monday') {
-        // Berechnet alle Tage von heute bis einschließlich des nächsten Montags
-        const currentDayIndex = new Date().getDay(); // 0 = So, 1 = Mo, 2 = Di, 3 = Mi, 4 = Do, 5 = Fr, 6 = Sa
-        let daysUntilMonday;
-        if (currentDayIndex === 1) {
-            daysUntilMonday = 1; // Wenn heute Montag ist: nur heute
-        } else if (currentDayIndex === 0) {
-            daysUntilMonday = 2; // Sonntag -> Montag = 2 Tage
-        } else {
-            daysUntilMonday = (8 - currentDayIndex) + 1; // z.B. Fr(5) -> 8-5+1 = 4 Tage (Fr, Sa, So, Mo)
-        }
-        daysToInclude = upcomingDays.slice(0, daysUntilMonday);
-    } else {
-        // Standard: 3 Tage ab heute
-        daysToInclude = upcomingDays.slice(0, 3);
+    // Stepper-UI synchronisieren
+    const daysLabelEl = document.getElementById('shopping-days-label');
+    const targetDateEl = document.getElementById('shopping-days-target-date');
+    if (daysLabelEl) {
+        daysLabelEl.textContent = `${shoppingDays} ${shoppingDays === 1 ? 'Tag' : 'Tage'}`;
     }
+    if (targetDateEl) {
+        targetDateEl.textContent = formatShoppingTargetDate(shoppingDays);
+    }
+
+    daysToInclude = upcomingDays.slice(0, shoppingDays);
 
     const rawIngredients = [];
     const unparsedDishes = [];
@@ -2343,15 +2344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const todayMs = new Date().setHours(0, 0, 0, 0);
         const upcomingDays = (appState.currentPlan || []).filter(d => d.dateTimeline >= todayMs);
 
-        if (shoppingTimeframe === '7days') {
-            daysToInclude = upcomingDays.length >= 7 ? upcomingDays.slice(0, 7) : (appState.currentPlan || []).slice(0, 7);
-        } else if (shoppingTimeframe === 'monday') {
-            const currentDayIndex = new Date().getDay();
-            const daysUntilMonday = currentDayIndex === 1 ? 1 : (currentDayIndex === 0 ? 2 : (8 - currentDayIndex) + 1);
-            daysToInclude = upcomingDays.slice(0, daysUntilMonday);
-        } else {
-            daysToInclude = upcomingDays.slice(0, 3);
-        }
+        daysToInclude = upcomingDays.slice(0, shoppingDays);
 
         const rawList = [];
         daysToInclude.forEach(day => {
@@ -2538,27 +2531,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Zeitraum-Buttons in der Einkaufsliste
-    const btnTf3Days = document.getElementById('btn-timeframe-3days');
-    const btnTf7Days = document.getElementById('btn-timeframe-7days');
-    const btnTfMonday = document.getElementById('btn-timeframe-monday');
+    // Stepper Event Listener für Zeitraum (1 bis 14 Tage)
+    const btnDaysDec = document.getElementById('btn-shopping-days-dec');
+    const btnDaysInc = document.getElementById('btn-shopping-days-inc');
 
-    const updateTimeframeButtons = (activeBtn, mode) => {
-        [btnTf3Days, btnTf7Days, btnTfMonday].forEach(b => { if (b) b.classList.remove('active'); });
-        if (activeBtn) activeBtn.classList.add('active');
-        shoppingTimeframe = mode;
-        localStorage.setItem('smartbite_shopping_timeframe', mode);
-        renderShoppingList();
-    };
+    if (btnDaysDec) {
+        btnDaysDec.addEventListener('click', () => {
+            if (shoppingDays > 1) {
+                shoppingDays--;
+                localStorage.setItem('smartbite_shopping_days', shoppingDays);
+                renderShoppingList();
+            }
+        });
+    }
 
-    // Gespeicherten Zeitraum beim Start auf Buttons anwenden
-    if (shoppingTimeframe === '7days' && btnTf7Days) updateTimeframeButtons(btnTf7Days, '7days');
-    else if (shoppingTimeframe === 'monday' && btnTfMonday) updateTimeframeButtons(btnTfMonday, 'monday');
-    else if (btnTf3Days) updateTimeframeButtons(btnTf3Days, '3days');
-
-    if (btnTf3Days) btnTf3Days.addEventListener('click', () => updateTimeframeButtons(btnTf3Days, '3days'));
-    if (btnTf7Days) btnTf7Days.addEventListener('click', () => updateTimeframeButtons(btnTf7Days, '7days'));
-    if (btnTfMonday) btnTfMonday.addEventListener('click', () => updateTimeframeButtons(btnTfMonday, 'monday'));
+    if (btnDaysInc) {
+        btnDaysInc.addEventListener('click', () => {
+            if (shoppingDays < 14) {
+                shoppingDays++;
+                localStorage.setItem('smartbite_shopping_days', shoppingDays);
+                renderShoppingList();
+            }
+        });
+    }
 
     // Manuelle Artikel hinzufügen (Standard: immer EINMAL-Artikel, müllt den Katalog nicht zu)
     const customInput = document.getElementById('shopping-custom-input');
