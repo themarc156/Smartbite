@@ -45,8 +45,8 @@
     <main class="main-content-area">
         <!-- VIEW 0: Smarte Einkaufsliste -->
         <section id="view-shopping" class="app-view hidden">
-            <div class="view-header plan-header-single-row shopping-top-bar">
-                <!-- Dynamischer Zeitraum-Stepper -->
+            <div class="shopping-top-bar-row">
+                <!-- Dynamischer Zeitraum-Stepper (bündig mit Eingabefeld darunter) -->
                 <div class="shopping-stepper-control">
                     <button type="button" id="btn-shopping-days-dec" class="btn btn-nav btn-stepper" title="Tage verringern">−</button>
                     <div class="shopping-stepper-info">
@@ -55,9 +55,10 @@
                     </div>
                     <button type="button" id="btn-shopping-days-inc" class="btn btn-nav btn-stepper" title="Tage erhöhen">+</button>
                 </div>
+                <!-- 50/50 geteilte Aktionsbuttons (bündig mit Hinzufügen-Button darunter) -->
                 <div class="shopping-action-buttons">
-                    <button type="button" id="btn-open-manage-shopping" class="btn btn-nav" title="Gänge sortieren & Vorräte streichen">🏷️</button>
-                    <button type="button" id="btn-open-staples-modal" class="btn btn-primary" title="⭐ Dauerbrenner & Vorräte">⭐</button>
+                    <button type="button" id="btn-open-manage-shopping" class="btn btn-nav btn-shopping-action" title="Gänge sortieren & Vorräte streichen">🏷️</button>
+                    <button type="button" id="btn-open-staples-modal" class="btn btn-primary btn-shopping-action" title="⭐ Dauerbrenner & Vorräte">⭐</button>
                 </div>
             </div>
 

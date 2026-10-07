@@ -1649,12 +1649,28 @@ textarea {
     padding: 0.35rem 0.5rem !important;
 }
 
+/* Einkaufsliste: Symmetrische Ausrichtung von Stepper, Buttons & Schnell-Eingabe */
+.shopping-top-bar-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.45rem;
+    width: 100%;
+}
+
 .shopping-stepper-control {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 0.35rem;
     flex: 1;
     min-width: 0;
+    height: 40px;
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0 0.35rem;
+    box-sizing: border-box;
 }
 
 .shopping-stepper-info {
@@ -1670,14 +1686,14 @@ textarea {
 }
 
 .shopping-days-count {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 800;
     color: var(--accent-primary);
     white-space: nowrap;
 }
 
 .shopping-target-date {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     color: var(--text-muted);
     font-weight: 600;
     white-space: nowrap;
@@ -1689,15 +1705,68 @@ textarea {
     color: var(--text-main);
     background-color: var(--bg-input);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius);
-    width: 32px !important;
-    min-width: 32px !important;
-    height: 32px !important;
+    border-radius: calc(var(--radius) - 2px);
+    width: 30px !important;
+    min-width: 30px !important;
+    height: 30px !important;
+    padding: 0 !important;
 }
 
 .btn-stepper:hover {
     border-color: var(--accent-primary);
     color: var(--accent-primary);
+}
+
+.shopping-action-buttons {
+    display: flex;
+    gap: 0.35rem;
+    width: 110px;
+    flex-shrink: 0;
+}
+
+.btn-shopping-action {
+    flex: 1;
+    min-width: 0;
+    height: 40px !important;
+    font-size: 1.05rem !important;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    box-sizing: border-box;
+}
+
+.shopping-quick-add {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    width: 100%;
+}
+
+.shopping-quick-add input {
+    flex: 1;
+    min-width: 0;
+    height: 40px;
+    padding: 0 0.75rem;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.88rem;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.shopping-quick-add .btn {
+    width: 110px;
+    flex-shrink: 0;
+    height: 40px !important;
+    font-size: 0.88rem !important;
+    font-weight: 700;
+    padding: 0 !important;
+    box-sizing: border-box;
 }
 
 .shopping-action-buttons {
