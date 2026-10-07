@@ -512,23 +512,38 @@ textarea {
     flex: 1;
 }
 
-/* Ergonomische 4+3 Filterleiste */
-.filter-two-tier-container {
-    display: flex;
-    flex-direction: column;
+/* Kasten-Layout: Links Modus-Spalte (80px), Rechts 2x2 Grid */
+.filter-layout-kasten {
+    display: grid;
+    grid-template-columns: 80px 1fr;
     gap: 0.35rem;
     margin-bottom: 0.75rem;
     width: 100%;
 }
 
-.filter-tier-row {
+.filter-left-col {
     display: flex;
+    flex-direction: column;
     gap: 0.35rem;
+}
+
+.btn-filter-side {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 !important;
+    font-size: 0.78rem;
     width: 100%;
 }
 
-.filter-tier-row .btn-filter {
-    flex: 1;
+.filter-right-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+}
+
+.filter-right-grid .btn-filter {
     height: 32px;
     padding: 0 0.25rem !important;
     font-size: 0.78rem;
@@ -540,6 +555,29 @@ textarea {
     border-radius: var(--radius);
     cursor: pointer;
     font-weight: 700;
+}
+
+.filter-right-grid .btn-filter-sub {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px dashed var(--border-color);
+    color: var(--text-muted);
+}
+
+.filter-right-grid .btn-filter-sub:hover {
+    color: var(--text-main);
+    border-color: #555;
+}
+
+.filter-right-grid .btn-filter-sub.active {
+    background-color: rgba(245, 158, 11, 0.18) !important;
+    border: 1px solid var(--accent-primary) !important;
+    color: var(--accent-primary) !important;
+}
+
+.btn-filter-baking.active {
+    background-color: #ec4899 !important;
+    border-color: #ec4899 !important;
+    color: #ffffff !important;
 }
 
 .filter-tier-sub .btn-filter-sub {

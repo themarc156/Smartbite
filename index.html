@@ -124,18 +124,17 @@
                     <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
                 </div>
 
-                <div class="filter-two-tier-container">
-                    <!-- Zeile 1: 4 Haupttypen -->
-                    <div class="filter-tier-row filter-row-4">
-                        <button type="button" id="filter-all" class="btn-filter active">Alle</button>
-                        <button type="button" id="filter-veggie" class="btn-filter">🌱 Veggie</button>
-                        <button type="button" id="filter-flex" class="btn-filter">🍲 Flexi</button>
-                        <button type="button" id="filter-meat" class="btn-filter">🥩 Fleisch</button>
+                <div class="filter-layout-kasten">
+                    <!-- Links: Modus-Spalte (Alltag vs. Backen) -->
+                    <div class="filter-left-col">
+                        <button type="button" id="filter-all" class="btn-filter btn-filter-side active">Alle</button>
+                        <button type="button" id="filter-baking" class="btn-filter btn-filter-side btn-filter-baking">🍰 Backen</button>
                     </div>
 
-                    <!-- Zeile 2: Backen + Sub-Filter -->
-                    <div class="filter-tier-row filter-row-3 filter-tier-sub">
-                        <button type="button" id="filter-baking" class="btn-filter btn-filter-baking">🍰 Backen</button>
+                    <!-- Rechts: 2x2 Kasten für Eigenschaften -->
+                    <div class="filter-right-grid">
+                        <button type="button" id="filter-veggie" class="btn-filter">🌱 Veggie</button>
+                        <button type="button" id="filter-flex" class="btn-filter">🍲 Flexi</button>
                         <button type="button" id="filter-lowcarb" class="btn-filter btn-filter-sub">🥗 Low-Carb</button>
                         <button type="button" id="filter-emergency" class="btn-filter btn-filter-sub">🚨 Notfall</button>
                     </div>

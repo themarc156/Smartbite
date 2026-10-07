@@ -148,9 +148,10 @@ const appState = {
     dishes: [],
     currentPlan: [],
     currentWeekPage: 0, 
-    selectedTypes: new Set(),   // 'veggie' | 'flex' | 'meat' | 'baking' (Multi-Select)
-    subFilterLowCarb: false,   // true | false
-    subFilterEmergency: false, // true | false
+    isBakingMode: false,
+    selectedTypes: new Set(),   // 'veggie' | 'flex' (Multi-Select)
+    subFilterLowCarb: false,
+    subFilterEmergency: false,
     searchQuery: '',
     selectModeForDayId: null,     
     currentViewingDishId: null,   
@@ -683,19 +684,22 @@ function renderApp() {
             );
         }
         
-        // 2. Typ-Filterung (Multi-Select: Veggie, Flexi, Fleisch, Backen beliebig kombinierbar)
-        if (appState.selectedTypes.size > 0) {
-            filteredDishes = filteredDishes.filter(d => {
-                let dishType = 'flex';
-                if (d.isMeat === 'baking') dishType = 'baking';
-                else if (d.isMeat === true) dishType = 'meat';
-                else if (d.isMeat === false) dishType = 'veggie';
-
-                return appState.selectedTypes.has(dishType);
-            });
+        // 2. Modus & Typ-Filterung
+        if (appState.isBakingMode) {
+            filteredDishes = filteredDishes.filter(d => d.isMeat === 'baking');
         } else {
-            // Standard ("Alle"): Backrezepte ausschließen
+            // Alltagsgerichte (Backrezepte ausschließen)
             filteredDishes = filteredDishes.filter(d => d.isMeat !== 'baking');
+
+            // Typ-Filterung (Veggie / Flexi kombinierbar)
+            if (appState.selectedTypes.size > 0) {
+                filteredDishes = filteredDishes.filter(d => {
+                    let dishType = 'flex';
+                    if (d.isMeat === false) dishType = 'veggie';
+                    else if (d.isMeat === true) dishType = 'meat';
+                    return appState.selectedTypes.has(dishType);
+                });
+            }
         }
 
         // 3. Sub-Filter Toggles (Low-Carb & Notfall)
@@ -3195,51 +3199,73 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Multi-Select Typen (Kombinierbare Filter-Pillen)
-    const typeFilterBtns = {
-        veggie: document.getElementById('filter-veggie'),
-        flex: document.getElementById('filter-flex'),
-        meat: document.getElementById('filter-meat'),
-        baking: document.getElementById('filter-baking')
-    };
+    // Links: Modus-Steuerung (Alle vs. Backen) | Rechts: Eigenschafts-Filter (Veggie, Flexi, Low, Notfall)
     const btnFilterAll = document.getElementById('filter-all');
+    const btnFilterBaking = document.getElementById('filter-baking');
+    const btnFilterVeggie = document.getElementById('filter-veggie');
+    const btnFilterFlex = document.getElementById('filter-flex');
+    const btnSubLow = document.getElementById('filter-lowcarb');
+    const btnSubEmergency = document.getElementById('filter-emergency');
 
-    const updateTypeFilterUI = () => {
-        if (btnFilterAll) btnFilterAll.classList.toggle('active', appState.selectedTypes.size === 0);
-        Object.entries(typeFilterBtns).forEach(([type, btn]) => {
-            if (btn) btn.classList.toggle('active', appState.selectedTypes.has(type));
-        });
+    const updateFilterUI = () => {
+        if (btnFilterAll) btnFilterAll.classList.toggle('active', !appState.isBakingMode && appState.selectedTypes.size === 0);
+        if (btnFilterBaking) btnFilterBaking.classList.toggle('active', appState.isBakingMode);
+        if (btnFilterVeggie) btnFilterVeggie.classList.toggle('active', !appState.isBakingMode && appState.selectedTypes.has('veggie'));
+        if (btnFilterFlex) btnFilterFlex.classList.toggle('active', !appState.isBakingMode && appState.selectedTypes.has('flex'));
+        if (btnSubLow) btnSubLow.classList.toggle('active', appState.subFilterLowCarb);
+        if (btnSubEmergency) btnSubEmergency.classList.toggle('active', appState.subFilterEmergency);
     };
 
     if (btnFilterAll) {
         btnFilterAll.addEventListener('click', () => {
+            appState.isBakingMode = false;
             appState.selectedTypes.clear();
-            updateTypeFilterUI();
+            updateFilterUI();
             renderApp();
         });
     }
 
-    Object.entries(typeFilterBtns).forEach(([type, btn]) => {
-        if (!btn) return;
-        btn.addEventListener('click', () => {
-            if (appState.selectedTypes.has(type)) {
-                appState.selectedTypes.delete(type);
-            } else {
-                appState.selectedTypes.add(type);
+    if (btnFilterBaking) {
+        btnFilterBaking.addEventListener('click', () => {
+            appState.isBakingMode = !appState.isBakingMode;
+            if (appState.isBakingMode) {
+                appState.selectedTypes.clear();
             }
-            updateTypeFilterUI();
+            updateFilterUI();
             renderApp();
         });
-    });
+    }
 
-    // Sub-Filter Toggles (Low-Carb & Notfall)
-    const btnSubLow = document.getElementById('filter-lowcarb');
-    const btnSubEmergency = document.getElementById('filter-emergency');
+    if (btnFilterVeggie) {
+        btnFilterVeggie.addEventListener('click', () => {
+            appState.isBakingMode = false;
+            if (appState.selectedTypes.has('veggie')) {
+                appState.selectedTypes.delete('veggie');
+            } else {
+                appState.selectedTypes.add('veggie');
+            }
+            updateFilterUI();
+            renderApp();
+        });
+    }
+
+    if (btnFilterFlex) {
+        btnFilterFlex.addEventListener('click', () => {
+            appState.isBakingMode = false;
+            if (appState.selectedTypes.has('flex')) {
+                appState.selectedTypes.delete('flex');
+            } else {
+                appState.selectedTypes.add('flex');
+            }
+            updateFilterUI();
+            renderApp();
+        });
+    }
 
     if (btnSubLow) {
         btnSubLow.addEventListener('click', () => {
             appState.subFilterLowCarb = !appState.subFilterLowCarb;
-            btnSubLow.classList.toggle('active', appState.subFilterLowCarb);
+            updateFilterUI();
             renderApp();
         });
     }
@@ -3247,7 +3273,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnSubEmergency) {
         btnSubEmergency.addEventListener('click', () => {
             appState.subFilterEmergency = !appState.subFilterEmergency;
-            btnSubEmergency.classList.toggle('active', appState.subFilterEmergency);
+            updateFilterUI();
             renderApp();
         });
     }
