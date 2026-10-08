@@ -257,10 +257,15 @@ async function loadData(silent = false) {
                 categoryOrder = data.shopping.categoryOrder;
                 localStorage.setItem('smartbite_category_order', JSON.stringify(categoryOrder));
             }
+            if (Array.isArray(data.shopping.purchasedKeys)) {
+                data.shopping.purchasedKeys.forEach(k => purchasedShoppingKeys.add(k));
+                localStorage.setItem('smartbite_purchased_shopping', JSON.stringify([...purchasedShoppingKeys]));
+            }
         }
 
-        // 3. Rollierenden 4-Wochen-Plan sicherstellen
+        // 3. Rollierenden 4-Wochen-Plan sicherstellen & veraltete gekaufte Zutaten bereinigen
         alignRollingPlan();
+        cleanupPurchasedKeys();
 
         if (appState.currentView === 'shopping') {
             renderShoppingList();
@@ -281,6 +286,7 @@ async function syncShoppingToApi() {
             body: JSON.stringify({
                 customItems: customShoppingItems,
                 checkedKeys: [...checkedShoppingKeys],
+                purchasedKeys: [...purchasedShoppingKeys],
                 staples: staplesCatalog,
                 categoryOverrides: categoryOverrides,
                 excludedKeys: [...excludedShoppingKeys],
@@ -1499,10 +1505,20 @@ const DEFAULT_STAPLES = [
 let shoppingDays = parseInt(localStorage.getItem('smartbite_shopping_days'), 10) || 3;
 let customShoppingItems = JSON.parse(localStorage.getItem('smartbite_custom_shopping') || '[]');
 let checkedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_checked_shopping') || '[]'));
+let purchasedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_purchased_shopping') || '[]'));
 let staplesCatalog = JSON.parse(localStorage.getItem('smartbite_staples_catalog') || 'null') || [...DEFAULT_STAPLES];
 let categoryOverrides = JSON.parse(localStorage.getItem('smartbite_category_overrides') || '{}');
 let excludedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_excluded_shopping') || '[]'));
 let categoryOrder = JSON.parse(localStorage.getItem('smartbite_category_order') || 'null');
+
+function cleanupPurchasedKeys() {
+    const validDayIds = new Set((appState.currentPlan || []).map(d => d.id));
+    purchasedShoppingKeys = new Set([...purchasedShoppingKeys].filter(k => {
+        const parts = k.split('__');
+        return parts.length === 2 && validDayIds.has(parts[0]);
+    }));
+    localStorage.setItem('smartbite_purchased_shopping', JSON.stringify([...purchasedShoppingKeys]));
+}
 
 function getOrderedCategoryNames() {
     const defaultNames = [...SUPERMARKET_CATEGORIES.map(c => c.name), '📦 Sonstige Lebensmittel'];
@@ -1616,7 +1632,7 @@ function bindLongPress(element, onTrigger) {
 function parseAndAggregateIngredients(rawList) {
     const aggregated = {};
 
-    rawList.forEach(({ text, dishName }) => {
+    rawList.forEach(({ text, dishName, dayId }) => {
         const line = text.trim();
         if (!line) return;
 
@@ -1630,8 +1646,12 @@ function parseAndAggregateIngredients(rawList) {
         }
 
         const key = item.toLowerCase().trim();
-        
-        // Überspringen, falls Zutat als Vorrat gestrichen wurde
+        const sourceKey = `${dayId}__${key}`;
+
+        // 1. Überspringen, wenn diese Zutat für diesen Speiseplan-Tag bereits besorgt wurde!
+        if (purchasedShoppingKeys.has(sourceKey)) return;
+
+        // 2. Überspringen, falls Zutat als Vorrat gestrichen wurde
         if (excludedShoppingKeys.has(key)) return;
 
         if (!aggregated[key]) {
@@ -1639,11 +1659,13 @@ function parseAndAggregateIngredients(rawList) {
                 key: key,
                 displayName: item,
                 category: categorizeIngredient(item),
-                sources: []
+                sources: [],
+                sourceKeys: []
             };
         }
 
-        aggregated[key].sources.push({ amount, dishName });
+        aggregated[key].sources.push({ amount, dishName, dayId });
+        aggregated[key].sourceKeys.push(sourceKey);
     });
 
     return aggregated;
@@ -1715,7 +1737,7 @@ function renderShoppingList() {
             lines = lines.map(cleanIngredientLine).filter(Boolean);
 
             if (lines.length > 0) {
-                lines.forEach(line => rawIngredients.push({ text: line, dishName: dish.name }));
+                lines.forEach(line => rawIngredients.push({ text: line, dishName: dish.name, dayId: day.id }));
             } else if (dish.image || dish.sourceUrl) {
                 if (!unparsedDishes.some(d => d.id === dish.id)) {
                     unparsedDishes.push(dish);
@@ -2006,21 +2028,24 @@ function renderShoppingList() {
                 return;
             }
 
-            // Ausfuehren nach zweitem Klick
+            // 1. Alle im Wagen liegenden Rezeptzutaten dauerhaft als besorgt merken
+            completedItemsList.forEach(({ item }) => {
+                if (item.sourceKeys && Array.isArray(item.sourceKeys)) {
+                    item.sourceKeys.forEach(k => purchasedShoppingKeys.add(k));
+                }
+            });
+            localStorage.setItem('smartbite_purchased_shopping', JSON.stringify([...purchasedShoppingKeys]));
+
+            // 2. Gekaufte manuelle Artikel entfernen
             customShoppingItems = customShoppingItems.filter(c => {
                 const key = typeof c === 'string' ? c : (c.id || c.name);
                 return !checkedShoppingKeys.has(key) && !checkedShoppingKeys.has((typeof c === 'string' ? c : c.name).toLowerCase().trim());
             });
             saveCustomShoppingItems();
-            checkedShoppingKeys.clear();
-            saveCheckedShoppingKeys();
 
-            // Beim Leeren des Einkaufswagens Zustand lokal & auf Server vollständig nullen
+            // 3. Einkaufswagen-Häkchen zurücksetzen & synchronisieren
             checkedShoppingKeys.clear();
             localStorage.setItem('smartbite_checked_shopping', '[]');
-            excludedShoppingKeys.clear();
-            localStorage.setItem('smartbite_excluded_shopping', '[]');
-            saveCustomShoppingItems();
             syncShoppingToApi();
 
             btnDoneClearInline.classList.remove('confirm-mode');
