@@ -680,18 +680,37 @@ function renderApp() {
     if (dishCountSpan && dishList) {
         let filteredDishes = [...appState.dishes];
 
-        // 1. Textsuche
-        if (appState.searchQuery.trim() !== '') {
-            const query = appState.searchQuery.toLowerCase();
-            filteredDishes = filteredDishes.filter(d => 
-                d.name.toLowerCase().includes(query) || 
-                (d.ingredients && d.ingredients.toLowerCase().includes(query)) ||
-                (d.instructions && d.instructions.toLowerCase().includes(query))
-            );
+        // 1. Text- & Attribut-Suche (Fleisch, High-Carb, Low-Carb, Notfall, Veggie, Flexi)
+        const cleanQuery = appState.searchQuery.trim().toLowerCase();
+        const isBakingSearch = cleanQuery === 'backen' || cleanQuery === 'kuchen';
+
+        if (cleanQuery !== '') {
+            const isMeatSearch = cleanQuery === 'fleisch' || cleanQuery === 'meat';
+            const isVeggieSearch = cleanQuery === 'veggie' || cleanQuery === 'vegetarisch';
+            const isFlexSearch = cleanQuery === 'flexi' || cleanQuery === 'flexibel';
+            const isHighCarbSearch = cleanQuery === 'high-carb' || cleanQuery === 'highcarb' || cleanQuery === 'high carb';
+            const isLowCarbSearch = cleanQuery === 'low-carb' || cleanQuery === 'lowcarb' || cleanQuery === 'low carb';
+            const isEmergencySearch = cleanQuery === 'notfall' || cleanQuery === 'schnell';
+
+            filteredDishes = filteredDishes.filter(d => {
+                // Attribut-Treffer
+                if (isMeatSearch && d.isMeat === true) return true;
+                if (isVeggieSearch && d.isMeat === false) return true;
+                if (isFlexSearch && (d.isMeat === null || d.isMeat === undefined)) return true;
+                if (isHighCarbSearch && d.isHighCarb === true) return true;
+                if (isLowCarbSearch && !d.isHighCarb && d.isMeat !== 'baking') return true;
+                if (isEmergencySearch && d.isEmergency === true) return true;
+                if (isBakingSearch && d.isMeat === 'baking') return true;
+
+                // Reguläre Textsuche
+                return d.name.toLowerCase().includes(cleanQuery) || 
+                    (d.ingredients && d.ingredients.toLowerCase().includes(cleanQuery)) ||
+                    (d.instructions && d.instructions.toLowerCase().includes(cleanQuery));
+            });
         }
         
         // 2. Modus & Typ-Filterung
-        if (appState.isBakingMode) {
+        if (appState.isBakingMode || isBakingSearch) {
             filteredDishes = filteredDishes.filter(d => d.isMeat === 'baking');
         } else {
             // Alltagsgerichte (Backrezepte ausschließen)
@@ -3212,9 +3231,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // (Alte Delete-Listener aus dem Rezept-Modal entfernt – Löschen findet nur noch im Formular statt)
 
     const searchInput = document.getElementById('dish-search-input');
+    const btnClearSearch = document.getElementById('btn-clear-search');
+
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             appState.searchQuery = e.target.value;
+            if (btnClearSearch) {
+                btnClearSearch.classList.toggle('hidden', !e.target.value);
+            }
+            renderApp();
+        });
+    }
+
+    if (btnClearSearch) {
+        btnClearSearch.addEventListener('click', () => {
+            if (searchInput) {
+                searchInput.value = '';
+                searchInput.focus();
+            }
+            appState.searchQuery = '';
+            btnClearSearch.classList.add('hidden');
             renderApp();
         });
     }

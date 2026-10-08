@@ -447,21 +447,49 @@ textarea {
 .search-bar-container {
     margin-bottom: 0.75rem;
     width: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .search-bar-container input {
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 2.2rem 0.75rem 1rem;
     background-color: var(--bg-input);
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     color: var(--text-main);
     font-size: 0.95rem;
     outline: none;
+    box-sizing: border-box;
 }
 
 .search-bar-container input:focus {
     border-color: var(--accent-primary);
+}
+
+.btn-clear-input {
+    position: absolute;
+    right: 0.65rem;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    cursor: pointer;
+    padding: 0.2rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    transition: color 0.15s, background-color 0.15s;
+}
+
+.btn-clear-input:hover {
+    color: var(--text-main);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Header-Zeile mit KW und Einkaufsliste nebeneinander */
