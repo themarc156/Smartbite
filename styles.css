@@ -1941,6 +1941,48 @@ textarea {
     font-size: 0.9rem;
 }
 
+/* WhatsApp Share Modal */
+.share-modal-content {
+    max-width: 480px;
+    max-height: 80vh;
+}
+
+.share-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.btn-share-option {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    color: var(--text-main);
+    font-size: 0.92rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+}
+
+.btn-share-option:hover {
+    border-color: var(--accent-success);
+    background-color: rgba(16, 185, 129, 0.1);
+    transform: translateY(-1px);
+}
+
+.share-option-badge {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
 /* Dauerbrenner Modal & Chips */
 .staples-modal-content {
     max-width: 620px;

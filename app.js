@@ -181,10 +181,10 @@ function toggleShortlistDish(dishId) {
     renderApp();
 }
 
-function shareShortlistViaWhatsApp() {
+function executeWhatsAppShare(headline) {
     if (appState.shortlistDishIds.size === 0) return;
     const dishes = appState.dishes.filter(d => appState.shortlistDishIds.has(d.id));
-    let text = `🍽️ Was wollen wir heute essen?\nHier ist die Auswahl:\n\n`;
+    let text = `${headline}\n\n`;
     dishes.forEach((d, idx) => {
         text += `${idx + 1}. ${d.name}\n`;
     });
@@ -192,7 +192,7 @@ function shareShortlistViaWhatsApp() {
 
     if (navigator.share) {
         navigator.share({
-            title: 'Essens-Auswahl für heute',
+            title: 'Essens-Auswahl',
             text: text
         }).catch(() => {
             window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
@@ -200,6 +200,54 @@ function shareShortlistViaWhatsApp() {
     } else {
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
     }
+}
+
+function openShortlistShareModal() {
+    const modal = document.getElementById('shortlist-share-modal');
+    const container = document.getElementById('share-options-container');
+    if (!modal || !container) return;
+
+    container.innerHTML = '';
+
+    const today = new Date();
+    const dayNames = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+
+    const getFutureDayInfo = (offset) => {
+        const d = new Date();
+        d.setDate(today.getDate() + offset);
+        return {
+            name: dayNames[d.getDay()],
+            dateStr: d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })
+        };
+    };
+
+    const dayPlus2 = getFutureDayInfo(2);
+    const dayPlus3 = getFutureDayInfo(3);
+
+    const shareOptions = [
+        { label: '📅 Heute', badge: 'Was wollen wir heute essen?', headline: '🍽️ Was wollen wir heute essen?' },
+        { label: '📅 Morgen', badge: 'Was wollen wir morgen essen?', headline: '🍽️ Was wollen wir morgen essen?' },
+        { label: `📅 ${dayPlus2.name}`, badge: dayPlus2.dateStr, headline: `🍽️ Was wollen wir am ${dayPlus2.name} (${dayPlus2.dateStr}) essen?` },
+        { label: `📅 ${dayPlus3.name}`, badge: dayPlus3.dateStr, headline: `🍽️ Was wollen wir am ${dayPlus3.name} (${dayPlus3.dateStr}) essen?` },
+        { label: '🗓️ Für die nächsten Tage', badge: 'Generelle Abstimmung', headline: '🍽️ Essens-Ideen für die nächsten Tage zur Abstimmung:' }
+    ];
+
+    shareOptions.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-share-option';
+        btn.innerHTML = `
+            <span>${opt.label}</span>
+            <span class="share-option-badge">${opt.badge}</span>
+        `;
+        btn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            executeWhatsAppShare(opt.headline);
+        });
+        container.appendChild(btn);
+    });
+
+    modal.classList.remove('hidden');
 }
 
 function updateShortlistFloatingBar() {
@@ -217,9 +265,10 @@ function updateShortlistFloatingBar() {
     } else {
         bar.classList.remove('hidden');
         if (label) {
+            // Einzelne Pin-Nadel – kein doppelter Text-Präfix
             label.textContent = appState.isShortlistFilterActive 
                 ? `Auswahl filtriert (${count}) ➔ Alle zeigen` 
-                : `📌 ${count} Gericht${count > 1 ? 'e' : ''} in der Auswahl`;
+                : `${count} Gericht${count > 1 ? 'e' : ''} in der Auswahl`;
         }
     }
 }
@@ -3364,7 +3413,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnShareShortlist) {
         btnShareShortlist.addEventListener('click', (e) => {
             e.stopPropagation();
-            shareShortlistViaWhatsApp();
+            openShortlistShareModal();
+        });
+    }
+
+    const shareModal = document.getElementById('shortlist-share-modal');
+    const btnCloseShareModal = document.getElementById('btn-close-share-modal');
+
+    if (btnCloseShareModal && shareModal) {
+        btnCloseShareModal.addEventListener('click', () => shareModal.classList.add('hidden'));
+        shareModal.addEventListener('click', (e) => {
+            if (e.target === shareModal) shareModal.classList.add('hidden');
         });
     }
 

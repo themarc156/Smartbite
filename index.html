@@ -197,7 +197,26 @@
         </div>
     </div>
 
-    <!-- Modal: Einkaufsliste verwalten (Gänge zuweisen & Vorrat streichen) -->
+    <!-- Modal: WhatsApp-Kontext Schnellwahl (1-Tipp Auswahl) -->
+    <div id="shortlist-share-modal" class="modal hidden">
+        <div class="modal-content share-modal-content">
+            <header class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-close-share-modal" class="btn btn-danger btn-close-top">✖</button>
+                    <div style="width: 36px;"></div>
+                </div>
+                <h2 class="recipe-modal-title">Für wann abstimmen?</h2>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
+                <p class="subtitle" style="text-align: center; margin-bottom: 0.75rem;">
+                    Wähle einen Zeitraum – WhatsApp öffnet sich sofort:
+                </p>
+                <div id="share-options-container" class="share-options-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Gänge & Vorräte anpassen -->
     <div id="shopping-manage-modal" class="modal hidden">
         <div class="modal-content manage-modal-content">
             <header class="modal-header modal-header-stacked">
