@@ -631,7 +631,7 @@ textarea {
     color: #ffffff !important;
 }
 
-/* Schwebende Leiste für Rezept-Shortlist (Voting) */
+/* Schwebende Leiste für Rezept-Shortlist (Voting) – immer fest über dem Bildschirm */
 .shortlist-floating-bar {
     position: fixed;
     bottom: 1.25rem;
@@ -641,14 +641,15 @@ textarea {
     max-width: 520px;
     background-color: rgba(30, 28, 26, 0.95);
     border: 1px solid var(--accent-primary);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.25);
-    backdrop-filter: blur(8px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.7), 0 0 15px rgba(245, 158, 11, 0.25);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border-radius: 30px;
     padding: 0.45rem 0.65rem 0.45rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    z-index: 100;
+    z-index: 800;
     gap: 0.6rem;
     box-sizing: border-box;
     animation: slideUpFloat 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;

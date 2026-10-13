@@ -207,16 +207,19 @@ function updateShortlistFloatingBar() {
     const label = document.getElementById('shortlist-bar-label');
     if (!bar) return;
 
+    // Nur im Rezepte-Tab und nur anzeigen, wenn mindestens 1 Gericht markiert ist
+    const isDbView = (appState.currentView === 'database');
     const count = appState.shortlistDishIds.size;
-    if (count === 0) {
+
+    if (!isDbView || count === 0) {
         bar.classList.add('hidden');
-        appState.isShortlistFilterActive = false;
+        if (count === 0) appState.isShortlistFilterActive = false;
     } else {
         bar.classList.remove('hidden');
         if (label) {
             label.textContent = appState.isShortlistFilterActive 
                 ? `Auswahl filtriert (${count}) ➔ Alle zeigen` 
-                : `${count} Gericht${count > 1 ? 'e' : ''} in der Auswahl`;
+                : `📌 ${count} Gericht${count > 1 ? 'e' : ''} in der Auswahl`;
         }
     }
 }
@@ -1280,6 +1283,7 @@ function switchView(viewName, animationType = 'fade') {
     if (tabs[viewName]) tabs[viewName].classList.add('active');
 
     appState.currentView = viewName;
+    updateShortlistFloatingBar();
 
     if (viewName === 'plan' && (!appState.currentPlan || appState.currentPlan.length === 0)) {
         generate4WeekPlan();
