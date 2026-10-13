@@ -159,6 +159,18 @@
                     </button>
                 </footer>
             </div>
+
+            <!-- Schwebende Leiste für Auswahl / Shortlist (WhatsApp & Filter) -->
+            <div id="shortlist-floating-bar" class="shortlist-floating-bar hidden">
+                <button type="button" id="btn-toggle-shortlist-view" class="btn-shortlist-toggle">
+                    <span class="shortlist-pin-icon">📌</span>
+                    <span id="shortlist-bar-label">0 Gerichte in der Auswahl</span>
+                </button>
+                <div class="shortlist-bar-actions">
+                    <button type="button" id="btn-share-shortlist" class="btn btn-primary btn-shortlist-action" title="Per WhatsApp teilen">📲 Teilen</button>
+                    <button type="button" id="btn-clear-shortlist" class="btn btn-danger btn-shortlist-action" title="Auswahl leeren">🧹</button>
+                </div>
+            </div>
         </section>
 
         <!-- (Rezept-Anlegen jetzt vollständig im modularen Rezept-Modal integriert) -->

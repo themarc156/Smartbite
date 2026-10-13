@@ -149,10 +149,12 @@ const appState = {
     currentPlan: [],
     currentWeekPage: 0, 
     isBakingMode: false,
-    selectedTypes: new Set(),   // 'veggie' | 'flex' (Multi-Select)
+    selectedTypes: new Set(),
     subFilterLowCarb: false,
     subFilterEmergency: false,
     searchQuery: '',
+    shortlistDishIds: new Set(JSON.parse(localStorage.getItem('smartbite_shortlist') || '[]')),
+    isShortlistFilterActive: false,
     selectModeForDayId: null,     
     currentViewingDishId: null,   
     currentViewingDish: null,
@@ -164,6 +166,60 @@ const appState = {
     basePortions: 4,
     currentView: 'plan'
 };
+
+function saveShortlist() {
+    localStorage.setItem('smartbite_shortlist', JSON.stringify([...appState.shortlistDishIds]));
+}
+
+function toggleShortlistDish(dishId) {
+    if (appState.shortlistDishIds.has(dishId)) {
+        appState.shortlistDishIds.delete(dishId);
+    } else {
+        appState.shortlistDishIds.add(dishId);
+    }
+    saveShortlist();
+    renderApp();
+}
+
+function shareShortlistViaWhatsApp() {
+    if (appState.shortlistDishIds.size === 0) return;
+    const dishes = appState.dishes.filter(d => appState.shortlistDishIds.has(d.id));
+    let text = `🍽️ Was wollen wir heute essen?\nHier ist die Auswahl:\n\n`;
+    dishes.forEach((d, idx) => {
+        text += `${idx + 1}. ${d.name}\n`;
+    });
+    text += `\nStimmt mal ab! 🗳️`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: 'Essens-Auswahl für heute',
+            text: text
+        }).catch(() => {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+        });
+    } else {
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
+    }
+}
+
+function updateShortlistFloatingBar() {
+    const bar = document.getElementById('shortlist-floating-bar');
+    const label = document.getElementById('shortlist-bar-label');
+    if (!bar) return;
+
+    const count = appState.shortlistDishIds.size;
+    if (count === 0) {
+        bar.classList.add('hidden');
+        appState.isShortlistFilterActive = false;
+    } else {
+        bar.classList.remove('hidden');
+        if (label) {
+            label.textContent = appState.isShortlistFilterActive 
+                ? `Auswahl filtriert (${count}) ➔ Alle zeigen` 
+                : `${count} Gericht${count > 1 ? 'e' : ''} in der Auswahl`;
+        }
+    }
+}
 
 function scaleIngredient(line, factor) {
     if (factor === 1) return line;
@@ -736,6 +792,13 @@ function renderApp() {
             filteredDishes = filteredDishes.filter(d => d.isEmergency === true);
         }
 
+        // 4. Exklusiver Shortlist-Filter (wenn schwebende Leiste angetippt wurde)
+        if (appState.isShortlistFilterActive) {
+            filteredDishes = filteredDishes.filter(d => appState.shortlistDishIds.has(d.id));
+        }
+
+        updateShortlistFloatingBar();
+
         dishCountSpan.textContent = filteredDishes.length;
         dishList.innerHTML = '';
         dishList.classList.toggle('grid-view', appState.isGridView && filteredDishes.length > 0);
@@ -880,6 +943,21 @@ function renderApp() {
 
             // 1. Grid-Ansicht
             if (appState.isGridView) {
+                const isDishPinned = appState.shortlistDishIds.has(dish.id);
+                if (isDishPinned) li.classList.add('is-pinned');
+
+                // Pin-Button oben rechts auf der Karte
+                const pinBtn = document.createElement('button');
+                pinBtn.type = 'button';
+                pinBtn.className = `btn-pin-dish ${isDishPinned ? 'pinned' : ''}`;
+                pinBtn.innerHTML = '📌';
+                pinBtn.title = isDishPinned ? 'Aus der Auswahl entfernen' : 'Zur Auswahl hinzufügen';
+                pinBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleShortlistDish(dish.id);
+                });
+                li.appendChild(pinBtn);
+
                 const displayImg = dish.previewImage || dish.image;
                 if (displayImg) {
                     const img = document.createElement('img');
@@ -963,6 +1041,18 @@ function renderApp() {
                 leftSide.appendChild(toggleTypeBtn);
                 leftSide.appendChild(nameSpan);
                 li.appendChild(leftSide);
+
+                // Pin-Button in der Listen-Ansicht
+                const pinBtnList = document.createElement('button');
+                pinBtnList.type = 'button';
+                pinBtnList.className = `btn-pin-dish-list ${appState.shortlistDishIds.has(dish.id) ? 'pinned' : ''}`;
+                pinBtnList.innerHTML = '📌';
+                pinBtnList.title = appState.shortlistDishIds.has(dish.id) ? 'Aus der Auswahl entfernen' : 'Zur Auswahl hinzufügen';
+                pinBtnList.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleShortlistDish(dish.id);
+                });
+                li.appendChild(pinBtnList);
             }
 
             dishList.appendChild(li);
@@ -3251,6 +3341,35 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             appState.searchQuery = '';
             btnClearSearch.classList.add('hidden');
+            renderApp();
+        });
+    }
+
+    // Schwebende Leiste: Interaktionen (Ansicht filtern, WhatsApp teilen, Auswahl leeren)
+    const btnToggleShortlistView = document.getElementById('btn-toggle-shortlist-view');
+    const btnShareShortlist = document.getElementById('btn-share-shortlist');
+    const btnClearShortlist = document.getElementById('btn-clear-shortlist');
+
+    if (btnToggleShortlistView) {
+        btnToggleShortlistView.addEventListener('click', () => {
+            appState.isShortlistFilterActive = !appState.isShortlistFilterActive;
+            renderApp();
+        });
+    }
+
+    if (btnShareShortlist) {
+        btnShareShortlist.addEventListener('click', (e) => {
+            e.stopPropagation();
+            shareShortlistViaWhatsApp();
+        });
+    }
+
+    if (btnClearShortlist) {
+        btnClearShortlist.addEventListener('click', (e) => {
+            e.stopPropagation();
+            appState.shortlistDishIds.clear();
+            appState.isShortlistFilterActive = false;
+            saveShortlist();
             renderApp();
         });
     }

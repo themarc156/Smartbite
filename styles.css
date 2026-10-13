@@ -631,6 +631,137 @@ textarea {
     color: #ffffff !important;
 }
 
+/* Schwebende Leiste für Rezept-Shortlist (Voting) */
+.shortlist-floating-bar {
+    position: fixed;
+    bottom: 1.25rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 2rem);
+    max-width: 520px;
+    background-color: rgba(30, 28, 26, 0.95);
+    border: 1px solid var(--accent-primary);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6), 0 0 15px rgba(245, 158, 11, 0.25);
+    backdrop-filter: blur(8px);
+    border-radius: 30px;
+    padding: 0.45rem 0.65rem 0.45rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    gap: 0.6rem;
+    box-sizing: border-box;
+    animation: slideUpFloat 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes slideUpFloat {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.btn-shortlist-toggle {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    min-width: 0;
+    flex: 1;
+}
+
+.btn-shortlist-toggle span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.shortlist-pin-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+.shortlist-bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-shrink: 0;
+}
+
+.btn-shortlist-action {
+    height: 34px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700;
+    border-radius: 20px !important;
+    padding: 0 0.75rem !important;
+}
+
+/* Pin-Button auf den Rezept-Karten */
+.btn-pin-dish {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: rgba(20, 19, 18, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    transition: all 0.15s ease;
+    backdrop-filter: blur(4px);
+    pointer-events: auto !important;
+}
+
+.btn-pin-dish:hover {
+    transform: scale(1.1);
+    border-color: var(--accent-primary);
+}
+
+.btn-pin-dish.pinned {
+    background-color: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    transform: scale(1.05);
+}
+
+.dish-list.grid-view li.is-pinned {
+    border-color: var(--accent-primary) !important;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
+.btn-pin-dish-list {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+}
+
+.btn-pin-dish-list.pinned {
+    background-color: rgba(245, 158, 11, 0.18);
+    border-color: var(--accent-primary);
+}
+
 /* Drag & Drop Stabilisierung für Rezept-Karten */
 .dish-list li {
     user-select: none;
