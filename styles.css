@@ -21,6 +21,16 @@
     padding: 0;
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE/Edge */
+    -webkit-touch-callout: none; /* Verhindert Lupe & Kopier-Menü bei Long-Press auf iOS */
+    -webkit-user-select: none; /* Safari & WebKit */
+    user-select: none; /* Standard: Deaktiviert Textmarkierung app-weit */
+}
+
+/* Eingabefelder und Textareas müssen für Texteingabe & Cursor selektierbar bleiben */
+input, textarea {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: default !important;
 }
 
 /* Scrollleisten in allen Browsern & auf Mobilgeraeten unsichtbar schalten */
