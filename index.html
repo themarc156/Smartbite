@@ -55,10 +55,11 @@
                     </div>
                     <button type="button" id="btn-shopping-days-inc" class="btn btn-nav btn-stepper" title="Tage erhöhen">+</button>
                 </div>
-                <!-- 50/50 geteilte Aktionsbuttons (bündig mit Hinzufügen-Button darunter) -->
+                <!-- 3 gleich breite Aktionsbuttons (Gänge, Dauerbrenner, Kundenkarten) -->
                 <div class="shopping-action-buttons">
                     <button type="button" id="btn-open-manage-shopping" class="btn btn-nav btn-shopping-action" title="Gänge sortieren & Vorräte streichen">🏷️</button>
                     <button type="button" id="btn-open-staples-modal" class="btn btn-primary btn-shopping-action" title="⭐ Dauerbrenner & Vorräte">⭐</button>
+                    <button type="button" id="btn-open-cards-modal" class="btn btn-nav btn-shopping-action" title="💳 Kundenkarten (Lidl, Kaufland etc.)">💳</button>
                 </div>
             </div>
 
@@ -421,6 +422,78 @@
         <div class="shortlist-bar-actions">
             <button type="button" id="btn-share-shortlist" class="btn btn-primary btn-shortlist-action" title="Per WhatsApp teilen">📲 Teilen</button>
             <button type="button" id="btn-clear-shortlist" class="btn btn-danger btn-shortlist-action" title="Auswahl leeren">🧹</button>
+        </div>
+    </div>
+
+    <!-- Modal: Kundenkarten-Auswahl & Verwaltung -->
+    <div id="shopping-cards-modal" class="modal hidden">
+        <div class="modal-content cards-modal-content">
+            <header class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-close-cards-modal" class="btn btn-danger btn-close-top">✖</button>
+                    <button type="button" id="btn-toggle-edit-cards" class="btn btn-gear" title="Karten verwalten / löschen">✏️</button>
+                </div>
+                <h2 class="recipe-modal-title">Kundenkarten</h2>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
+                <p id="cards-instruction-hint" class="subtitle" style="margin-bottom: 0.75rem; text-align: center;">
+                    Tippe auf eine Karte zum Scannen an der Kasse:
+                </p>
+
+                <!-- Klickbare Kundenkarten im Supermarkt-Design -->
+                <div id="loyalty-cards-container" class="loyalty-cards-grid"></div>
+
+                <!-- Neue Karte anlegen (Nur im Bearbeiten-Modus) -->
+                <div id="cards-add-box" class="cards-add-box hidden">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem;">Supermarkt Schnellwahl:</h4>
+                    <div id="card-preset-chips" class="card-presets-row">
+                        <button type="button" class="btn-preset-chip" data-name="Lidl Plus" data-preset="lidl">Lidl</button>
+                        <button type="button" class="btn-preset-chip" data-name="Kaufland Card" data-preset="kaufland">Kaufland</button>
+                        <button type="button" class="btn-preset-chip" data-name="Aldi" data-preset="aldi">Aldi</button>
+                        <button type="button" class="btn-preset-chip" data-name="Edeka" data-preset="edeka">Edeka</button>
+                        <button type="button" class="btn-preset-chip" data-name="Elli Markt" data-preset="elli">Elli</button>
+                        <button type="button" class="btn-preset-chip" data-name="REWE" data-preset="rewe">REWE</button>
+                        <button type="button" class="btn-preset-chip" data-name="Payback" data-preset="payback">Payback</button>
+                        <button type="button" class="btn-preset-chip" data-name="dm" data-preset="dm">dm</button>
+                        <button type="button" class="btn-preset-chip" data-name="Rossmann" data-preset="rossmann">Rossmann</button>
+                        <button type="button" class="btn-preset-chip" data-name="Kundenkarte" data-preset="custom">Andere</button>
+                    </div>
+
+                    <input type="text" id="new-card-name-input" placeholder="Kartenname (z.B. Lidl Plus)..." autocomplete="off" class="styled-form-input" style="margin-top: 0.6rem;">
+                    
+                    <div class="form-media-upload-row" style="margin-top: 0.5rem;">
+                        <label class="btn-upload-choice">
+                            📷 Code knipsen
+                            <input type="file" id="new-card-cam-file" accept="image/*" capture="environment" class="hidden-file-input">
+                        </label>
+                        <label class="btn-upload-choice">
+                            🖼️ Screenshot
+                            <input type="file" id="new-card-file" accept="image/*" class="hidden-file-input">
+                        </label>
+                    </div>
+                    <span id="new-card-file-hint" class="selected-file-hint" style="margin-top: 0.2rem;"></span>
+
+                    <button type="button" id="btn-save-new-card" class="btn btn-primary" style="width: 100%; height: 40px; margin-top: 0.75rem;">Karte speichern 💾</button>
+                </div>
+
+                <button type="button" id="btn-done-cards-modal" class="btn btn-primary btn-modal-bottom-done">Fertig ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Barcode / QR-Code Großansicht (Optimaler Weiß-Kontrast für Scanner) -->
+    <div id="card-barcode-modal" class="modal hidden">
+        <div class="modal-content card-scanner-modal-content">
+            <header class="modal-header modal-top-bar" style="border-bottom: none; padding-bottom: 0.25rem;">
+                <span id="scanner-modal-title" style="font-weight: 800; font-size: 1.1rem; color: #141312;">Kundenkarte</span>
+                <button type="button" id="btn-close-barcode-modal" class="btn btn-danger btn-close-top">✖</button>
+            </header>
+            <div class="scanner-view-body">
+                <div class="scanner-white-box">
+                    <img id="scanner-barcode-img" src="" alt="Barcode / QR-Code" class="scanner-barcode-img">
+                </div>
+                <span class="scanner-brightness-hint">📱 Display hell stellen & vor den Scanner halten</span>
+            </div>
         </div>
     </div>
 

@@ -1890,7 +1890,7 @@ textarea {
 .shopping-action-buttons {
     display: flex;
     gap: 0.35rem;
-    width: 110px;
+    width: 165px;
     flex-shrink: 0;
 }
 
@@ -1930,7 +1930,7 @@ textarea {
 }
 
 .shopping-quick-add .btn {
-    width: 110px;
+    width: 165px;
     flex-shrink: 0;
     height: 40px !important;
     font-size: 0.88rem !important;
@@ -1939,17 +1939,81 @@ textarea {
     box-sizing: border-box;
 }
 
-.shopping-action-buttons {
-    display: flex;
-    gap: 0.25rem;
+/* Kundenkarten Modal & Supermarkt-Farbmixe */
+.cards-modal-content {
+    max-width: 620px;
+    max-height: 85vh;
 }
 
-.shopping-action-buttons .btn {
-    height: 32px;
-    min-width: 32px;
-    padding: 0 0.35rem !important;
-    font-size: 0.9rem;
+.loyalty-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1.25rem;
+    max-height: 48vh;
+    overflow-y: auto;
+    padding-right: 0.2rem;
 }
+
+.loyalty-card-tile {
+    position: relative;
+    border-radius: 12px;
+    padding: 0.9rem 0.6rem;
+    min-height: 85px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.loyalty-card-tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+.loyalty-card-name {
+    font-size: 0.92rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+    word-break: break-word;
+}
+
+.loyalty-card-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    align-self: flex-end;
+}
+
+.btn-remove-card-def {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-color: var(--accent-danger);
+    color: #fff;
+    border: 2px solid var(--bg-card);
+    font-size: 0.75rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Supermarkt-Farbmixturen */
+.card-theme-lidl {
+    background: linear-gradient(135deg, #0050aa 0%, #002d6b 60%, #d51224 60%, #d51224 75%, #ffd000 75%);
+    color: #
 
 /* WhatsApp Share Modal */
 .share-modal-content {

@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=no">
+    <title>SmartBite – Family Food-Orga</title>
+    
+    <!-- PWA & Apple Web App Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a1816">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SmartBite">
+    <link rel="apple-touch-icon" href="/icon.png">
+    <link rel="icon" type="image/png" href="/icon.png">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header class="app-header">
+        <div class="brand">
+            <img src="/icon.png" alt="SmartBite Icon" class="brand-header-icon">
+            <div class="brand-titles">
+                <h1>SmartBite</h1>
+                <span class="brand-subtitle">Family Food-Orga</span>
+            </div>
+        </div>
+        <nav class="nav-tabs">
+            <button id="nav-btn-shopping" class="nav-tab">
+                <span class="nav-icon">🛒</span>
+                <span class="nav-label">Einkauf</span>
+            </button>
+            <button id="nav-btn-plan" class="nav-tab active">
+                <span class="nav-icon">📅</span>
+                <span class="nav-label">Speiseplan</span>
+            </button>
+            <button id="nav-btn-database" class="nav-tab">
+                <span class="nav-icon">🍔</span>
+                <span class="nav-label">Rezepte</span>
+            </button>
+        </nav>
+    </header>
+
+    <main class="main-content-area">
+        <!-- VIEW 0: Smarte Einkaufsliste -->
+        <section id="view-shopping" class="app-view hidden">
+            <div class="shopping-top-bar-row">
+                <!-- Dynamischer Zeitraum-Stepper (bündig mit Eingabefeld darunter) -->
+                <div class="shopping-stepper-control">
+                    <button type="button" id="btn-shopping-days-dec" class="btn btn-nav btn-stepper" title="Tage verringern">−</button>
+                    <div class="shopping-stepper-info">
+                        <span id="shopping-days-label" class="shopping-days-count">3 Tage</span>
+                        <span id="shopping-days-target-date" class="shopping-target-date">bis ...</span>
+                    </div>
+                    <button type="button" id="btn-shopping-days-inc" class="btn btn-nav btn-stepper" title="Tage erhöhen">+</button>
+                </div>
+                <!-- 50/50 geteilte Aktionsbuttons (bündig mit Hinzufügen-Button darunter) -->
+                <div class="shopping-action-buttons">
+                    <button type="button" id="btn-open-manage-shopping" class="btn btn-nav btn-shopping-action" title="Gänge sortieren & Vorräte streichen">🏷️</button>
+                    <button type="button" id="btn-open-staples-modal" class="btn btn-primary btn-shopping-action" title="⭐ Dauerbrenner & Vorräte">⭐</button>
+                </div>
+            </div>
+
+            <!-- Hinweis-Box für Rezepte ohne Textzutaten -->
+            <div id="shopping-unparsed-box" class="unparsed-recipes-box hidden">
+                <span class="unparsed-title">⚠️ Rezepte ohne Textzutaten (manuell prüfen):</span>
+                <div id="shopping-unparsed-links" class="unparsed-chips-container"></div>
+            </div>
+
+           <!-- Schnelleingabe mit Autocomplete -->
+            <div class="shopping-quick-add">
+                <input type="text" id="shopping-custom-input" placeholder="+ Artikel (z.B. Spülmaschinentabs)..." autocomplete="off" list="shopping-staples-datalist">
+                <datalist id="shopping-staples-datalist"></datalist>
+                <button type="button" id="btn-add-custom-item" class="btn btn-primary">Hinzufügen</button>
+            </div>
+
+            <div id="shopping-list-container" class="shopping-categories-container"></div>
+
+            <!-- Zuklappbare Kachel: Bereits im Einkaufswagen -->
+            <div id="shopping-done-section" class="shopping-done-section hidden">
+                <div id="shopping-done-toggle-bar" class="shopping-done-header">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                        <span id="done-caret-icon" style="color: #34d399; font-size: 0.9rem;">▾</span>
+                        <span style="font-weight: 700; color: #34d399; font-size: 0.9rem;">🛒 Im Einkaufswagen (<span id="done-items-count">0</span>)</span>
+                    </div>
+                    <button type="button" id="btn-done-clear-inline" class="btn-done-clear" title="Wagen leeren">Wagen leeren 🧹</button>
+                </div>
+                <div id="shopping-done-items-container" class="shopping-done-items-container hidden"></div>
+            </div>
+        </section>
+
+        <!-- (Undo-Snackbar entfernt) -->
+
+        <!-- VIEW 1: Speiseplan -->
+        <section id="view-plan" class="app-view">
+            <div class="view-header plan-header-single-row">
+                <div class="kw-stepper" style="width: 100%; justify-content: space-between;">
+                    <button id="btn-prev-week" class="btn btn-nav">&lt;</button>
+                    <div style="display: flex; align-items: center; gap: 0.45rem;">
+                        <span id="modal-kw-title" class="kw-display">KW --</span>
+                        <button id="btn-jump-today" class="btn-today-jump" title="Zur aktuellen Woche springen">Heute 📍</button>
+                    </div>
+                    <button id="btn-next-week" class="btn btn-nav">&gt;</button>
+                </div>
+            </div>
+            <div id="modal-plan-grid" class="modal-plan-grid"></div>
+        </section>
+
+        <!-- VIEW 2: Gerichte-Datenbank -->
+        <section id="view-database" class="app-view hidden">
+            <!-- Unsichtbarer Zähler zur Fehlervermeidung in JS -->
+            <span id="dish-count" class="hidden">0</span>
+            <div class="database-layout-simple">
+                <!-- Aktionsleiste bei Zuweisung eines Tages (Tag leeren / Freitext) -->
+                <div id="select-mode-actions-bar" class="select-mode-actions-bar hidden">
+                    <button type="button" id="btn-set-unplanned" class="btn btn-nav btn-set-unplanned">❓ Tag leeren (auf ungeplant setzen)</button>
+                    <div class="freetext-dish-row">
+                        <input type="text" id="freetext-dish-input" placeholder="✍️ Freitext (z.B. Resteessen, Restaurant, Curry)..." autocomplete="off">
+                        <button type="button" id="btn-submit-freetext" class="btn btn-primary">Eintragen</button>
+                    </div>
+                </div>
+
+                <div class="search-and-toggle-row">
+                    <div class="search-bar-container">
+                        <input type="text" id="dish-search-input" placeholder="🔍 Rezepte durchsuchen..." autocomplete="off">
+                        <button type="button" id="btn-clear-search" class="btn-clear-input hidden" title="Suche leeren">✕</button>
+                    </div>
+                    <button type="button" id="btn-open-add-recipe" class="btn btn-primary" style="height: 36px; padding: 0 0.75rem !important;" title="Neues Rezept anlegen">➕ Neu</button>
+                    <button id="btn-toggle-layout" class="btn-gear" title="Ansicht umschalten (Karten / Liste)">🖼️</button>
+                </div>
+
+                <div class="filter-layout-kasten">
+                    <!-- Links: Modus-Spalte (Alltag vs. Backen) -->
+                    <div class="filter-left-col">
+                        <button type="button" id="filter-all" class="btn-filter btn-filter-side active">Alle</button>
+                        <button type="button" id="filter-baking" class="btn-filter btn-filter-side btn-filter-baking">🍰 Backen</button>
+                    </div>
+
+                    <!-- Rechts: 2x2 Kasten für Eigenschaften -->
+                    <div class="filter-right-grid">
+                        <button type="button" id="filter-veggie" class="btn-filter">🌱 Veggie</button>
+                        <button type="button" id="filter-flex" class="btn-filter">🍲 Flexi</button>
+                        <button type="button" id="filter-lowcarb" class="btn-filter btn-filter-sub">🥗 Low-Carb</button>
+                        <button type="button" id="filter-emergency" class="btn-filter btn-filter-sub">🚨 Notfall</button>
+                    </div>
+                </div>
+
+                <div class="card" style="padding: 0; background: transparent; border: none;">
+                    <!-- Unsichtbarer Anker zur Vermeidung von JS-Fehlern -->
+                    <span id="database-instruction" class="hidden"></span>
+                    <ul id="dish-list" class="dish-list"></ul>
+                </div>
+
+                <!-- Footer-Bereich fuer Backup & Datensicherheit -->
+                <footer class="database-footer-area">
+                    <button type="button" id="btn-download-backup" class="btn-footer-backup">
+                        📥 Alle Rezepte als Backup sichern (JSON)
+                    </button>
+                </footer>
+            </div>
+
+            </section>
+
+        <!-- (Rezept-Anlegen jetzt vollständig im modularen Rezept-Modal integriert) -->
+    </main>
+
+    <!-- Modal: Dauerbrenner-Schnellauswahl & Katalog -->
+    <div id="shopping-staples-modal" class="modal hidden">
+        <div class="modal-content staples-modal-content">
+            <header class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-close-staples-modal" class="btn btn-danger btn-close-top">✖</button>
+                    <button type="button" id="btn-toggle-edit-staples" class="btn btn-gear" title="Dauerbrenner verwalten / löschen">✏️</button>
+                </div>
+                <h2 class="recipe-modal-title">Dauerbrenner</h2>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
+                <p id="staples-instruction-hint" class="subtitle" style="margin-bottom: 0.75rem; text-align: center;">
+                    Tippe auf einen Artikel, um ihn auf den Zettel zu setzen:
+                </p>
+
+                <!-- Klickbare Dauerbrenner-Chips -->
+                <div id="staples-chips-container" class="staples-chips-grid"></div>
+
+                <!-- Neuen Dauerbrenner anlegen (Nur im Bearbeiten-Modus) -->
+                <div id="staples-add-box" class="staples-add-box hidden">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem;">Neuen Dauerbrenner anlegen:</h4>
+                    <div class="staples-add-form-row">
+                        <input type="text" id="new-staple-input" placeholder="z.B. Hafermilch, Müllbeutel..." autocomplete="off" class="styled-form-input" style="padding: 0.45rem 0.65rem !important;">
+                        <button type="button" id="btn-create-staple" class="btn btn-primary" style="height: 36px; padding: 0 0.85rem !important;">Speichern ⭐</button>
+                    </div>
+                </div>
+
+                <button type="button" id="btn-save-staples-modal" class="btn btn-primary btn-modal-bottom-done">Fertig ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: WhatsApp-Kontext Schnellwahl (1-Tipp Auswahl) -->
+    <div id="shortlist-share-modal" class="modal hidden">
+        <div class="modal-content share-modal-content">
+            <header class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-close-share-modal" class="btn btn-danger btn-close-top">✖</button>
+                    <div style="width: 36px;"></div>
+                </div>
+                <h2 class="recipe-modal-title">Für wann abstimmen?</h2>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
+                <p class="subtitle" style="text-align: center; margin-bottom: 0.75rem;">
+                    Wähle einen Zeitraum – WhatsApp öffnet sich sofort:
+                </p>
+                <div id="share-options-container" class="share-options-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Gänge & Vorräte anpassen -->
+    <div id="shopping-manage-modal" class="modal hidden">
+        <div class="modal-content manage-modal-content">
+            <header class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-close-manage-shopping" class="btn btn-danger btn-close-top">✖</button>
+                    <div style="width: 36px;"></div> <!-- Ausgleich für zentrierten Titel -->
+                </div>
+                <h2 class="recipe-modal-title">Gänge & Vorräte anpassen</h2>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0.5rem;">
+                <p class="subtitle" style="margin-bottom: 0.75rem; text-align: center;">
+                    Weise Artikel dem richtigen Gang zu oder streiche Vorräte (🗑️):
+                </p>
+                <div id="shopping-manage-items-list" class="manage-items-scroll-list"></div>
+                <button type="button" id="btn-save-manage-shopping" class="btn btn-primary btn-modal-bottom-done">Fertig ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Rezept Detail-Ansicht & In-Place Bearbeitung -->
+    <div id="recipe-view-modal" class="modal hidden">
+        <div class="modal-content recipe-view-content">
+            <!-- 1. HEADER FÜR LESE-MODUS (Kollisionsfrei) -->
+            <header id="recipe-view-header" class="modal-header modal-header-stacked">
+                <div class="modal-top-bar">
+                    <button id="btn-close-recipe-view" class="btn btn-danger btn-close-top">✖</button>
+                    <button id="btn-edit-recipe" class="btn btn-primary btn-icon-only" title="Rezept bearbeiten">✏️</button>
+                </div>
+                <h2 id="recipe-view-title" class="recipe-modal-title">Rezeptname</h2>
+            </header>
+
+            <!-- 2. HEADER FÜR BEARBEITUNGS-MODUS -->
+            <header id="recipe-edit-header" class="modal-header modal-header-stacked hidden">
+                <div class="modal-top-bar">
+                    <button type="button" id="btn-modal-cancel-edit" class="btn btn-primary btn-close-top" style="background: var(--bg-input); border: 1px solid var(--border-color);">✖</button>
+                    <button type="button" id="btn-modal-delete-dish" class="btn btn-danger">🗑️ Löschen</button>
+                </div>
+                <h2 id="recipe-edit-modal-title" class="recipe-modal-title">Rezept bearbeiten</h2>
+            </header>
+            
+            <!-- BODY LESE-MODUS -->
+            <div id="recipe-view-body" class="recipe-view-body">
+                <div id="recipe-view-badges" class="recipe-badges-container"></div>
+                
+                <div id="recipe-link-container" class="hidden" style="margin-bottom: 1rem;">
+                    <a id="recipe-source-link" href="#" target="_blank" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">
+                        🔗 Original-Rezept öffnen (Chefkoch / Instagram)
+                    </a>
+                </div>
+
+                <!-- Vorschau-Foto (falls vorhanden) -->
+                <div id="recipe-preview-image-container" class="recipe-image-container hidden" style="margin-bottom: 1rem;">
+                    <h4 style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.3rem;">Foto:</h4>
+                    <img id="recipe-preview-image" src="" alt="Vorschau-Foto" style="max-height: 250px; object-fit: cover;">
+                </div>
+
+                <!-- Screenshot / Infomaterial -->
+                <div id="recipe-view-image-container" class="recipe-image-container hidden">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.3rem;">
+                        <h4 style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">Hinterlegter Screenshot / Info:</h4>
+                        <span style="font-size: 0.72rem; color: var(--accent-primary);">🔍 Tippen zum Zoomen</span>
+                    </div>
+                    <img id="recipe-view-image" src="" alt="Screenshot" class="zoomable-recipe-img">
+                </div>
+
+                <div class="recipe-section">
+                    <div class="section-header-with-scaler">
+                        <h3>Zutaten</h3>
+                        <div class="portions-scaler">
+                            <button id="btn-portion-dec" class="btn-scaler">-</button>
+                            <span id="portion-count-label">4 Portionen</span>
+                            <button id="btn-portion-inc" class="btn-scaler">+</button>
+                        </div>
+                    </div>
+                    <ul id="recipe-view-ingredients" class="ingredients-rendered-list"></ul>
+                </div>
+
+                <div class="recipe-section">
+                    <h3>Zubereitung</h3>
+                    <div id="recipe-view-instructions" class="instructions-rendered-text"></div>
+                </div>
+            </div>
+
+            <!-- BODY BEARBEITUNGS-MODUS (Angeglichen an Neu-Bereich) -->
+            <div id="recipe-edit-body" class="recipe-view-body hidden">
+                <form id="modal-dish-edit-form" novalidate class="recipe-form-flow">
+                    <input type="hidden" id="modal-edit-id" value="">
+                    
+                    <!-- Name des Gerichts -->
+                    <input type="text" id="modal-edit-name" required placeholder="Name des Gerichts *" class="styled-form-input">
+
+                    <!-- Art des Gerichts (Pillen) -->
+                    <div class="pill-selector-group">
+                        <button type="button" data-val="veggie" onclick="selectDishType(this, 'veggie', 'modal-edit-meat-val')">🌱 Veggie</button>
+                        <button type="button" class="active" data-val="flex" onclick="selectDishType(this, 'flex', 'modal-edit-meat-val')">🍲 Flexi</button>
+                        <button type="button" data-val="meat" onclick="selectDishType(this, 'meat', 'modal-edit-meat-val')">🥩 Fleisch</button>
+                        <button type="button" data-val="baking" onclick="selectDishType(this, 'baking', 'modal-edit-meat-val')">🍰 Backen</button>
+                    </div>
+                    <input type="hidden" id="modal-edit-meat-val" value="flex">
+
+                    <!-- Checkboxen -->
+                    <div class="checkbox-row-container">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="modal-edit-highcarb"> 🌾 High-Carb
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="modal-edit-emergency"> 🚨 Notfall-Gericht
+                        </label>
+                    </div>
+
+                    <!-- Versteckte Datenfelder -->
+                    <textarea id="modal-edit-ingredients" class="hidden"></textarea>
+                    <textarea id="modal-edit-instructions" class="hidden"></textarea>
+
+                    <!-- Kompakte Trigger-Karten -->
+                    <div class="form-text-triggers-grid">
+                        <button type="button" class="btn-text-trigger" onclick="openTextEditorModal('ingredients', 'modal-edit-ingredients', 'Zutaten bearbeiten')">
+                            <span class="trigger-icon">📝</span>
+                            <div class="trigger-texts">
+                                <span class="trigger-title">Zutaten</span>
+                                <span id="modal-ingredients-status" class="trigger-status">Noch keine Zutaten</span>
+                            </div>
+                        </button>
+
+                        <button type="button" class="btn-text-trigger" onclick="openTextEditorModal('instructions', 'modal-edit-instructions', 'Zubereitung bearbeiten')">
+                            <span class="trigger-icon">👨‍🍳</span>
+                            <div class="trigger-texts">
+                                <span class="trigger-title">Zubereitung</span>
+                                <span id="modal-instructions-status" class="trigger-status">Noch keine Schritte</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- Rezept-Link -->
+                    <input type="url" id="modal-edit-url" placeholder="🔗 Rezept-Link (optional)" class="styled-form-input">
+
+                    <!-- Upload-Buttons: Foto (Kamera + Galerie) & Screenshot -->
+                    <div class="form-media-upload-row">
+                        <label class="btn-upload-choice">
+                            📷 Foto knipsen
+                            <input type="file" id="modal-edit-preview-file-cam" accept="image/*" capture="environment" class="hidden-file-input">
+                        </label>
+                        <label class="btn-upload-choice">
+                            🖼️ Galerie
+                            <input type="file" id="modal-edit-preview-file" accept="image/*" class="hidden-file-input">
+                        </label>
+                    </div>
+                    <label class="btn-upload-choice" style="width: 100%;">
+                        📸 Rezept aus Screenshot
+                        <input type="file" id="modal-edit-image-file" accept="image/*" class="hidden-file-input">
+                    </label>
+
+                    <div class="upload-feedback-container">
+                        <span id="modal-preview-file-hint" class="selected-file-hint"></span>
+                        <span id="modal-screenshot-file-hint" class="selected-file-hint"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-submit-recipe" style="height: 44px;">Änderungen speichern 💾</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- (Separates Dauerbrenner-Modal entfernt – alles auf einer Liste) -->
+
+    <!-- Modal: Fokussierter Text-Editor fuer Zutaten & Zubereitung -->
+    <div id="text-editor-modal" class="modal hidden">
+        <div class="modal-content text-editor-modal-content">
+            <header class="modal-header">
+                <button type="button" id="btn-cancel-text-editor" class="btn btn-nav" style="width: auto; padding: 0 0.6rem !important;">Abbrechen</button>
+                <h2 id="text-editor-modal-title" style="font-size: 1.1rem; margin: 0; color: var(--accent-primary);">Text bearbeiten</h2>
+                <button type="button" id="btn-save-text-editor" class="btn btn-primary" style="height: 32px; padding: 0 0.8rem !important; font-weight: 700;">Fertig ✓</button>
+            </header>
+            <div class="recipe-view-body" style="padding-bottom: 0;">
+                <textarea id="text-editor-modal-input" placeholder="Hier tippen..." class="fullscreen-modal-textarea"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Zoom-Lightbox fuer Screenshots & Bilder -->
+    <div id="image-lightbox-modal" class="image-lightbox-modal hidden">
+        <div class="lightbox-top-bar">
+            <div class="lightbox-zoom-hint">Doppeltippen / Aufziehen zum Zoomen</div>
+            <div class="lightbox-controls">
+                <button type="button" id="btn-lightbox-zoom-out" class="btn-lightbox-action" title="Herauszoomen">-</button>
+                <button type="button" id="btn-lightbox-reset" class="btn-lightbox-action" title="Zurücksetzen">1x</button>
+                <button type="button" id="btn-lightbox-zoom-in" class="btn-lightbox-action" title="Heranzoomen">+</button>
+                <button type="button" id="btn-close-lightbox" class="btn-lightbox-close" title="Schließen">✖</button>
+            </div>
+        </div>
+        <div id="lightbox-viewport" class="lightbox-viewport">
+            <img id="lightbox-img" src="" alt="Großansicht" class="lightbox-img">
+        </div>
+    </div>
+
+    <!-- Schwebende Leiste für Auswahl / Shortlist (Direkt im Body für echten Viewport-Fixed-Effekt) -->
+    <div id="shortlist-floating-bar" class="shortlist-floating-bar hidden">
+        <button type="button" id="btn-toggle-shortlist-view" class="btn-shortlist-toggle">
+            <span class="shortlist-pin-icon">📌</span>
+            <span id="shortlist-bar-label">0 Gerichte in der Auswahl</span>
+        </button>
+        <div class="shortlist-bar-actions">
+            <button type="button" id="btn-share-shortlist" class="btn btn-primary btn-shortlist-action" title="Per WhatsApp teilen">📲 Teilen</button>
+            <button type="button" id="btn-clear-shortlist" class="btn btn-danger btn-shortlist-action" title="Auswahl leeren">🧹</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

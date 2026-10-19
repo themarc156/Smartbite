@@ -222,6 +222,7 @@ def save_shopping():
     data["shopping"]["excludedKeys"] = payload.get("excludedKeys", [])
     data["shopping"]["categoryOrder"] = payload.get("categoryOrder", [])
     data["shopping"]["purchasedKeys"] = payload.get("purchasedKeys", [])
+    data["shopping"]["loyaltyCards"] = payload.get("loyaltyCards", [])
     save_data(data)
     return jsonify({"status": "success"})
 
