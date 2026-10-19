@@ -2928,6 +2928,139 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Alphabetisch sortieren
+        const sortedStaples = [...staplesCatalog].sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
+
+        sortedStaples.forEach(staple => {
+            const cleanStapleName = staple.name.toLowerCase().trim();
+            
+            // Prüfen, ob der Artikel aktuell auf dem Einkaufszettel (aktiv) steht
+            const isCurrentlyOnList = customShoppingItems.some(c => {
+                const cName = (typeof c === 'string' ? c : c.name).toLowerCase().trim();
+                const cId = typeof c === 'string' ? c : c.id;
+                return (cName === cleanStapleName || cId === staple.id) && !checkedShoppingKeys.has(cId) && !checkedShoppingKeys.has(cName);
+            });
+
+            const chip = document.createElement('div');
+            chip.className = `staple-chip ${isCurrentlyOnList ? 'active' : ''}`;
+            
+            if (isStaplesEditMode) {
+                chip.innerHTML = `
+                    <span>${staple.name}</span>
+                    <button type="button" class="btn-remove-staple-def" title="Dauerbrenner dauerhaft löschen">✕</button>
+                `;
+            } else {
+                chip.innerHTML = `<span>${staple.name}</span>`;
+            }
+
+            // Klick auf den Chip: Im Normalmodus auf die Liste setzen / entfernen
+            chip.addEventListener('click', (e) => {
+                if (e.target.closest('.btn-remove-staple-def')) return;
+                if (isStaplesEditMode) return; // Im Bearbeiten-Modus Klicks auf die Liste sperren
+
+                if (isCurrentlyOnList) {
+                    customShoppingItems = customShoppingItems.filter(c => {
+                        const cName = (typeof c === 'string' ? c : c.name).toLowerCase().trim();
+                        const cId = typeof c === 'string' ? c : c.id;
+                        return cName !== cleanStapleName && cId !== staple.id;
+                    });
+                } else {
+                    const newId = `custom-${Date.now()}`;
+                    checkedShoppingKeys.delete(newId);
+                    checkedShoppingKeys.delete(cleanStapleName);
+                    excludedShoppingKeys.delete(newId);
+                    excludedShoppingKeys.delete(cleanStapleName);
+                    
+                    customShoppingItems.push({
+                        id: newId,
+                        name: staple.name,
+                        category: staple.category || categorizeIngredient(staple.name)
+                    });
+                }
+
+                saveCustomShoppingItems();
+                saveCheckedShoppingKeys();
+                saveExcludedShoppingKeys();
+                renderStaplesModal();
+                renderShoppingList();
+            });
+
+            // Klick auf das ✕ im Bearbeiten-Modus: Dauerbrenner löschen
+            const delDefBtn = chip.querySelector('.btn-remove-staple-def');
+            if (delDefBtn) {
+                delDefBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    staplesCatalog = staplesCatalog.filter(s => s.name.toLowerCase().trim() !== cleanStapleName);
+                    saveStaplesCatalog();
+                    renderStaplesModal();
+                });
+            }
+
+            staplesChipsContainer.appendChild(chip);
+        });
+    }
+
+    if (btnToggleEditStaples) {
+        btnToggleEditStaples.addEventListener('click', () => {
+            isStaplesEditMode = !isStaplesEditMode;
+            renderStaplesModal();
+        });
+    }
+
+    if (btnOpenStaples) {
+        btnOpenStaples.addEventListener('click', () => {
+            isStaplesEditMode = false;
+            renderStaplesModal();
+            if (staplesModal) staplesModal.classList.remove('hidden');
+        });
+    }
+
+    const closeStaplesModal = () => {
+        isStaplesEditMode = false;
+        if (staplesModal) staplesModal.classList.add('hidden');
+        renderShoppingList();
+    };
+
+    if (btnCloseStaples) btnCloseStaples.addEventListener('click', closeStaplesModal);
+    if (btnSaveStaples) btnSaveStaples.addEventListener('click', closeStaplesModal);
+
+    // Klick auf den abgedunkelten Hintergrund schließt das Modal
+    if (staplesModal) {
+        staplesModal.addEventListener('click', (e) => {
+            if (e.target === staplesModal) {
+                closeStaplesModal();
+            }
+        });
+    }
+
+    // Neuen Dauerbrenner dauerhaft hinzufügen
+    const handleCreateStaple = () => {
+        const val = newStapleInput ? newStapleInput.value.trim() : '';
+        if (val) {
+            const cleanKey = val.toLowerCase().trim();
+            if (!staplesCatalog.some(s => s.name.toLowerCase().trim() === cleanKey)) {
+                staplesCatalog.push({
+                    id: `staple-${Date.now()}`,
+                    name: val,
+                    category: categorizeIngredient(val)
+                });
+                saveStaplesCatalog();
+            }
+            newStapleInput.value = '';
+            renderStaplesModal();
+        }
+    };
+
+    if (btnCreateStaple) btnCreateStaple.addEventListener('click', handleCreateStaple);
+    if (newStapleInput) {
+        newStapleInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCreateStaple();
+            }
+        });
+    }
+
     // Kundenkarten Modal Steuerung & Bearbeitungs-Modus
     const cardsModal = document.getElementById('shopping-cards-modal');
     const btnOpenCards = document.getElementById('btn-open-cards-modal');
@@ -3128,139 +3261,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (barcodeModal) {
         barcodeModal.addEventListener('click', (e) => {
             if (e.target === barcodeModal) closeCardBarcodeModal();
-        });
-    }
-
-        // Alphabetisch sortieren
-        const sortedStaples = [...staplesCatalog].sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));
-
-        sortedStaples.forEach(staple => {
-            const cleanStapleName = staple.name.toLowerCase().trim();
-            
-            // Prüfen, ob der Artikel aktuell auf dem Einkaufszettel (aktiv) steht
-            const isCurrentlyOnList = customShoppingItems.some(c => {
-                const cName = (typeof c === 'string' ? c : c.name).toLowerCase().trim();
-                const cId = typeof c === 'string' ? c : c.id;
-                return (cName === cleanStapleName || cId === staple.id) && !checkedShoppingKeys.has(cId) && !checkedShoppingKeys.has(cName);
-            });
-
-            const chip = document.createElement('div');
-            chip.className = `staple-chip ${isCurrentlyOnList ? 'active' : ''}`;
-            
-            if (isStaplesEditMode) {
-                chip.innerHTML = `
-                    <span>${staple.name}</span>
-                    <button type="button" class="btn-remove-staple-def" title="Dauerbrenner dauerhaft löschen">✕</button>
-                `;
-            } else {
-                chip.innerHTML = `<span>${staple.name}</span>`;
-            }
-
-            // Klick auf den Chip: Im Normalmodus auf die Liste setzen / entfernen
-            chip.addEventListener('click', (e) => {
-                if (e.target.closest('.btn-remove-staple-def')) return;
-                if (isStaplesEditMode) return; // Im Bearbeiten-Modus Klicks auf die Liste sperren
-
-                if (isCurrentlyOnList) {
-                    customShoppingItems = customShoppingItems.filter(c => {
-                        const cName = (typeof c === 'string' ? c : c.name).toLowerCase().trim();
-                        const cId = typeof c === 'string' ? c : c.id;
-                        return cName !== cleanStapleName && cId !== staple.id;
-                    });
-                } else {
-                    const newId = `custom-${Date.now()}`;
-                    checkedShoppingKeys.delete(newId);
-                    checkedShoppingKeys.delete(cleanStapleName);
-                    excludedShoppingKeys.delete(newId);
-                    excludedShoppingKeys.delete(cleanStapleName);
-                    
-                    customShoppingItems.push({
-                        id: newId,
-                        name: staple.name,
-                        category: staple.category || categorizeIngredient(staple.name)
-                    });
-                }
-
-                saveCustomShoppingItems();
-                saveCheckedShoppingKeys();
-                saveExcludedShoppingKeys();
-                renderStaplesModal();
-                renderShoppingList();
-            });
-
-            // Klick auf das ✕ im Bearbeiten-Modus: Dauerbrenner löschen
-            const delDefBtn = chip.querySelector('.btn-remove-staple-def');
-            if (delDefBtn) {
-                delDefBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    staplesCatalog = staplesCatalog.filter(s => s.name.toLowerCase().trim() !== cleanStapleName);
-                    saveStaplesCatalog();
-                    renderStaplesModal();
-                });
-            }
-
-            staplesChipsContainer.appendChild(chip);
-        });
-    }
-
-    if (btnToggleEditStaples) {
-        btnToggleEditStaples.addEventListener('click', () => {
-            isStaplesEditMode = !isStaplesEditMode;
-            renderStaplesModal();
-        });
-    }
-
-    if (btnOpenStaples) {
-        btnOpenStaples.addEventListener('click', () => {
-            isStaplesEditMode = false;
-            renderStaplesModal();
-            if (staplesModal) staplesModal.classList.remove('hidden');
-        });
-    }
-
-    const closeStaplesModal = () => {
-        isStaplesEditMode = false;
-        if (staplesModal) staplesModal.classList.add('hidden');
-        renderShoppingList();
-    };
-
-    if (btnCloseStaples) btnCloseStaples.addEventListener('click', closeStaplesModal);
-    if (btnSaveStaples) btnSaveStaples.addEventListener('click', closeStaplesModal);
-
-    // Klick auf den abgedunkelten Hintergrund schließt das Modal
-    if (staplesModal) {
-        staplesModal.addEventListener('click', (e) => {
-            if (e.target === staplesModal) {
-                closeStaplesModal();
-            }
-        });
-    }
-
-    // Neuen Dauerbrenner dauerhaft hinzufügen
-    const handleCreateStaple = () => {
-        const val = newStapleInput ? newStapleInput.value.trim() : '';
-        if (val) {
-            const cleanKey = val.toLowerCase().trim();
-            if (!staplesCatalog.some(s => s.name.toLowerCase().trim() === cleanKey)) {
-                staplesCatalog.push({
-                    id: `staple-${Date.now()}`,
-                    name: val,
-                    category: categorizeIngredient(val)
-                });
-                saveStaplesCatalog();
-            }
-            newStapleInput.value = '';
-            renderStaplesModal();
-        }
-    };
-
-    if (btnCreateStaple) btnCreateStaple.addEventListener('click', handleCreateStaple);
-    if (newStapleInput) {
-        newStapleInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleCreateStaple();
-            }
         });
     }
 
