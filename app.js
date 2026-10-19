@@ -445,6 +445,13 @@ function openCardBarcodeModal(card) {
     if (titleEl) titleEl.textContent = card.name || 'Kundenkarte';
     imgEl.src = card.imageUrl;
     imgEl.alt = card.name || 'Barcode';
+    imgEl.classList.remove('zoomed');
+
+    // 1-Tipp Zoom direkt auf den QR-Code in der Mitte
+    imgEl.onclick = () => {
+        imgEl.classList.toggle('zoomed');
+    };
+
     enableWakeLock();
     modal.classList.remove('hidden');
 }
