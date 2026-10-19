@@ -369,6 +369,10 @@ async function loadData(silent = false) {
                 data.shopping.purchasedKeys.forEach(k => purchasedShoppingKeys.add(k));
                 localStorage.setItem('smartbite_purchased_shopping', JSON.stringify([...purchasedShoppingKeys]));
             }
+            if (Array.isArray(data.shopping.loyaltyCards)) {
+                loyaltyCards = data.shopping.loyaltyCards;
+                localStorage.setItem('smartbite_loyalty_cards', JSON.stringify(loyaltyCards));
+            }
         }
 
         // 3. Rollierenden 4-Wochen-Plan sicherstellen & veraltete gekaufte Zutaten bereinigen
@@ -398,12 +402,51 @@ async function syncShoppingToApi() {
                 staples: staplesCatalog,
                 categoryOverrides: categoryOverrides,
                 excludedKeys: [...excludedShoppingKeys],
-                categoryOrder: categoryOrder
+                categoryOrder: categoryOrder,
+                loyaltyCards: loyaltyCards
             })
         });
     } catch (err) {
         console.warn('Einkaufslisten-Sync fehlgeschlagen:', err);
     }
+}
+
+function saveLoyaltyCards() {
+    localStorage.setItem('smartbite_loyalty_cards', JSON.stringify(loyaltyCards));
+    syncShoppingToApi();
+}
+
+const CARD_THEMES = {
+    lidl: { cls: 'card-theme-lidl', icon: '🟡' },
+    kaufland: { cls: 'card-theme-kaufland', icon: '🔴' },
+    aldi: { cls: 'card-theme-aldi', icon: '🔷' },
+    edeka: { cls: 'card-theme-edeka', icon: '💛' },
+    elli: { cls: 'card-theme-elli', icon: '🟠' },
+    rewe: { cls: 'card-theme-rewe', icon: '🔴' },
+    payback: { cls: 'card-theme-payback', icon: '🔵' },
+    dm: { cls: 'card-theme-dm', icon: '🟣' },
+    rossmann: { cls: 'card-theme-rossmann', icon: '🐴' },
+    custom: { cls: 'card-theme-custom', icon: '💳' }
+};
+
+function openCardBarcodeModal(card) {
+    if (!card || !card.imageUrl) return;
+    const modal = document.getElementById('card-barcode-modal');
+    const titleEl = document.getElementById('scanner-modal-title');
+    const imgEl = document.getElementById('scanner-barcode-img');
+    if (!modal || !imgEl) return;
+
+    if (titleEl) titleEl.textContent = card.name || 'Kundenkarte';
+    imgEl.src = card.imageUrl;
+    imgEl.alt = card.name || 'Barcode';
+    enableWakeLock();
+    modal.classList.remove('hidden');
+}
+
+function closeCardBarcodeModal() {
+    const modal = document.getElementById('card-barcode-modal');
+    if (modal) modal.classList.add('hidden');
+    releaseWakeLock();
 }
 
 function alignRollingPlan() {
@@ -1672,6 +1715,7 @@ let staplesCatalog = JSON.parse(localStorage.getItem('smartbite_staples_catalog'
 let categoryOverrides = JSON.parse(localStorage.getItem('smartbite_category_overrides') || '{}');
 let excludedShoppingKeys = new Set(JSON.parse(localStorage.getItem('smartbite_excluded_shopping') || '[]'));
 let categoryOrder = JSON.parse(localStorage.getItem('smartbite_category_order') || 'null');
+let loyaltyCards = JSON.parse(localStorage.getItem('smartbite_loyalty_cards') || '[]');
 
 function cleanupPurchasedKeys() {
     const validDayIds = new Set((appState.currentPlan || []).map(d => d.id));
@@ -2883,6 +2927,209 @@ document.addEventListener('DOMContentLoaded', () => {
             staplesChipsContainer.innerHTML = '<p class="subtitle" style="text-align: center; width: 100%;">Noch keine Dauerbrenner hinterlegt.</p>';
             return;
         }
+
+    // Kundenkarten Modal Steuerung & Bearbeitungs-Modus
+    const cardsModal = document.getElementById('shopping-cards-modal');
+    const btnOpenCards = document.getElementById('btn-open-cards-modal');
+    const btnCloseCards = document.getElementById('btn-close-cards-modal');
+    const btnDoneCards = document.getElementById('btn-done-cards-modal');
+    const btnToggleEditCards = document.getElementById('btn-toggle-edit-cards');
+    const cardsContainer = document.getElementById('loyalty-cards-container');
+    const cardsAddBox = document.getElementById('cards-add-box');
+    const cardsHint = document.getElementById('cards-instruction-hint');
+    const newCardNameInput = document.getElementById('new-card-name-input');
+    const newCardCamFile = document.getElementById('new-card-cam-file');
+    const newCardFile = document.getElementById('new-card-file');
+    const newCardFileHint = document.getElementById('new-card-file-hint');
+    const btnSaveNewCard = document.getElementById('btn-save-new-card');
+    const presetChipsContainer = document.getElementById('card-preset-chips');
+
+    let isCardsEditMode = false;
+    let selectedPreset = 'lidl';
+
+    function renderCardsModal() {
+        if (!cardsContainer) return;
+        cardsContainer.innerHTML = '';
+
+        if (btnToggleEditCards) {
+            btnToggleEditCards.classList.toggle('active-edit-mode', isCardsEditMode);
+        }
+
+        if (cardsAddBox) {
+            cardsAddBox.classList.toggle('hidden', !isCardsEditMode);
+        }
+
+        if (cardsHint) {
+            cardsHint.textContent = isCardsEditMode
+                ? 'Bearbeitungs-Modus: Lösche Karten (✕) oder lege neue an:'
+                : 'Tippe auf eine Karte zum Scannen an der Kasse:';
+        }
+
+        if (!loyaltyCards || loyaltyCards.length === 0) {
+            cardsContainer.innerHTML = '<p class="subtitle" style="text-align: center; grid-column: 1 / -1; width: 100%; padding: 1.5rem 0;">Noch keine Kundenkarten hinterlegt.<br>Tippe oben auf ✏️, um eine hinzuzufügen.</p>';
+            return;
+        }
+
+        loyaltyCards.forEach(card => {
+            const theme = CARD_THEMES[card.preset] || CARD_THEMES.custom;
+            const tile = document.createElement('div');
+            tile.className = `loyalty-card-tile ${theme.cls}`;
+
+            tile.innerHTML = `
+                <span class="loyalty-card-name">${card.name}</span>
+                <span class="loyalty-card-icon">${theme.icon}</span>
+            `;
+
+            if (isCardsEditMode) {
+                const delBtn = document.createElement('button');
+                delBtn.type = 'button';
+                delBtn.className = 'btn-remove-card-def';
+                delBtn.textContent = '✕';
+                delBtn.title = 'Karte löschen';
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    loyaltyCards = loyaltyCards.filter(c => c.id !== card.id);
+                    saveLoyaltyCards();
+                    renderCardsModal();
+                });
+                tile.appendChild(delBtn);
+            } else {
+                tile.addEventListener('click', () => {
+                    openCardBarcodeModal(card);
+                });
+            }
+
+            cardsContainer.appendChild(tile);
+        });
+    }
+
+    if (presetChipsContainer) {
+        presetChipsContainer.querySelectorAll('.btn-preset-chip').forEach(btn => {
+            btn.addEventListener('click', () => {
+                presetChipsContainer.querySelectorAll('.btn-preset-chip').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedPreset = btn.getAttribute('data-preset') || 'custom';
+                if (newCardNameInput) {
+                    newCardNameInput.value = btn.getAttribute('data-name') || '';
+                }
+            });
+        });
+        const defaultPresetBtn = presetChipsContainer.querySelector('[data-preset="lidl"]');
+        if (defaultPresetBtn) defaultPresetBtn.classList.add('active');
+    }
+
+    if (newCardCamFile) {
+        newCardCamFile.addEventListener('change', () => {
+            if (newCardCamFile.files.length > 0) {
+                if (newCardFile) newCardFile.value = '';
+                if (newCardFileHint) newCardFileHint.textContent = `✓ Foto gewählt: ${newCardCamFile.files[0].name}`;
+            }
+        });
+    }
+
+    if (newCardFile) {
+        newCardFile.addEventListener('change', () => {
+            if (newCardFile.files.length > 0) {
+                if (newCardCamFile) newCardCamFile.value = '';
+                if (newCardFileHint) newCardFileHint.textContent = `✓ Screenshot gewählt: ${newCardFile.files[0].name}`;
+            }
+        });
+    }
+
+    if (btnSaveNewCard) {
+        btnSaveNewCard.addEventListener('click', async () => {
+            const cardName = newCardNameInput ? newCardNameInput.value.trim() : '';
+            if (!cardName) {
+                alert('Bitte gib einen Namen für die Karte ein.');
+                return;
+            }
+
+            const chosenFile = (newCardCamFile && newCardCamFile.files.length > 0)
+                ? newCardCamFile.files[0]
+                : (newCardFile && newCardFile.files.length > 0 ? newCardFile.files[0] : null);
+
+            if (!chosenFile) {
+                alert('Bitte wähle ein Bild oder einen Screenshot des Barcodes/QR-Codes aus.');
+                return;
+            }
+
+            btnSaveNewCard.disabled = true;
+            btnSaveNewCard.textContent = 'Wird hochgeladen... ⏳';
+
+            try {
+                const compressed = await compressImageFile(chosenFile, 1200, 0.88);
+                const formData = new FormData();
+                formData.append('image', compressed);
+                const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                const uploadData = await uploadRes.json();
+
+                if (!uploadData.imageUrl) {
+                    throw new Error('Upload lieferte keine Bild-URL');
+                }
+
+                loyaltyCards.push({
+                    id: `card-${Date.now()}`,
+                    name: cardName,
+                    preset: selectedPreset,
+                    imageUrl: uploadData.imageUrl
+                });
+
+                saveLoyaltyCards();
+
+                if (newCardNameInput) newCardNameInput.value = '';
+                if (newCardCamFile) newCardCamFile.value = '';
+                if (newCardFile) newCardFile.value = '';
+                if (newCardFileHint) newCardFileHint.textContent = '';
+                isCardsEditMode = false;
+                renderCardsModal();
+            } catch (err) {
+                console.error('Karten-Upload fehlgeschlagen:', err);
+                alert('Fehler beim Speichern der Karte.');
+            } finally {
+                btnSaveNewCard.disabled = false;
+                btnSaveNewCard.textContent = 'Karte speichern 💾';
+            }
+        });
+    }
+
+    if (btnToggleEditCards) {
+        btnToggleEditCards.addEventListener('click', () => {
+            isCardsEditMode = !isCardsEditMode;
+            renderCardsModal();
+        });
+    }
+
+    if (btnOpenCards) {
+        btnOpenCards.addEventListener('click', () => {
+            isCardsEditMode = false;
+            renderCardsModal();
+            if (cardsModal) cardsModal.classList.remove('hidden');
+        });
+    }
+
+    const closeCardsModal = () => {
+        isCardsEditMode = false;
+        if (cardsModal) cardsModal.classList.add('hidden');
+    };
+
+    if (btnCloseCards) btnCloseCards.addEventListener('click', closeCardsModal);
+    if (btnDoneCards) btnDoneCards.addEventListener('click', closeCardsModal);
+
+    if (cardsModal) {
+        cardsModal.addEventListener('click', (e) => {
+            if (e.target === cardsModal) closeCardsModal();
+        });
+    }
+
+    const barcodeModal = document.getElementById('card-barcode-modal');
+    const btnCloseBarcodeModal = document.getElementById('btn-close-barcode-modal');
+
+    if (btnCloseBarcodeModal) btnCloseBarcodeModal.addEventListener('click', closeCardBarcodeModal);
+    if (barcodeModal) {
+        barcodeModal.addEventListener('click', (e) => {
+            if (e.target === barcodeModal) closeCardBarcodeModal();
+        });
+    }
 
         // Alphabetisch sortieren
         const sortedStaples = [...staplesCatalog].sort((a, b) => a.name.localeCompare(b.name, 'de', { sensitivity: 'base' }));

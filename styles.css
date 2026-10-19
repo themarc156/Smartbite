@@ -2013,7 +2013,138 @@ textarea {
 /* Supermarkt-Farbmixturen */
 .card-theme-lidl {
     background: linear-gradient(135deg, #0050aa 0%, #002d6b 60%, #d51224 60%, #d51224 75%, #ffd000 75%);
-    color: #
+    color: #ffffff;
+}
+
+.card-theme-kaufland {
+    background: linear-gradient(135deg, #e10915 0%, #a0000a 100%);
+    color: #ffffff;
+}
+
+.card-theme-aldi {
+    background: linear-gradient(135deg, #001e62 0%, #004b91 65%, #f47920 65%);
+    color: #ffffff;
+}
+
+.card-theme-edeka {
+    background: linear-gradient(135deg, #ffd000 0%, #e5b300 100%);
+    color: #003087;
+}
+
+.card-theme-edeka .loyalty-card-name {
+    text-shadow: none;
+}
+
+.card-theme-elli {
+    background: linear-gradient(135deg, #ff7a00 0%, #cc5500 70%, #2e7d32 70%);
+    color: #ffffff;
+}
+
+.card-theme-rewe {
+    background: linear-gradient(135deg, #cc071e 0%, #87000f 100%);
+    color: #ffffff;
+}
+
+.card-theme-payback {
+    background: linear-gradient(135deg, #002d72 0%, #0055b8 100%);
+    color: #ffffff;
+}
+
+.card-theme-dm {
+    background: linear-gradient(135deg, #6c2378 0%, #993399 70%, #ffcc00 70%);
+    color: #ffffff;
+}
+
+.card-theme-rossmann {
+    background: linear-gradient(135deg, #b80018 0%, #75000e 100%);
+    color: #ffffff;
+}
+
+.card-theme-custom {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    color: var(--accent-primary);
+}
+
+.card-presets-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.4rem;
+}
+
+.btn-preset-chip {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    padding: 0.3rem 0.55rem;
+    border-radius: 14px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-preset-chip:hover {
+    border-color: var(--accent-primary);
+    color: var(--text-main);
+}
+
+.btn-preset-chip.active {
+    background-color: var(--accent-primary) !important;
+    border-color: var(--accent-primary) !important;
+    color: #141312 !important;
+}
+
+.cards-add-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* Scanner-Modal mit maximalem Weiß-Kontrast */
+.card-scanner-modal-content {
+    background-color: #ffffff !important;
+    border: none !important;
+    max-width: 420px;
+    padding: 1rem;
+    border-radius: calc(var(--radius) * 2);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+}
+
+.scanner-view-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.5rem 0 0.2rem 0;
+}
+
+.scanner-white-box {
+    background: #ffffff;
+    padding: 0.5rem;
+    border-radius: 8px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scanner-barcode-img {
+    max-width: 100%;
+    max-height: 56vh;
+    object-fit: contain;
+    display: block;
+    border-radius: 4px;
+}
+
+.scanner-brightness-hint {
+    font-size: 0.78rem;
+    color: #4b5563;
+    font-weight: 700;
+    text-align: center;
+}
 
 /* WhatsApp Share Modal */
 .share-modal-content {
