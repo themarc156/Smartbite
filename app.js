@@ -3196,9 +3196,15 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSaveNewCard.textContent = 'Wird hochgeladen... ⏳';
 
             try {
-                const compressed = await compressImageFile(chosenFile, 1200, 0.88);
+                // Screenshots sind bereits kompakt -> 1:1 Original hochladen (kein Qualitätsverlust, kein Canvas-Bug)
+                // Nur extrem große Kamera-Dateien (> 2.5 MB) durch den Komprimierer schicken
+                let fileToUpload = chosenFile;
+                if (chosenFile.size > 2.5 * 1024 * 1024) {
+                    fileToUpload = await compressImageFile(chosenFile, 1600, 0.90);
+                }
+
                 const formData = new FormData();
-                formData.append('image', compressed);
+                formData.append('image', fileToUpload);
                 const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
                 const uploadData = await uploadRes.json();
 
